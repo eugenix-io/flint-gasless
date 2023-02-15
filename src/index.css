@@ -1,0 +1,31 @@
+/* webpackIgnore: true */
+@font-face {
+    font-family: "regular";   /*Can be any text*/
+    src: local("gilmer-regular"),
+      url("./assets/fonts/gilmer-regular.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "medium";   /*Can be any text*/
+    src: local("gilmer-medium"),
+      url("./assets/fonts/gilmer-medium.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "bold";   /*Can be any text*/
+    src: local("gilmer-bold"),
+      url("./assets/fonts/gilmer-bold.ttf") format("truetype");
+}
+
+/* .drop-down {
+    animation: anim 0.5s linear;
+} */
+
+@keyframes anim {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(180deg);
+    }
+}
