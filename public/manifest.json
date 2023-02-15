@@ -1,0 +1,12 @@
+{
+    "name": "Flint | Gasless",
+    "description": "Pay gas in any token from any chain",
+    "version": "0.0.0.1",
+    "manifest_version": 3,
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "icons": {
+      "128": "flint.png"
+    }
+}
