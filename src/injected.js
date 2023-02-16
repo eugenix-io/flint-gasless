@@ -1,34 +1,48 @@
-import { ethers } from 'ethers';
-import USDTAbi from './usdtAbi.json';
-import web3 from 'web3';
-import axios from 'axios';
-import $ from 'jquery'
+import { ethers } from "ethers";
+import USDTAbi from "./usdtAbi.json";
+import web3 from "web3";
+import axios from "axios";
+import $ from "jquery";
+import domainData from "./domainData.json";
 
 let responseJson;
 let parent;
 let parentFlint;
 
+const flintContractAddress = "0x65a6b9613550de688b75e12B50f28b33c07580bc";
+const baseUrl = "http://localhost:5001";
+const verifyingContractForApprove =
+  "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619";
+const tokenName = "Wrapped Ether";
+const tokenVersion = "1";
+
+const amountIn = ethers.parseEther("0.00024");
+
+const approvalAmount = ethers.parseEther("10000");
+
+// Uniswap path data
+let uniswapPathData = {
+  path: [],
+  fees: [],
+  amount: 0,
+};
+
 const domainType = [
   { name: "name", type: "string" },
   { name: "version", type: "string" },
   { name: "verifyingContract", type: "address" },
-  { name: "salt", type: "bytes32" }
+  { name: "salt", type: "bytes32" },
 ];
 
 const metaTransactionType = [
   { name: "nonce", type: "uint256" },
   { name: "from", type: "address" },
-  { name: "functionSignature", type: "bytes" }
+  { name: "functionSignature", type: "bytes" },
 ];
 
-const domainData = {
-  name: "Tether USD",
-  version: "1",
-  verifyingContract: "0x7FFB3d637014488b63fb9858E279385685AFc1e2",
-  salt: "0x0000000000000000000000000000000000000000000000000000000000000089",
-};
-
-let signer = null, provider, walletAddress;
+let signer = null,
+  provider,
+  walletAddress;
 
 const getSignatureParameters = (signature) => {
   if (!web3.utils.isHexStrict(signature)) {
@@ -51,17 +65,24 @@ const getSignatureParameters = (signature) => {
 const generateFunctionSignature = (abi) => {
   let iface = new ethers.Interface(abi);
   // Approve amount for spender 1 matic
-  return iface.encodeFunctionData("approve", ['0xb2c125eec20aac81a6d2b37f17c252acdb785b54', 1]);
-}
+  return iface.encodeFunctionData("approve", [
+    flintContractAddress,
+    approvalAmount,
+  ]);
+};
 
 const generate = async () => {
   try {
-
     // get nonce from backend
 
-    const nonce = (await axios.get(`https://mtx.flint.money/mtx/get-nonce?wa=${walletAddress}`)).data.nonce;
+    console.log("WALLET ADDRESS", walletAddress);
+    const nonce = (
+      await axios.get(
+        `${baseUrl}/mtx/get-nonce?wa=${walletAddress}&contract=${uniswapPathData.path[0]}`
+      )
+    ).data.nonce;
 
-    console.log(nonce, 'Nonce from backend');
+    console.log(nonce, "Nonce from backend");
     // get the signature
 
     let functionSignature = generateFunctionSignature(USDTAbi);
@@ -69,7 +90,7 @@ const generate = async () => {
     let message = {
       nonce: parseInt(nonce),
       from: walletAddress,
-      functionSignature: functionSignature
+      functionSignature: functionSignature,
     };
 
     const dataToSign = {
@@ -77,19 +98,19 @@ const generate = async () => {
         EIP712Domain: domainType,
         MetaTransaction: metaTransactionType,
       },
-      domain: domainData,
+      domain: domainData[uniswapPathData.path[0]],
       primaryType: "MetaTransaction",
       message: message,
     };
 
-    console.log(dataToSign, 'data t sinff');
+    console.log(dataToSign, "data t sinff");
 
     const sign = await ethereum.request({
-      method: 'eth_signTypedData_v4',
+      method: "eth_signTypedData_v4",
       params: [walletAddress, JSON.stringify(dataToSign)],
     });
 
-    console.log(sign, 'Signsgnsngs')
+    console.log(sign, "Signsgnsngs");
 
     let { r, s, v } = getSignatureParameters(sign);
 
@@ -97,18 +118,40 @@ const generate = async () => {
 
     // Send R, S, V to backend
 
-    console.log(r, s, v, 'RRRRRRR');
+    console.log(r, s, v, "RRRRRRR");
 
-    const data = { r, s, v, functionSignature, userAddress: walletAddress }
+    const data = {
+      r,
+      s,
+      v,
+      functionSignature,
+      userAddress: walletAddress,
+      fromToken: uniswapPathData.path[0],
+      toToken: uniswapPathData.path[uniswapPathData.path.length - 1],
+      amountIn: uniswapPathData.amount.toString(),
+      uniswapPathData: {
+        path: [],
+        fees: [],
+      },
+    };
 
-    const txResp = await axios.post(`https://mtx.flint.money/mtx/send`, data, {
+    if (uniswapPathData.path.length > 2) {
+      data.uniswapPathData = {
+        path: uniswapPathData.path,
+        fees: uniswapPathData.fees,
+      };
+    }
+
+    console.log(data, "Data final format");
+
+    const txResp = await axios.post(`${baseUrl}/mtx/send`, data, {
       headers: {
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     });
 
     const txJson = JSON.parse(txResp.data.data);
-    console.log(txJson, 'Tx json');
+    console.log(txJson, "Tx json");
     const hash = txJson["hash"];
 
     // {
@@ -131,48 +174,43 @@ const generate = async () => {
 
     setTx(hash);
 
-    console.log(txResp.data.data, 'transaction...');
+    console.log(txResp.data.data, "transaction...");
   } catch (error) {
-    console.log(error, 'Error in generate');
+    console.log(error, "Error in generate");
   }
-}
+};
 
 const initiateConnectWallet = async () => {
-  console.log('Runnuing iniititaitse', window.ethereum)
+  console.log("Runnuing iniititaitse", window.ethereum);
   if (window.ethereum === null) {
     // If MetaMask is not installed, we use the default provider,
     // which is backed by a variety of third-party services (such
     // as INFURA). They do not have private keys installed so are
     // only have read-only access
     console.log("MetaMask not installed; using read-only defaults");
-    provider = ethers.getDefaultProvider();
+    // provider = ethers.getDefaultProvider();
   } else {
-    console.log('ch 1');
+    console.log("ch 1");
     const provider = new ethers.BrowserProvider(window.ethereum);
-    console.log('ch 2', provider);
+    console.log("ch 2", provider);
     signer = await provider.getSigner();
-    console.log('ch 3', signer);
-    console.log(signer.address, 'Sginerfer');
+    console.log("ch 3", signer);
+    console.log(signer.address, "Sginerfer");
     const currentWalletAddress = signer.address;
     walletAddress = currentWalletAddress;
 
-    console.log(currentWalletAddress, 'wallet address');
+    console.log(currentWalletAddress, "wallet address");
   }
-}
+};
 
 const getEth = async () => {
-  console.log('called');
+  console.log("called");
   // Initiate wallet connect
   await initiateConnectWallet();
+};
 
-  setTimeout(() => {
-    console.log('Executing@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@');
-    generate();
-  }, 5000);
-}
-
-console.log('runing injected');
-// getEth();
+console.log("runing injected");
+getEth();
 
 // (function() {
 //   var XHR = XMLHttpRequest.prototype;
@@ -184,12 +222,16 @@ console.log('runing injected');
 //   }
 //   XHR.send = function() {
 //       this.addEventListener('load', function() {
-//         // console.log(this.response, 'response intercepted ----');            
-//         console.log(this.url, 'request url');            
+//         // console.log(this.response, 'response intercepted ----');
+//         console.log(this.url, 'request url');
 //       });
 //       return send.apply(this, arguments);
 //   };
 // })();
+
+const swapUsdt = async () => {
+  generate();
+};
 
 const proceed_swap = () => {
   if (responseJson) {
@@ -198,7 +240,7 @@ const proceed_swap = () => {
     const routeArray = [];
     const feeArr = [];
     const routeMap = {};
-    for(let i in routes) {
+    for (let i in routes) {
       const route = routes[i];
       const tokenIn = route.tokenIn;
       const tokenOut = route.tokenOut;
@@ -206,43 +248,48 @@ const proceed_swap = () => {
       routeMap[tokenIn.address] = tokenIn.symbol;
       routeMap[tokenOut.address] = tokenOut.symbol;
     }
-    for(let y in routeMap) {
+    for (let y in routeMap) {
       routeArray.push(y);
     }
-    console.log('sss amount', amount);
-    console.log('sss All routes in an array', routeArray);
-    console.log('sss Fee array', feeArr);
+    console.log("sss amount", amount);
+    console.log("sss All routes in an array", routeArray);
+    console.log("sss Fee array", feeArr);
 
-    if ($('#gas-dai:checked').val()) {
-      console.log('swapping using DAI as gas');
-    } else if ($('#gas-usdt:checked').val()) {
-      console.log('swapping using USDT as gas');
+    uniswapPathData.path = routeArray;
+    uniswapPathData.fees = feeArr;
+    uniswapPathData.amount = amount;
+
+    if ($("#gas-dai:checked").val()) {
+      console.log("swapping using DAI as gas");
+    } else if ($("#gas-usdt:checked").val()) {
+      console.log("swapping using USDT as gas");
+      swapUsdt();
     }
   }
-}
+};
 
 const enable_flint = () => {
   parent.hide();
   parentFlint.show();
-}
+};
 
 const disable_flint = () => {
   parent.show();
   parentFlint.hide();
-}
+};
 
 const disableBtn = () => {
-  $('#flint-swap').css('background-color', 'rgb(41, 50, 73)');
-  $('#flint-swap').css('color', 'rgb(152, 161, 192);');
-}
+  $("#flint-swap").css("background-color", "rgb(41, 50, 73)");
+  $("#flint-swap").css("color", "rgb(152, 161, 192);");
+};
 
 const enableButton = () => {
-  $('#flint-swap').css('background-color', 'rgb(76, 130, 251)');
-  $('#flint-swap').css('color', 'rgb(245, 246, 252)');
-}
+  $("#flint-swap").css("background-color", "rgb(76, 130, 251)");
+  $("#flint-swap").css("color", "rgb(245, 246, 252)");
+};
 
 setTimeout(() => {
-  const swapBtnOriginal = $('#swap-button');
+  const swapBtnOriginal = $("#swap-button");
   parent = swapBtnOriginal.parent();
   // parent.hide();
   const css = `background-color: rgb(41, 50, 73);
@@ -254,7 +301,7 @@ setTimeout(() => {
   cursor: pointer;
   border-radius: 20px;
   color: rgb(152, 161, 192);`;
-  const btn = `<button id="flint-swap" style="${css}">Swap</button>`
+  const btn = `<button id="flint-swap" style="${css}">Swap</button>`;
   const ul = `<ul id="gas-selector" style="list-style-type: none; padding: 0;">
   <li>
     <input id="gas-matic" type="radio" name="selector" checked="checked">
@@ -275,37 +322,41 @@ setTimeout(() => {
     
     <div class="check"><div class="inside"></div></div>
   </li>
-</ul>`
-  $(`<div id="new-par"><p style="font-weight: 500; font-size: 16px; margin-left: 12px;">Gas will be paid in</p>${ul}</div>`).insertBefore(parent)
-  parent.parent().append(`<div id="tg_fl" style="display: none;">${btn}</div>`)
-  $(document).on('click', '#flint-swap', function(){ 
+</ul>`;
+  $(
+    `<div id="new-par"><p style="font-weight: 500; font-size: 16px; margin-left: 12px;">Gas will be paid in</p>${ul}</div>`
+  ).insertBefore(parent);
+  parent.parent().append(`<div id="tg_fl" style="display: none;">${btn}</div>`);
+  $(document).on("click", "#flint-swap", function () {
     proceed_swap();
   });
-  parentFlint = $('#tg_fl');
-  $(document).on('change', '#gas-selector', function() {
-    if ($('#gas-matic:checked').val()) {
-      disable_flint()
+  parentFlint = $("#tg_fl");
+  $(document).on("change", "#gas-selector", function () {
+    if ($("#gas-matic:checked").val()) {
+      disable_flint();
     } else {
-      enable_flint()
+      enable_flint();
     }
-  })
+  });
 }, 1000);
-
 
 const { fetch: originalFetch } = window;
 window.fetch = async (...args) => {
   let [resource, config] = args;
-  if (typeof resource === 'object' && resource.url?.includes('https://api.uniswap.org/v1/quote')
-   || (typeof resource === 'string' && resource.includes('https://api.uniswap.org/v1/quote'))) {
+  if (
+    (typeof resource === "object" &&
+      resource.url?.includes("https://api.uniswap.org/v1/quote")) ||
+    (typeof resource === "string" &&
+      resource.includes("https://api.uniswap.org/v1/quote"))
+  ) {
     responseJson = undefined;
     disableBtn();
   }
-  console.log(resource, typeof resource, 'another call');
+  console.log(resource, typeof resource, "another call");
   let response = await originalFetch(resource, config);
-  if (response.url?.includes('https://api.uniswap.org/v1/quote')) {
+  if (response.url?.includes("https://api.uniswap.org/v1/quote")) {
     responseJson = await response.json();
     enableButton();
   }
   return response;
 };
-
