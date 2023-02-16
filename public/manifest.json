@@ -13,6 +13,7 @@
     {
       "matches": ["https://app.uniswap.org/*"],
       "js": ["content.js"],
+      "css": ["style.css"],
       "run_at": "document_start"
     }
   ],

@@ -1,462 +1,12 @@
-// // PocketUniverse logo in ASCII form.
-// // import logger from '../../lib/logger';
-// // import { RequestManager, Response } from '../../lib/request';
-// // import { ethErrors } from 'eth-rpc-errors';
-
-// // const log = logger.child({ component: 'Injected' });
-// // log.debug({ msg: 'Injected script loaded.' });
-
-// /// Handling all the request communication.
-// // const REQUEST_MANAGER = new RequestManager();
-
-// let timer = undefined;
-
-// const addPocketUniverseProxy = (provider) => {
-//   // Heavily taken from RevokeCash to ensure consistency. Thanks Rosco :)!
-//   //
-//   // https://github.com/RevokeCash/browser-extension
-//   const sendHandler = {
-//     apply: (target, thisArg, args) => {
-//       const [payloadOrMethod, callbackOrParams] = args;
-
-//       // ethereum.send has three overloads:
-
-//       // ethereum.send(method: string, params?: Array<unknown>): Promise<JsonRpcResponse>;
-//       // > gets handled like ethereum.request
-//       if (typeof payloadOrMethod === 'string') {
-//         return provider.request({
-//           method: payloadOrMethod,
-//           params: callbackOrParams,
-//         });
-//       }
-
-//       // ethereum.send(payload: JsonRpcRequest): unknown;
-//       // > cannot contain signature requests
-//       if (!callbackOrParams) {
-//         return Reflect.apply(target, thisArg, args);
-//       }
-
-//       // ethereum.send(payload: JsonRpcRequest, callback: JsonRpcCallback): void;
-//       // > gets handled like ethereum.sendAsync
-//       return provider.sendAsync(payloadOrMethod, callbackOrParams);
-//     },
-//   };
-
-//   const requestHandler = {
-//     apply: async (target, thisArg, args) => {
-//       const [request] = args;
-//       if (!request) {
-//         return Reflect.apply(target, thisArg, args);
-//       }
-
-//       console.log('INTERCEPTED REQ :::: ', request);
-//       console.log('INTERCEPTED PARAMS :::: ', request.params);
-//       // console.log('INTERCEPTED FIRST PARAM :::: ', request.params[0]);
-
-//       if (
-//         request.method !== 'eth_signTypedData_v3' &&
-//         request.method !== 'eth_signTypedData_v4' &&
-//         request.method !== 'eth_sendTransaction' &&
-//         request.method !== 'eth_sign' && 
-//         request.method !== 'personal_sign'
-//       ) {
-//         return Reflect.apply(target, thisArg, args);
-//       }
-
-//       // log.info({ args }, 'Request type');
-//       let response;
-//       if (request.method === 'eth_sendTransaction') {
-//         // log.info('Transaction Request');
-
-//         if (request.params.length !== 1) {
-//           // Forward the request anyway.
-//           // log.warn('Unexpected argument length.');
-//           return Reflect.apply(target, thisArg, args);
-//         }
-
-//         // log.info(request, 'Request being sent');
-
-//         // Sending response.
-//         // response = await REQUEST_MANAGER.request({
-//         //   chainId: await provider.request({ method: 'eth_chainId' }),
-//         //   signer: request.params[0].from,
-//         //   transaction: request.params[0],
-//         // });
-
-//         // if (response === Response.Reject) {
-//         //   // log.info('Reject');
-//         //   // Based on EIP-1103
-//         //   // eslint-disable-next-line no-throw-literal
-//         //   // throw ethErrors.provider.userRejectedRequest(
-//         //   //   'PocketUniverse Tx Signature: User denied transaction signature.'
-//         //   // );
-//         // }
-//       } else if (
-//         request.method === 'eth_signTypedData_v3' ||
-//         request.method === 'eth_signTypedData_v4'
-//       ) {
-//         // log.info('Signature Request');
-//         if (request.params.length !== 2) {
-//           // Forward the request anyway.
-//           // log.warn('Unexpected argument length.');
-//           return Reflect.apply(target, thisArg, args);
-//         }
-
-//         const params = JSON.parse(request.params[1]);
-//         // log.info({ params }, 'Request being sent');
-
-//         // Sending response.
-//         // response = await REQUEST_MANAGER.request({
-//         //   chainId: await provider.request({ method: 'eth_chainId' }),
-//         //   signer: params[0],
-//         //   domain: params['domain'],
-//         //   message: params['message'],
-//         //   primaryType: params['primaryType'],
-//         // });
-
-//         // if (response === Response.Reject) {
-//         //   log.info('Reject');
-//         //   // NOTE: Be cautious when changing this name. 1inch behaves strangely when the error message diverges.
-//         //   throw ethErrors.provider.userRejectedRequest(
-//         //     'PocketUniverse Message Signature: User denied message signature.'
-//         //   );
-//         // }
-//       } else if (request.method === 'eth_sign') {
-//         // log.info('EthSign Request');
-//         if (request.params.length !== 2) {
-//           // Forward the request anyway.
-//           // log.warn('Unexpected argument length.');
-//           return Reflect.apply(target, thisArg, args);
-//         }
-
-//         // Sending response.
-//         // response = await REQUEST_MANAGER.request({
-//         //   chainId: await provider.request({ method: 'eth_chainId' }),
-//         //   signer: request.params[0],
-//         //   hash: request.params[1],
-//         // });
-
-//         // if (response === Response.Reject) {
-//         //   log.info('Reject');
-//         //   // NOTE: Be cautious when changing this name. 1inch behaves strangely when the error message diverges.
-//         //   throw ethErrors.provider.userRejectedRequest(
-//         //     'PocketUniverse Message Signature: User denied message signature.'
-//         //   );
-//         // }
-//       } else if (request.method === 'personal_sign') {
-//         // log.info('Presonal Sign Request');
-//         // if (request.params.length < 2) {
-//         //   // Forward the request anyway.
-//         //   log.warn('Unexpected argument length.');
-//         //   return Reflect.apply(target, thisArg, args);
-//         // }
-
-//         // Sending response.
-//         // response = await REQUEST_MANAGER.request({
-//         //   chainId: await provider.request({ method: 'eth_chainId' }),
-//         //   signer: request.params[1],
-//         //   signMessage: request.params[0],
-//         // });
-
-//         // if (response === Response.Reject) {
-//         //   log.info('Reject');
-//         //   // NOTE: Be cautious when changing this name. 1inch behaves strangely when the error message diverges.
-//         //   throw ethErrors.provider.userRejectedRequest(
-//         //     'PocketUniverse Message Signature: User denied message signature.'
-//         //   );
-//         // }
-//       } else {
-//         throw new Error('Show never reach here');
-//       }
-
-//       // For error, we just continue, to make sure we don't block the user!
-//       // if (response === Response.Continue || response === Response.Error) {
-//       //   log.info(response, 'Continue | Error');
-//       //   return Reflect.apply(target, thisArg, args);
-//       // }
-//     },
-//   };
-
-//   const sendAsyncHandler = {
-//     apply: async (target, thisArg, args) => {
-//       const [request, callback] = args;
-//       if (!request) {
-//         return Reflect.apply(target, thisArg, args);
-//       }
-
-//       if (
-//         request.method !== 'eth_signTypedData_v3' &&
-//         request.method !== 'eth_signTypedData_v4' &&
-//         request.method !== 'eth_sendTransaction' &&
-//         request.method !== 'eth_sign' &&
-//         request.method !== 'personal_sign'
-//       ) {
-//         return Reflect.apply(target, thisArg, args);
-//       }
-
-//       // log.info({ args }, 'Request Type Async Handler');
-//       if (request.method === 'eth_sendTransaction') {
-//         // log.info('Transaction Request');
-
-//         if (request.params.length !== 1) {
-//           // Forward the request anyway.
-//           // log.warn('Unexpected argument length.');
-//           return Reflect.apply(target, thisArg, args);
-//         }
-
-//         // log.info(request, 'Request being sent');
-//         provider
-//           .request({ method: 'eth_chainId' })
-//           .then((chainId) => {
-//             // return REQUEST_MANAGER.request({
-//             //   chainId,
-//             //   signer: request.params[0].from,
-//             //   transaction: request.params[0],
-//             // });
-//           })
-//           .then((response) => {
-//             // if (response === Response.Reject) {
-//             //   log.info('Reject');
-//             //   // Based on EIP-1103
-//             //   // eslint-disable-next-line no-throw-literal
-//             //   const error = ethErrors.provider.userRejectedRequest(
-//             //     'PocketUniverse Tx Signature: User denied transaction signature.'
-//             //   );
-//             //   const response = {
-//             //     id: request?.id,
-//             //     jsonrpc: '2.0',
-//             //     error,
-//             //   };
-//             //   callback(error, response);
-//             //   // For error, we just continue, to make sure we don't block the user!
-//             // } else if (
-//             //   response === Response.Continue ||
-//             //   response === Response.Error
-//             // ) {
-//             //   log.info(response, 'Continue | Error');
-//             //   return Reflect.apply(target, thisArg, args);
-//             // }
-//           });
-//       } else if (
-//         request.method === 'eth_signTypedData_v3' ||
-//         request.method === 'eth_signTypedData_v4'
-//       ) {
-//         // log.info('Signature Request');
-//         if (request.params.length !== 2) {
-//           // Forward the request anyway.
-//           // log.warn('Unexpected argument length.');
-//           return Reflect.apply(target, thisArg, args);
-//         }
-
-//         const params = JSON.parse(request.params[1]);
-//         // log.info({ params }, 'Request being sent');
-
-//         provider
-//           .request({ method: 'eth_chainId' })
-//           .then((chainId) => {
-//             // return REQUEST_MANAGER.request({
-//             //   chainId,
-//             //   signer: params[0],
-//             //   domain: params['domain'],
-//             //   message: params['message'],
-//             //   primaryType: params['primaryType'],
-//             // });
-//           })
-//           .then((response) => {
-//             // if (response === Response.Reject) {
-//             //   log.info('Reject');
-//             //   // Based on EIP-1103
-//             //   // eslint-disable-next-line no-throw-literal
-//             //   const error = ethErrors.provider.userRejectedRequest(
-//             //     'PocketUniverse Message Signature: User denied message signature.'
-//             //   );
-//             //   const response = {
-//             //     id: request?.id,
-//             //     jsonrpc: '2.0',
-//             //     error,
-//             //   };
-//             //   callback(error, response);
-//             //   // For error, we just continue, to make sure we don't block the user!
-//             // } else if (
-//             //   response === Response.Continue ||
-//             //   response === Response.Error
-//             // ) {
-//             //   log.info(response, 'Continue | Error');
-//             //   return Reflect.apply(target, thisArg, args);
-//             // }
-//           });
-//       } else if (request.method === 'eth_sign') {
-//         // log.info('EthSign Request');
-//         if (request.params.length !== 2) {
-//           // Forward the request anyway.
-//           // log.warn('Unexpected argument length.');
-//           return Reflect.apply(target, thisArg, args);
-//         }
-
-//         provider
-//           .request({ method: 'eth_chainId' })
-//           .then((chainId) => {
-//             // return REQUEST_MANAGER.request({
-//             //   chainId,
-//             //   signer: request.params[0],
-//             //   hash: request.params[1],
-//             // });
-//           })
-//           .then((response) => {
-//             // if (response === Response.Reject) {
-//             //   log.info('Reject');
-//             //   // Based on EIP-1103
-//             //   // eslint-disable-next-line no-throw-literal
-//             //   const error = ethErrors.provider.userRejectedRequest(
-//             //     'PocketUniverse Message Signature: User denied message signature.'
-//             //   );
-//             //   const response = {
-//             //     id: request?.id,
-//             //     jsonrpc: '2.0',
-//             //     error,
-//             //   };
-//             //   callback(error, response);
-//             //   // For error, we just continue, to make sure we don't block the user!
-//             // } else if (
-//             //   response === Response.Continue ||
-//             //   response === Response.Error
-//             // ) {
-//             //   log.info(response, 'Continue | Error');
-//             //   return Reflect.apply(target, thisArg, args);
-//             // }
-//           });
-//       } else if (request.method === 'personal_sign') {
-//         // log.info('Presonal Sign Request');
-//         if (request.params.length === 0) {
-//           // Forward the request anyway.
-//           // log.warn('Unexpected argument length.');
-//           return Reflect.apply(target, thisArg, args);
-//         }
-
-//         provider
-//           .request({ method: 'eth_chainId' })
-//           .then((chainId) => {
-//             // return REQUEST_MANAGER.request({
-//             //   chainId,
-//             //   signer: request.params[1],
-//             //   signMessage: request.params[0],
-//             // });
-//           })
-//           .then((response) => {
-//             // if (response === Response.Reject) {
-//             //   log.info('Reject');
-//             //   // Based on EIP-1103
-//             //   // eslint-disable-next-line no-throw-literal
-//             //   const error = ethErrors.provider.userRejectedRequest(
-//             //     'PocketUniverse Message Signature: User denied message signature.'
-//             //   );
-//             //   const response = {
-//             //     id: request?.id,
-//             //     jsonrpc: '2.0',
-//             //     error,
-//             //   };
-//             //   callback(error, response);
-//             //   // For error, we just continue, to make sure we don't block the user!
-//             // } else if (
-//             //   response === Response.Continue ||
-//             //   response === Response.Error
-//             // ) {
-//             //   log.info(response, 'Continue | Error');
-//             //   return Reflect.apply(target, thisArg, args);
-//             // }
-//           });
-//       }
-//     },
-//   };
-
-//   if (provider && !provider?.isPocketUniverse) {
-//     // log.debug({ provider }, 'Added proxy');
-//     // TODO(jqphu): Brave will not allow us to overwrite request/send/sendAsync as it is readonly.
-//     //
-//     // The workaround would be to proxy the entire window.ethereum object (but
-//     // that could run into its own complications). For now we shall just skip
-//     // brave wallet.
-//     //
-//     // This should still work for metamask and other wallets using the brave browser.
-//     try {
-//       Object.defineProperty(provider, 'request', {
-//         value: new Proxy(provider.request, requestHandler),
-//       });
-//       Object.defineProperty(provider, 'send', {
-//         value: new Proxy(provider.send, sendHandler),
-//       });
-//       Object.defineProperty(provider, 'sendAsync', {
-//         value: new Proxy(provider.sendAsync, sendAsyncHandler),
-//       });
-//       provider.isPocketUniverse = true;
-//       console.log('Pocket Universe is running!');
-//     } catch (error) {
-//       // If we can't add ourselves to this provider, don't mess with other providers.
-//       // log.warn({ provider, error }, 'Could not attach to provider');
-//     }
-//   }
-// };
-
-// const addProxy = () => {
-//   console.log('add proxy called');
-//   // Protect against double initialization.
-//   if (window.ethereum && !window.ethereum?.isPocketUniverse) {
-//     // log.debug({ provider: window.ethereum }, 'Injecting!');
-//     console.log('got ETH', window.ethereum);
-//     addPocketUniverseProxy(window.ethereum);
-
-//     if (window.ethereum.providers?.length) {
-      
-//       // log.debug('New providers!');
-//       window.ethereum.providers.forEach(addPocketUniverseProxy);
-//     }
-//   }
-// };
-
-// if (window.ethereum) {
-//   console.log('eth not found');
-//   // log.debug({ provider: window.ethereum }, 'Detected Provider');
-//   addProxy();
-// } else {
-//   // log.debug('Adding event listener');
-//   window.addEventListener('ethereum#initialized', addProxy);
-// }
-
-// timer = setInterval(addProxy, 100);
-
-// // This cleanup timeout serves two purposes.
-// //
-// // 1. There is a wallet
-// //
-// // We do not clear the timeout in addProxy since if coinbase wallet and
-// // metamask are both present, metamask will augment the providers array. We do
-// // not get any events when this happens. Thus, we continually poll to see if
-// // there are any new providers and if there are we inject ourselves.
-// //
-// // 2. There are no wallets at all.
-// //
-// // Although we don't do a lot of work, we don't want to churn CPU cycles for no
-// // reason. Thus after 5 seconds we give up on checking for the wallet.
-// setTimeout(() => {
-//   window.removeEventListener('ethereum#initialized', addProxy);
-//   clearTimeout(timer);
-// }, 5000);
-
-
-// export const check = async () => {
-//   console.log('called');
-//   let [tab] =  await chrome.tabs.query({active: true, currentWindow: true});
-//   console.log(tab);
-//   chrome.scripting.executeScript({
-//     target: {tabId: tab.id},
-//     function: getEth
-//   })
-// }
-
 import { ethers } from 'ethers';
 import USDTAbi from './usdtAbi.json';
 import web3 from 'web3';
 import axios from 'axios';
+import $ from 'jquery'
+
+let responseJson;
+let parent;
+let parentFlint;
 
 const domainType = [
   { name: "name", type: "string" },
@@ -622,4 +172,140 @@ const getEth = async () => {
 }
 
 console.log('runing injected');
-getEth();
+// getEth();
+
+// (function() {
+//   var XHR = XMLHttpRequest.prototype;
+//   var send = XHR.send;
+//   var open = XHR.open;
+//   XHR.open = function(method, url) {
+//       this.url = url; // the request url
+//       return open.apply(this, arguments);
+//   }
+//   XHR.send = function() {
+//       this.addEventListener('load', function() {
+//         // console.log(this.response, 'response intercepted ----');            
+//         console.log(this.url, 'request url');            
+//       });
+//       return send.apply(this, arguments);
+//   };
+// })();
+
+const proceed_swap = () => {
+  if (responseJson) {
+    const amount = responseJson.amount;
+    const routes = responseJson.route[0];
+    const routeArray = [];
+    const feeArr = [];
+    const routeMap = {};
+    for(let i in routes) {
+      const route = routes[i];
+      const tokenIn = route.tokenIn;
+      const tokenOut = route.tokenOut;
+      feeArr.push(route.fee);
+      routeMap[tokenIn.address] = tokenIn.symbol;
+      routeMap[tokenOut.address] = tokenOut.symbol;
+    }
+    for(let y in routeMap) {
+      routeArray.push(y);
+    }
+    console.log('sss amount', amount);
+    console.log('sss All routes in an array', routeArray);
+    console.log('sss Fee array', feeArr);
+
+    if ($('#gas-dai:checked').val()) {
+      console.log('swapping using DAI as gas');
+    } else if ($('#gas-usdt:checked').val()) {
+      console.log('swapping using USDT as gas');
+    }
+  }
+}
+
+const enable_flint = () => {
+  parent.hide();
+  parentFlint.show();
+}
+
+const disable_flint = () => {
+  parent.show();
+  parentFlint.hide();
+}
+
+const disableBtn = () => {
+  $('#flint-swap').css('background-color', 'rgb(41, 50, 73)');
+  $('#flint-swap').css('color', 'rgb(152, 161, 192);');
+}
+
+const enableButton = () => {
+  $('#flint-swap').css('background-color', 'rgb(76, 130, 251)');
+  $('#flint-swap').css('color', 'rgb(245, 246, 252)');
+}
+
+setTimeout(() => {
+  const swapBtnOriginal = $('#swap-button');
+  parent = swapBtnOriginal.parent();
+  // parent.hide();
+  const css = `background-color: rgb(41, 50, 73);
+  font-size: 20px;
+  font-weight: 600;
+  padding: 16px;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  border-radius: 20px;
+  color: rgb(152, 161, 192);`;
+  const btn = `<button id="flint-swap" style="${css}">Swap</button>`
+  const ul = `<ul id="gas-selector" style="list-style-type: none; padding: 0;">
+  <li>
+    <input id="gas-matic" type="radio" name="selector" checked="checked">
+    <label for="gas-matic" style="font-weight: 500; font-size: 16px;">MATIC</label>
+    <div class="check"><div class="inside"></div></div>
+  </li>
+  
+  <li>
+    <input id="gas-dai" type="radio" name="selector">
+    <label for="gas-dai" style="font-weight: 500; font-size: 16px;">DAI</label>
+    
+    <div class="check"><div class="inside"></div></div>
+  </li>
+  
+  <li>
+    <input id="gas-usdt" type="radio" name="selector">
+    <label for="gas-usdt" style="font-weight: 500; font-size: 16px;">USDT</label>
+    
+    <div class="check"><div class="inside"></div></div>
+  </li>
+</ul>`
+  $(`<div id="new-par"><p style="font-weight: 500; font-size: 16px; margin-left: 12px;">Gas will be paid in</p>${ul}</div>`).insertBefore(parent)
+  parent.parent().append(`<div id="tg_fl" style="display: none;">${btn}</div>`)
+  $(document).on('click', '#flint-swap', function(){ 
+    proceed_swap();
+  });
+  parentFlint = $('#tg_fl');
+  $(document).on('change', '#gas-selector', function() {
+    if ($('#gas-matic:checked').val()) {
+      disable_flint()
+    } else {
+      enable_flint()
+    }
+  })
+}, 1000);
+
+
+const { fetch: originalFetch } = window;
+window.fetch = async (...args) => {
+  let [resource, config] = args;
+  if (typeof resource === 'object' && resource.url?.includes('https://api.uniswap.org/v1/quote')
+   || (typeof resource === 'string' && resource.includes('https://api.uniswap.org/v1/quote'))) {
+    responseJson = undefined;
+    disableBtn();
+  }
+  console.log(resource, typeof resource, 'another call');
+  let response = await originalFetch(resource, config);
+  if (response.url?.includes('https://api.uniswap.org/v1/quote')) {
+    responseJson = await response.json();
+    enableButton();
+  }
+  return response;
+};
+
