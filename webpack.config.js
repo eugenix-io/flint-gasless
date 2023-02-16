@@ -4,7 +4,9 @@ const path = require('path');
 
 module.exports = {
     entry: {
-        popup: './src/popup.jsx'
+        popup: './src/popup.jsx',
+        content: './src/content.js',
+        injected: './src/injected.js',
     }, 
     output: {
         path: path.resolve(__dirname, 'dist'),
@@ -35,7 +37,7 @@ module.exports = {
         ],
     },
     plugins: [
-        new HtmlWebpackPlugin({ template: './src/popup.html', filename: 'popup.html' }),
+        new HtmlWebpackPlugin({ template: './src/index.html', filename: 'index.html' }),
         new CopyPlugin({
             patterns: [{
                 from: 'public'

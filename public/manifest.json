@@ -1,12 +1,23 @@
 {
-    "name": "Flint | Gasless",
-    "description": "Pay gas in any token from any chain",
-    "version": "0.0.0.1",
-    "manifest_version": 3,
-    "action": {
-        "default_popup": "popup.html"
-    },
-    "icons": {
-      "128": "flint.png"
+  "name": "Flint | Gasless",
+  "description": "Pay gas in any token from any chain",
+  "version": "0.0.0.1",
+  "manifest_version": 3,
+  "action": {
+      "default_popup": "index.html"
+  },
+  "icons": {
+    "128": "flint.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://app.uniswap.org/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
     }
+  ],
+  "web_accessible_resources": [{
+    "resources": ["injected.js"],
+    "matches": ["<all_urls>"]
+  }]
 }

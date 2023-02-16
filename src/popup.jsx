@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
-import FlintLogo from './assets/flint-logo.svg'
+import FlintLogo from './assets/flint-logo.svg';
+import $ from "jquery";
+
 
 const url = 'https://app.prod.eugenix.io/coin-listing/api/v1/coin-listing/market-chart-data?date_range=ONE_DAY&coins=usdt&coins=usdc&coins=ftm&coins=axs&coins=doge&coins=matic&coins=avax&coins=trx&coins=bch&coins=eth&coins=dai&coins=dot&coins=sol&coins=btc&coins=bnb&coins=gmt&coins=knc&coins=snx&coins=okb'
 
@@ -48,7 +50,7 @@ const App = () => {
     );
 }
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
+const root = ReactDOM.createRoot(document.getElementById("fext-root"));
 root.render(
     <App />
 );

@@ -12,8 +12,10 @@
   "license": "ISC",
   "dependencies": {
     "copy-webpack-plugin": "^11.0.0",
+    "jquery": "^3.6.3",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "webextension-polyfill": "^0.10.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.12",
