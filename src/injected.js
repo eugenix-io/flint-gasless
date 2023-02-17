@@ -156,7 +156,7 @@ const generate = async () => {
     const txJson = JSON.parse(txResp.data.data);
     console.log(txJson, "Tx json");
     const hash = txJson["hash"];
-    
+
     $("#flint-swap").html('Swap')
     $("#flint-swap").toggleClass('button--loading')
     isTransacting = false
@@ -320,27 +320,27 @@ setTimeout(() => {
   color: rgb(152, 161, 192);`;
   const btn = `<button id="flint-swap" style="${css}">Swap</button>`;
   // const btn2 = `<button id="flint-swap" class="button--loading" style="${css2}"></button>`;
-//   const ul = `<ul id="gas-selector" style="list-style-type: none; padding: 0;">
-//   <li>
-//     <input id="gas-matic" type="radio" name="selector" checked="checked">
-//     <label for="gas-matic" style="font-weight: 500; font-size: 16px;">MATIC</label>
-//     <div class="check"><div class="inside"></div></div>
-//   </li>
-  
-//   <li>
-//     <input id="gas-dai" type="radio" name="selector">
-//     <label for="gas-dai" style="font-weight: 500; font-size: 16px;">DAI</label>
-    
-//     <div class="check"><div class="inside"></div></div>
-//   </li>
-  
-//   <li>
-//     <input id="gas-usdt" type="radio" name="selector">
-//     <label for="gas-usdt" style="font-weight: 500; font-size: 16px;">USDT</label>
-    
-//     <div class="check"><div class="inside"></div></div>
-//   </li>
-// </ul>`;
+  //   const ul = `<ul id="gas-selector" style="list-style-type: none; padding: 0;">
+  //   <li>
+  //     <input id="gas-matic" type="radio" name="selector" checked="checked">
+  //     <label for="gas-matic" style="font-weight: 500; font-size: 16px;">MATIC</label>
+  //     <div class="check"><div class="inside"></div></div>
+  //   </li>
+
+  //   <li>
+  //     <input id="gas-dai" type="radio" name="selector">
+  //     <label for="gas-dai" style="font-weight: 500; font-size: 16px;">DAI</label>
+
+  //     <div class="check"><div class="inside"></div></div>
+  //   </li>
+
+  //   <li>
+  //     <input id="gas-usdt" type="radio" name="selector">
+  //     <label for="gas-usdt" style="font-weight: 500; font-size: 16px;">USDT</label>
+
+  //     <div class="check"><div class="inside"></div></div>
+  //   </li>
+  // </ul>`;
   const ul = `<ul id="gas-selector" style="list-style-type: none; padding: 0;">
   <li>
     <input id="gas-matic" type="radio" name="selector" checked="checked">
