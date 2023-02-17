@@ -79,3 +79,40 @@ input[type=radio]:checked~.check::before {
 input[type=radio]:checked~label {
     color: #4c82fb;
 }
+
+.button--loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    border: 4px solid transparent;
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: button-loading-spinner 1s ease infinite;
+}
+
+@keyframes button-loading-spinner {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.fn-lk-sc {
+    margin: 14px 20px;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.fn-lk-sc:hover {
+    opacity: 0.8;
+}

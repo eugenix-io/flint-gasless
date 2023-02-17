@@ -9,8 +9,11 @@ let responseJson;
 let parent;
 let parentFlint;
 
+let isTransacting = false;
+
 const flintContractAddress = "0x65a6b9613550de688b75e12B50f28b33c07580bc";
-const baseUrl = "http://localhost:5001";
+// const baseUrl = "http://localhost:5001";
+const baseUrl = "https://mtx.flint.money";
 const verifyingContractForApprove =
   "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619";
 const tokenName = "Wrapped Ether";
@@ -153,7 +156,15 @@ const generate = async () => {
     const txJson = JSON.parse(txResp.data.data);
     console.log(txJson, "Tx json");
     const hash = txJson["hash"];
-
+    
+    $("#flint-swap").html('Swap')
+    $("#flint-swap").toggleClass('button--loading')
+    isTransacting = false
+    enableButton()
+    parent.parent().append(`<a class="fn-lk-sc" target="_blank" href="https://polygonscan.com/tx/${hash}"><p style="margin: 0 5px 0 0; color: rgb(130, 71, 229);">Check transaction status on Polygon Scan</p>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24px" height="24px" fill="rgb(130, 71, 229)">
+  <path d="M 5 3 C 3.9069372 3 3 3.9069372 3 5 L 3 19 C 3 20.093063 3.9069372 21 5 21 L 19 21 C 20.093063 21 21 20.093063 21 19 L 21 12 L 19 12 L 19 19 L 5 19 L 5 5 L 12 5 L 12 3 L 5 3 z M 14 3 L 14 5 L 17.585938 5 L 8.2929688 14.292969 L 9.7070312 15.707031 L 19 6.4140625 L 19 10 L 21 10 L 21 3 L 14 3 z"/>
+  </svg></a>`);
     // {
     //   "_type": "TransactionReceipt",
     //   "accessList": null,
@@ -171,8 +182,6 @@ const generate = async () => {
     //   "to": "0x7FFB3d637014488b63fb9858E279385685AFc1e2",
     //   "value": "0"
     // }
-
-    setTx(hash);
 
     console.log(txResp.data.data, "transaction...");
   } catch (error) {
@@ -234,7 +243,7 @@ const swapUsdt = async () => {
 };
 
 const proceed_swap = () => {
-  if (responseJson) {
+  if (responseJson && !isTransacting) {
     const amount = responseJson.amount;
     const routes = responseJson.route[0];
     const routeArray = [];
@@ -259,10 +268,16 @@ const proceed_swap = () => {
     uniswapPathData.fees = feeArr;
     uniswapPathData.amount = amount;
 
-    if ($("#gas-dai:checked").val()) {
-      console.log("swapping using DAI as gas");
-    } else if ($("#gas-usdt:checked").val()) {
+    // if ($("#gas-dai:checked").val()) {
+    //   console.log("swapping using DAI as gas");
+    // } else
+    if ($("#gas-usdt:checked").val()) {
       console.log("swapping using USDT as gas");
+      $("#flint-swap").html('')
+      $("#flint-swap").toggleClass('button--loading')
+      $(".fn-lk-sc").remove();
+      isTransacting = true;
+      disableBtn();
       swapUsdt();
     }
   }
@@ -299,23 +314,39 @@ setTimeout(() => {
   border: none;
   width: 100%;
   cursor: pointer;
+  position: relative;
+  min-height: 56.5px;
   border-radius: 20px;
   color: rgb(152, 161, 192);`;
   const btn = `<button id="flint-swap" style="${css}">Swap</button>`;
+  // const btn2 = `<button id="flint-swap" class="button--loading" style="${css2}"></button>`;
+//   const ul = `<ul id="gas-selector" style="list-style-type: none; padding: 0;">
+//   <li>
+//     <input id="gas-matic" type="radio" name="selector" checked="checked">
+//     <label for="gas-matic" style="font-weight: 500; font-size: 16px;">MATIC</label>
+//     <div class="check"><div class="inside"></div></div>
+//   </li>
+  
+//   <li>
+//     <input id="gas-dai" type="radio" name="selector">
+//     <label for="gas-dai" style="font-weight: 500; font-size: 16px;">DAI</label>
+    
+//     <div class="check"><div class="inside"></div></div>
+//   </li>
+  
+//   <li>
+//     <input id="gas-usdt" type="radio" name="selector">
+//     <label for="gas-usdt" style="font-weight: 500; font-size: 16px;">USDT</label>
+    
+//     <div class="check"><div class="inside"></div></div>
+//   </li>
+// </ul>`;
   const ul = `<ul id="gas-selector" style="list-style-type: none; padding: 0;">
   <li>
     <input id="gas-matic" type="radio" name="selector" checked="checked">
     <label for="gas-matic" style="font-weight: 500; font-size: 16px;">MATIC</label>
     <div class="check"><div class="inside"></div></div>
   </li>
-  
-  <li>
-    <input id="gas-dai" type="radio" name="selector">
-    <label for="gas-dai" style="font-weight: 500; font-size: 16px;">DAI</label>
-    
-    <div class="check"><div class="inside"></div></div>
-  </li>
-  
   <li>
     <input id="gas-usdt" type="radio" name="selector">
     <label for="gas-usdt" style="font-weight: 500; font-size: 16px;">USDT</label>
@@ -350,13 +381,17 @@ window.fetch = async (...args) => {
       resource.includes("https://api.uniswap.org/v1/quote"))
   ) {
     responseJson = undefined;
-    disableBtn();
+    if (!isTransacting) {
+      disableBtn();
+    }
   }
   console.log(resource, typeof resource, "another call");
   let response = await originalFetch(resource, config);
   if (response.url?.includes("https://api.uniswap.org/v1/quote")) {
     responseJson = await response.json();
-    enableButton();
+    if (!isTransacting) {
+      enableButton();
+    }
   }
   return response;
 };
