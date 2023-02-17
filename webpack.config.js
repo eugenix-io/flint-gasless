@@ -5,8 +5,8 @@ const path = require('path');
 module.exports = {
     entry: {
         popup: './src/popup.jsx',
-        content: './src/content.js',
-        injected: './src/injected.js',
+        content: './src/contentScript/content.js',
+        injected: './src/injected/injected.js',
     }, 
     output: {
         path: path.resolve(__dirname, 'dist'),
