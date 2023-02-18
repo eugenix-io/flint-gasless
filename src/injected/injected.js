@@ -259,8 +259,17 @@ const proceedSwap = () => {
   }
 };
 
-setTimeout(() => {
-  addFlintUILayer(proceedSwap)
-}, 1000);
+const attachUI = (i) => {
+  if (i <= 100) {
+    setTimeout(() => {
+      const len = addFlintUILayer(proceedSwap)
+      if (len === 0) {
+        attachUI(i+1)
+      }
+    }, 50);
+  }
+}
+
+attachUI(0);
 
 interceptRequests();

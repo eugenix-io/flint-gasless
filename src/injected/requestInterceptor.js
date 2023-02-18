@@ -11,12 +11,19 @@ export const interceptRequests = () => {
       (typeof resource === "string" &&
         resource.includes("https://api.uniswap.org/v1/quote"))
     ) {
+
       setResponseJson(undefined);
       if (!getIsTransacting()) {
         disableBtn();
       }
     }
+
+
+    
     let response = await originalFetch(resource, config);
+
+
+    
     if (response.url?.includes("https://api.uniswap.org/v1/quote")) {
       const responseJson = await response.json();
       setResponseJson(responseJson);
