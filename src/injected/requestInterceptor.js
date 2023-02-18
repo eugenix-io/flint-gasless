@@ -1,5 +1,16 @@
-import { getIsTransacting, setResponseJson } from "./injected";
-import { disableBtn, enableButton } from "./jqueryUITransformer";
+import { calculateAllowance, getIsTransacting, setResponseJson } from "./injected";
+import { disableBtn, enableButton, startPreloader } from "./jqueryUITransformer";
+
+let currentToken = '', previousToken = '', i = 0;
+const getTokenInAddress = (str) => {
+  const newStr = str.split("?")[1];
+
+  console.log(newStr, "newStr");
+
+  const url = new URLSearchParams(newStr);
+
+  return url.get("tokenInAddress");
+};
 
 export const interceptRequests = () => {
   const { fetch: originalFetch } = window;
@@ -11,7 +22,14 @@ export const interceptRequests = () => {
       (typeof resource === "string" &&
         resource.includes("https://api.uniswap.org/v1/quote"))
     ) {
-
+      const tokenInAddress = getTokenInAddress(resource.url);
+      currentToken = tokenInAddress;
+      if (i == 0 || !(previousToken === currentToken)) {
+        i +=1;
+        previousToken = currentToken;
+        startPreloader();
+        calculateAllowance(tokenInAddress);
+      }
       setResponseJson(undefined);
       if (!getIsTransacting()) {
         disableBtn();
@@ -32,5 +50,5 @@ export const interceptRequests = () => {
       }
     }
     return response;
-  };  
-}
+  };
+};

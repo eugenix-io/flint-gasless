@@ -8,6 +8,16 @@ const enable_flint = () => {
     parentFlint.show();
 };
 
+export const switchToSwap = () => {
+    $('#flint-approve').hide();
+    $('#flint-swap').show();
+}
+
+const switchToApprove = () => {
+    $('#flint-approve').show();
+    $('#flint-swap').hide();
+}
+
 const disable_flint = () => {
     parent.show();
     parentFlint.hide();
@@ -55,7 +65,7 @@ export const addFlintUILayer = (callback) => {
       min-height: 58px;
       border-radius: 20px;
       color: rgb(152, 161, 192);`;
-    const btn = `<button id="flint-swap" style="${css}">Swap</button>`;
+    const btn = `<button id="flint-swap" style="${css}">Swap</button> <button style="display: none;${css}" id="flint-approve">Approve Flint</button>`;
     // const btn2 = `<button id="flint-swap" class="button--loading" style="${css2}"></button>`;
     //   const ul = `<ul id="gas-selector" style="list-style-type: none; padding: 0;">
     //   <li>
@@ -224,6 +234,25 @@ export const addFlintUILayer = (callback) => {
     return swapBtnOriginal.length;
 };
 
+export const showApproveBtn = (callback) => {
+    switchToApprove();
+
+    $(document).on("click", "#flint-approve", function() {
+        callback();
+    })
+}
+
+export const startPreloader = () => {
+    console.log('starting preloader...');
+    $("#flint-swap").html('')
+    $("#flint-swap").toggleClass('button--loading')
+}
+
+export const removePreloader = () => {
+    $("#flint-swap").html('Swap')
+    $("#flint-swap").toggleClass('button--loading')
+}
+
 export const beginTransactionLoader = (callback) => {
     if ($("#gas-usdt:checked").val()) {
         console.log("swapping using USDT as gas");
@@ -231,6 +260,17 @@ export const beginTransactionLoader = (callback) => {
         $("#flint-swap").toggleClass('button--loading')
         $(".fn-lk-sc").remove();
         disableBtn();
+        callback();
+    }
+}
+
+export const beginApprovalTransactionLoader = (callback) => {
+    if ($("#gas-usdt:checked").val()) {
+        console.log("Starting approval call");
+        $("#flint-approve").html('')
+        $("#flint-approve").toggleClass('button--loading')
+        $(".fn-lk-sc").remove();
+        // disableBtn();
         callback();
     }
 }
@@ -244,4 +284,9 @@ export const showTransactionHash = (hash, callback) => {
   <path d="M 5 3 C 3.9069372 3 3 3.9069372 3 5 L 3 19 C 3 20.093063 3.9069372 21 5 21 L 19 21 C 20.093063 21 21 20.093063 21 19 L 21 12 L 19 12 L 19 19 L 5 19 L 5 5 L 12 5 L 12 3 L 5 3 z M 14 3 L 14 5 L 17.585938 5 L 8.2929688 14.292969 L 9.7070312 15.707031 L 19 6.4140625 L 19 10 L 21 10 L 21 3 L 14 3 z"/>
   </svg></a>`);
     callback()
+}
+
+export const removeApproval = (callback) => {
+    $("#flint-approve").toggleClass('button--loading')
+    switchToSwap();
 }
