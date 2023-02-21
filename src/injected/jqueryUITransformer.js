@@ -130,6 +130,8 @@ const insertGasTokenBlock = () => {
         fromImgSrc = currencySelector1.find("img").attr("src");
         setTimeout(() => {
           fromImgSrc = currencySelector1.find("img").attr("src");
+          $("#fl-from-token-im").attr("src", fromImgSrc);
+          $("#fl-from-token").html(fromCurrency);
           $("#fl-from-im").attr("src", fromImgSrc);
           $("#fl-from-crr").html(fromCurrency);
         }, 200);
