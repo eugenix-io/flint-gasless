@@ -48,7 +48,6 @@ const metaTransactionType = [
 let signer = null,
   walletAddress;
 
-
 const generate = async (transactionType) => {
   try {
     // get nonce from backend
@@ -241,7 +240,7 @@ const attachUI = (i) => {
   if (i <= 100) {
     console.log("THIS IS I - ", i);
     setTimeout(() => {
-      const len = addFlintUILayer(open_popup, buttonClick);
+      const len = addFlintUILayer(buttonClick);
       if (len === 0) {
         attachUI(i + 1);
       }

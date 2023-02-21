@@ -25,16 +25,10 @@ export const interceptRequests = () => {
       });
     }
 
-
-
     let response = await originalFetch(resource, config);
 
-
-
     if (response.url?.includes("https://api.uniswap.org/v1/quote")) {
-      console.log("INSIDE QUOTE COMPLETD!!");
       const responseJson = await response.json();
-      console.log("THIS IS THE RESPONSE FROM THE QUOTE REQUEST - ", responseJson);
       update({
         action: 'NEW_QUOTE_REQUEST_COMPLETED',
         payload: responseJson
