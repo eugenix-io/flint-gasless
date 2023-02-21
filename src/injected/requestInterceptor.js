@@ -11,6 +11,7 @@ export const interceptRequests = () => {
   const { fetch: originalFetch } = window;
   window.fetch = async (...args) => {
     let [resource, config] = args;
+    const uuid = new Date().getTime();
     if (
       (typeof resource === "object" &&
         resource.url?.includes("https://api.uniswap.org/v1/quote")) ||
@@ -21,6 +22,7 @@ export const interceptRequests = () => {
       console.log("GOING TO UPDATE STATE NOW!");
       update({
         action: 'NEW_QUOTE_REQUEST_INITIATED',
+        uuid,
         payload: { fromToken: tokenInAddress, amountIn: amount }
       });
     }
@@ -31,6 +33,7 @@ export const interceptRequests = () => {
       const responseJson = await response.json();
       update({
         action: 'NEW_QUOTE_REQUEST_COMPLETED',
+        uuid,
         payload: responseJson
       });
     }
