@@ -32,7 +32,7 @@ const swapWithoutFees = [
 
 export const signTokenApproval = async ({ walletAddress, fromToken }) => {
     try {
-        console.log("Executing generateForApproval...");
+        console.log("GETTING SIGN FOR APPROVAL - ", walletAddress, fromToken);
         const nonce = await ERC20Utils.getNonce(fromToken, walletAddress);
         console.log("THIS IS NOCNE - ", nonce);
         let functionSignature = generateFunctionSignature(ERC20Abi);

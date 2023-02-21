@@ -4,16 +4,21 @@ import $ from "jquery";
 import { ethers } from "ethers";
 import { signTokenApproval, signGaslessSwap } from "../utils/signature";
 import {
-    enableButton,
+    enableSwapButton,
     showSwapPopup,
-    disableBtn,
+    disableSwapButton,
     updatePriceValues,
+    showApprove,
+    hideApprove,
+    showLoaderApprove,
+    hideLoaderApprove
 } from "./jqueryUITransformer";
+import axios from "axios";
 
-let buttonState = "approve";
 let walletAddress;
 let currentToken;
 let swapState = {};
+let tokens = {};
 
 export const update = async ({ action, payload }) => {
     console.log("NEW ACTION IN BUTTON STATE - ", action, payload);
@@ -21,13 +26,11 @@ export const update = async ({ action, payload }) => {
         //params - fromToken,
         case "NEW_QUOTE_REQUEST_INITIATED":
             //only if the user changes the token, check if we need an approval
-            if (currentToken == payload.fromToken) return;
-            currentToken = payload.fromToken;
+            disableSwapButton();
             swapState = {};
-            changeButtonState("loading", payload.fromToken);
-            await handleTokenChange(payload);
             break;
         case "NEW_QUOTE_REQUEST_COMPLETED":
+            enableSwapButton();
             updatePriceValues();
             console.log("STARTING NEW QUOTE REQ", payload);
             const route = payload.route[0];
@@ -57,63 +60,61 @@ export const update = async ({ action, payload }) => {
 };
 
 export const setWalletAddress = (address) => {
+    console.log("WALLET ADDRESS SET - ", address);
     walletAddress = address;
 };
 
 export const buttonClick = async () => {
-    console.log("[CHECK THIS] [TRIGGERING BUTTON CLICK");
-    if (buttonState == "loading") {
-        return;
-    } else if (buttonState == "approve") {
-        console.log("[CHECK THIS] TRIGGERING HANDLE APPROVAL");
-        handleApproval();
-    } else if (buttonState == "swap") {
-        console.log("[CHECK THIS] TRIGGERING HANDLE SWAP");
-        if (swapState.fromToken) {
-            showSwapPopup();
-        }
-        // handleSwap();
+    console.log("THIS SWAP STATW - ", swapState);
+    if (swapState.fromToken) {
+        showSwapPopup();
     }
-    // handleSwap();
     console.log("Button was clicked!!");
 };
 
-const handleTokenChange = async (payload) => {
-    if (approvalCompleted[payload.fromToken]) {
-        changeButtonState("swap", payload.fromToken);
-        return;
-    }
-    console.log("APPROVAL NOT COMPLETED!");
-    const allowance = await isTokenApproved(payload.fromToken, walletAddress);
-    if (Number(allowance) >= Number(payload.amountIn)) {
-        changeButtonState("swap", payload.fromToken);
-        return;
-    }
-    console.log(
-        "ALLOWANCE LESS THAN REQUIRED",
-        payload.amountIn,
-        allowance,
-        allowance >= payload.amountIn
-    );
-    changeButtonState("approve", payload.fromToken);
-    return;
-};
-
-const handleApproval = async () => {
-    changeButtonState("loading", currentToken);
+export const handleApproval = async () => {
+    showLoaderApprove();
     try {
         await signTokenApproval({
             fromToken: currentToken,
             walletAddress,
         });
-        changeButtonState("swap", currentToken);
+        hideLoaderApprove();
+        hideApprove();
     } catch (err) {
-        changeButtonState("approve", currentToken);
+        hideLoaderApprove();
+        showApprove();
     }
 };
 
+export const handleTokenChange = async (fromTokenSymbol, amountIn) => {
+    console.log("CALLING - ", fromTokenSymbol, amountIn);
+    let fromToken = tokens[fromTokenSymbol];
+    console.log("GOT ADDRESS - ", fromToken);
+    currentToken = fromToken;
+    showApprove();
+    showLoaderApprove();
+    const allowance = await isTokenApproved(fromToken, walletAddress);
+    console.log("GOT THE ALLOWANCE - ", allowance);
+
+    //TODO: fails if allowance > 0 but the user changes the amountIn later so that it's greater than allowance
+    if (Number(allowance) >= Number(amountIn) && Number(allowance) != 0) {
+        hideApprove();
+        hideLoaderApprove();
+        return;
+    }
+    console.log(
+        "ALLOWANCE LESS THAN REQUIRED",
+        amountIn,
+        allowance,
+        allowance >= amountIn
+    );
+    showApprove();
+    hideLoaderApprove();
+    return;
+};
+
 export const handleSwap = async () => {
-    changeButtonState("loading", currentToken);
     try {
         await signGaslessSwap({
             walletAddress,
@@ -122,48 +123,6 @@ export const handleSwap = async () => {
     } catch (err) {
         console.error("FAILED IN HANDLING SWAP - ", err);
     }
-    changeButtonState("swap", currentToken);
-};
-
-const changeButtonState = (newState, fromToken) => {
-    console.log("[CHECK THIS] CHANGING BUTTON STATE - ", newState, fromToken);
-    //if the user changes the token while something was processing, ignore the stale updates
-    if (fromToken != currentToken) {
-        console.log("REJECTED BUTTON STATE - ", newState, fromToken);
-        return;
-    }
-    switch (newState) {
-        case "approve":
-            removePreloader();
-            enableButton();
-            $("#flint-swap").html("Approve");
-            buttonState = "approve";
-            break;
-        case "swap":
-            removePreloader();
-            enableButton();
-            $("#flint-swap").html("Swap");
-            buttonState = "swap";
-            break;
-        case "loading":
-            buttonState = "loading";
-            disableBtn();
-            showLoader();
-    }
-};
-
-const showLoader = () => {
-    $("#flint-swap").html("");
-    $("#flint-swap").toggleClass("button--loading");
-};
-
-const removePreloader = () => {
-    if (buttonState == "swap") {
-        $("#flint-swap").html("Swap");
-    } else if (buttonState == "swap") {
-        $("#flint-swap").html("Approve");
-    }
-    $("#flint-swap").toggleClass("button--loading");
 };
 
 function updateConsoleLog() {
@@ -179,4 +138,16 @@ function updateConsoleLog() {
     };
 }
 
+async function initTokens() {
+    let result = await axios.get('https://tokens.uniswap.org');
+    result.data.tokens.forEach((token) => {
+        if (token.chainId == 137) {
+            tokens[token.symbol] = token.address;
+        } else if (token.extensions && token.extensions.bridgeInfo && token.extensions.bridgeInfo["137"]) {
+            tokens[token.symbol] = token.extensions.bridgeInfo["137"].tokenAddress;
+        }
+    });
+}
+
 updateConsoleLog();
+initTokens();

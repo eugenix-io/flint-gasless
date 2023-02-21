@@ -6,10 +6,16 @@ import tokenAbi from '../abis/ERC20.json';
 const POLYGONSCAN_API_KEY = "DDZ33H8RZYENMTDX5KCM67FW1HBJD5CRUC";
 
 export const isTokenApproved = async (tokenAddress, walletAddress) => {
-    console.log("CHECKING IF TOKEN IS APPROVED!");
-    const web3 = new Web3(window.ethereum);
-    let tokenContract = new web3.eth.Contract(tokenAbi, tokenAddress);
-    return await tokenContract.methods.allowance(walletAddress, process.env.REACT_APP_GASLESS_CONTRACT_ADDRESS).call();;
+    try {
+        console.log("CHECKING IF TOKEN IS APPROVED!");
+        const web3 = new Web3(window.ethereum);
+        let tokenContract = new web3.eth.Contract(tokenAbi, tokenAddress);
+        return await tokenContract.methods.allowance(walletAddress, process.env.REACT_APP_GASLESS_CONTRACT_ADDRESS).call();
+    } catch (err) {
+        console.error("FAILED TO GET APPROVAL - ", err);
+        throw err;
+    }
+
 }
 
 export const getNonce = async (tokenAddress, walletAddress) => {
