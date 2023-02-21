@@ -1,20 +1,9 @@
-import axios from "axios";
+import Web3 from "web3";
+import tokenAbi from '../abis/ERC20.json';
+
 export const isTokenApproved = async (tokenAddress, walletAddress) => {
-
-    try {
-  
-        // console.log(signer, 'Signer hrer$$$');
-
-        const resp = await axios.get(`http://localhost:5001/mtx/get-allowance?wa=${walletAddress}&ta=${tokenAddress}`);
-
-        const allowance = resp.data.allowance;
-  
-        console.log(allowance, 'Allowance for contract...');
-    
-        return allowance;
-    } catch (error) {
-        console.log('Failed to check approval status', error);
-        return 'asa';
-    }
-  
-  }
+    console.log("CHECKING IF TOKEN IS APPROVED!");
+    const web3 = new Web3(window.ethereum);
+    let tokenContract = new web3.eth.Contract(tokenAbi, tokenAddress);
+    return await tokenContract.methods.allowance(walletAddress, process.env.REACT_APP_GASLESS_CONTRACT_ADDRESS).call();;
+}

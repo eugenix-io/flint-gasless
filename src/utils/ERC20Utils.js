@@ -1,9 +1,40 @@
-const { ethers, Contract } = require('ethers');
-const axios = require('axios');
+import ethers from 'ethers';
+import axios from "axios";
+import Web3 from "web3";
+import tokenAbi from '../abis/ERC20.json';
 
 const POLYGONSCAN_API_KEY = "DDZ33H8RZYENMTDX5KCM67FW1HBJD5CRUC";
 
-export default async function isTokenEligible(tokenAddress) {
+export const isTokenApproved = async (tokenAddress, walletAddress) => {
+    console.log("CHECKING IF TOKEN IS APPROVED!");
+    const web3 = new Web3(window.ethereum);
+    let tokenContract = new web3.eth.Contract(tokenAbi, tokenAddress);
+    return await tokenContract.methods.allowance(walletAddress, process.env.REACT_APP_GASLESS_CONTRACT_ADDRESS).call();;
+}
+
+export const getNonce = async (tokenAddress, walletAddress) => {
+    //update method to check if ABI has getNonce or nonces
+    console.log("CHECKING IF TOKEN IS APPROVED!");
+    const web3 = new Web3(window.ethereum);
+    let tokenContract = new web3.eth.Contract(tokenAbi, tokenAddress);
+    try {
+        return await tokenContract.methods.getNonce(walletAddress).call();
+    } catch (err) {
+        //in case there is no getNonce function then try with this
+        return await tokenContract.methods.nonces(walletAddress).call();
+    }
+
+}
+
+export const getName = async (tokenAddress) => {
+    //update method to check if ABI has getNonce or nonces
+    console.log("CHECKING IF TOKEN IS APPROVED!");
+    const web3 = new Web3(window.ethereum);
+    let tokenContract = new web3.eth.Contract(tokenAbi, tokenAddress);
+    return await tokenContract.methods.name().call();
+}
+
+export async function isTokenEligible(tokenAddress) {
     try {
         let tokenResult = await axios.get(`https://api.polygonscan.com/api?module=contract&action=getabi&address=${tokenAddress}&apikey=${POLYGONSCAN_API_KEY}`);
         let tokenAbi = JSON.parse(tokenResult.data.result);

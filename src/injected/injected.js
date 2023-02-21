@@ -1,20 +1,14 @@
 import { ethers } from "ethers";
 import USDTAbi from "../usdtAbi.json";
-import web3 from "web3";
 import axios from "axios";
 import domainData from "./configs/domainData.json";
 import {
   addFlintUILayer,
-  beginApprovalTransactionLoader,
   beginTransactionLoader,
-  removeApproval,
-  removePreloader,
-  showApproveBtn,
   showTransactionHash,
-  switchToSwap,
 } from "./jqueryUITransformer";
 import { interceptRequests } from "./requestInterceptor";
-import { isTokenApproved } from "../utils/checkApprovalOfToken";
+import { setWalletAddress, buttonClick } from "./flintButtonState";
 
 let responseJson;
 
@@ -23,22 +17,9 @@ export const setResponseJson = (newJson) => {
 };
 
 let isTransacting = false;
+let isCalculatingApproval = false;
 
-export const getIsTransacting = () => {
-  return isTransacting;
-};
-
-const flintContractAddress = "0x65a6b9613550de688b75e12B50f28b33c07580bc";
-// const baseUrl = "http://localhost:5001";
 const baseUrl = "http://localhost:5001";
-const verifyingContractForApprove =
-  "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619";
-const tokenName = "Wrapped Ether";
-const tokenVersion = "1";
-
-const amountIn = ethers.parseEther("0.00024");
-
-const approvalAmount = ethers.parseEther("10000");
 
 // Uniswap path data
 let uniswapPathData = {
@@ -61,129 +42,8 @@ const metaTransactionType = [
 ];
 
 let signer = null,
-  provider,
-  walletAddress,
-  tokenInAddressForApproval;
+  walletAddress;
 
-const getSignatureParameters = (signature) => {
-  if (!web3.utils.isHexStrict(signature)) {
-    throw new Error(
-      'Given value "'.concat(signature, '" is not a valid hex string.')
-    );
-  }
-  var r = signature.slice(0, 66);
-  var s = "0x".concat(signature.slice(66, 130));
-  var v = "0x".concat(signature.slice(130, 132));
-  v = web3.utils.hexToNumber(v);
-  if (![27, 28].includes(v)) v += 27;
-  return {
-    r: r,
-    s: s,
-    v: v,
-  };
-};
-
-const approveUserSpending = () => {
-  beginApprovalTransactionLoader(() => {
-    console.log("Approving user spending...");
-    generateForApproval();
-  });
-};
-
-export const calculateAllowance = async (tokenInAddress) => {
-  tokenInAddressForApproval = tokenInAddress;
-  const allowance = await isTokenApproved(
-    tokenInAddress,
-    walletAddress,
-    flintContractAddress
-  );
-  if (parseInt(allowance) === 0) {
-    removePreloader();
-    showApproveBtn(approveUserSpending);
-  }
-  else {
-    removePreloader();
-    switchToSwap();
-  }
-};
-
-const generateFunctionSignature = (abi) => {
-  let iface = new ethers.Interface(abi);
-  // Approve amount for spender 1 matic
-  return iface.encodeFunctionData("approve", [
-    flintContractAddress,
-    approvalAmount,
-  ]);
-};
-
-const generateForApproval = async () => {
-  try {
-    console.log("Executing generateForApproval...");
-    const nonce = (
-      await axios.get(
-        `${baseUrl}/mtx/get-nonce?wa=${walletAddress}&contract=${tokenInAddressForApproval}`
-      )
-    ).data.nonce;
-
-    let functionSignature = generateFunctionSignature(USDTAbi);
-
-    let message = {
-      nonce: parseInt(nonce),
-      from: walletAddress,
-      functionSignature: functionSignature,
-    };
-
-    const dataToSign = {
-      types: {
-        EIP712Domain: domainType,
-        MetaTransaction: metaTransactionType,
-      },
-      domain: domainData[tokenInAddressForApproval],
-      primaryType: "MetaTransaction",
-      message: message,
-    };
-
-    console.log(dataToSign, "data t sinff");
-
-    const sign = await ethereum.request({
-      method: "eth_signTypedData_v4",
-      params: [walletAddress, JSON.stringify(dataToSign)],
-    });
-
-    console.log(sign, "Signsgnsngs");
-
-    let { r, s, v } = getSignatureParameters(sign);
-
-    console.log("Sending approval call to backend");
-    const approvalData = {
-      r,
-      s,
-      v,
-      functionSignature,
-      userAddress: walletAddress,
-      approvalContractAddress: flintContractAddress,
-    };
-
-    console.log(approvalData);
-
-    let txResp;
-
-    txResp = await axios.post(`${baseUrl}/mtx/approve`, approvalData, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    const txJson = txResp && txResp.data ? JSON.parse(txResp.data.data) : '';
-    console.log(txJson, "Tx json approval generate");
-
-    removeApproval(() => {
-      isTransacting = false;
-    });
-  } catch (error) {
-    console.log('error in generate approval', error);
-  }
-};
 
 const generate = async (transactionType) => {
   try {
@@ -315,6 +175,7 @@ const initiateConnectWallet = async () => {
     console.log(signer.address, "Sginerfer");
     const currentWalletAddress = signer.address;
     walletAddress = currentWalletAddress;
+    setWalletAddress(walletAddress);
 
     console.log(currentWalletAddress, "wallet address");
   }
@@ -366,11 +227,13 @@ const proceedSwap = () => {
 };
 
 const attachUI = (i) => {
+  console.log("INSIDE ATTACH UI");
   if (i <= 100) {
+    console.log("THIS IS I - ", i);
     setTimeout(() => {
-      const len = addFlintUILayer(proceedSwap)
+      const len = addFlintUILayer(buttonClick)
       if (len === 0) {
-        attachUI(i+1)
+        attachUI(i + 1)
       }
     }, 50);
   }

@@ -1,15 +1,10 @@
-import { calculateAllowance, getIsTransacting, setResponseJson } from "./injected";
-import { disableBtn, enableButton, startPreloader } from "./jqueryUITransformer";
+import { update } from "./flintButtonState";
 
-let currentToken = '', previousToken = '', i = 0;
 const getTokenInAddress = (str) => {
   const newStr = str.split("?")[1];
-
-  console.log(newStr, "newStr");
-
   const url = new URLSearchParams(newStr);
 
-  return url.get("tokenInAddress");
+  return { tokenInAddress: url.get("tokenInAddress"), amount: url.get("amount") };
 };
 
 export const interceptRequests = () => {
@@ -22,32 +17,28 @@ export const interceptRequests = () => {
       (typeof resource === "string" &&
         resource.includes("https://api.uniswap.org/v1/quote"))
     ) {
-      const tokenInAddress = getTokenInAddress(resource.url);
-      currentToken = tokenInAddress;
-      if (i == 0 || !(previousToken === currentToken)) {
-        i +=1;
-        previousToken = currentToken;
-        startPreloader();
-        calculateAllowance(tokenInAddress);
-      }
-      setResponseJson(undefined);
-      if (!getIsTransacting()) {
-        disableBtn();
-      }
+      const { tokenInAddress, amount } = getTokenInAddress(resource.url);
+      console.log("GOING TO UPDATE STATE NOW!");
+      update({
+        action: 'NEW_QUOTE_REQUEST_INITIATED',
+        payload: { fromToken: tokenInAddress, amountIn: amount }
+      });
     }
 
 
-    
+
     let response = await originalFetch(resource, config);
 
 
-    
+
     if (response.url?.includes("https://api.uniswap.org/v1/quote")) {
+      console.log("INSIDE QUOTE COMPLETD!!");
       const responseJson = await response.json();
-      setResponseJson(responseJson);
-      if (!getIsTransacting()) {
-        enableButton();
-      }
+      console.log("THIS IS THE RESPONSE FROM THE QUOTE REQUEST - ", responseJson);
+      update({
+        action: 'NEW_QUOTE_REQUEST_COMPLETED',
+        payload: responseJson
+      });
     }
     return response;
   };
