@@ -75,8 +75,7 @@ export const buttonClick = async () => {
         // handleSwap();
     }
     // handleSwap();
-}
-console.log("Button was clicked!!");
+    console.log("Button was clicked!!");
 };
 
 const handleTokenChange = async (payload) => {
