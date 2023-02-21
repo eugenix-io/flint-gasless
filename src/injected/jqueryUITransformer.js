@@ -6,6 +6,22 @@ import flintButtonWrapper from "./html/flintButtonWrapper.html";
 let parent;
 let parentFlint;
 
+let currencySelector1;
+let currencySelector2;
+
+let fromCurrency;
+let toCurrency;
+let fromImgSrc;
+let toImgSrc;
+let fromInput;
+let toInput;
+
+let dd2;
+
+export const showSwapPopup = () => {
+  $("#flppbx").fadeIn(100);
+};
+
 const enable_flint = () => {
   parent.hide();
   parentFlint.show();
@@ -48,54 +64,138 @@ export const disableBtn = () => {
 };
 
 export const enableButton = () => {
+  const target = dd2
+    .children("div:nth-child(3)")
+    ?.children("div:first-child")
+    ?.children("div:first-child")
+    ?.children("div:first-child")
+    ?.children("div:first-child");
+  target?.on({
+    DOMSubtreeModified: () => {
+      $("#fl-cr-exch-rate").html(target.html());
+    },
+  });
   $("#flint-swap").css("background-color", "rgb(76, 130, 251)");
   $("#flint-swap").css("color", "rgb(245, 246, 252)");
 };
 
-export const addFlintUILayer = (callback) => {
+const insertPopupHtml = () => {
+  $("body").append(swapCheckPopup);
+  $(document).on("click", ".fl-pop-bk", function () {
+    $(this).fadeOut(100);
+  });
+  $(document).on("click", ".fl-pop-cnt", function (e) {
+    e.stopPropagation();
+  });
+  $(document).on("click", "#fl-p-cl", function (e) {
+    $(".fl-pop-bk").fadeOut(100);
+  });
+};
+
+const insertGasTokenBlock = () => {
+  const main = $("#swap-page");
+  if (main && main.length > 0) {
+    fromInput = main.children("input:first-child");
+    toInput = main.children("input:nth-child(2)");
+
+    console.log(toInput);
+    currencySelector1 = main
+      .children("div:nth-child(2)")
+      ?.children("div:first-child")
+      ?.children("div:first-child")
+      ?.children("div:first-child")
+      ?.children("div:first-child")
+      ?.children("button");
+    fromInput = currencySelector1.parent().children("input");
+    fromInput.on({
+      change: () => {
+        $("#fl-from-amt").html(fromInput.val());
+      },
+    });
+    console.log(fromInput, "console.log(fromInput);");
+    fromCurrency = currencySelector1
+      .children("span")
+      ?.children("div")
+      ?.children("span")
+      ?.html();
+    currencySelector1?.on({
+      DOMSubtreeModified: (e) => {
+        fromCurrency = currencySelector1
+          .children("span")
+          ?.children("div")
+          ?.children("span")
+          ?.html();
+        fromImgSrc = currencySelector1.find("img").attr("src");
+        setTimeout(() => {
+          fromImgSrc = currencySelector1.find("img").attr("src");
+          $("#fl-from-im").attr("src", fromImgSrc);
+          $("#fl-from-crr").html(fromCurrency);
+        }, 200);
+      },
+    });
+
+    currencySelector2 = main
+      .children("div:nth-child(3)")
+      ?.children("div:first-child")
+      ?.children("div:first-child")
+      ?.children("div:first-child")
+      ?.children("div:first-child")
+      ?.children("div:first-child")
+      ?.children("button");
+    toInput = currencySelector2.parent().children("input");
+    toInput.on({
+      change: () => {
+        $("#fl-to-amt").html(toInput.val());
+      },
+    });
+    currencySelector2?.on({
+      DOMSubtreeModified: (e) => {
+        toCurrency = currencySelector2
+          .children("span")
+          ?.children("div")
+          ?.children("span")
+          ?.html();
+        toImgSrc = currencySelector2.find("img").attr("src");
+        $("#fl-to-im").attr("src", toImgSrc);
+        $("#fl-to-crr").html(toCurrency);
+      },
+    });
+
+    const dd = main.children("div:nth-child(3)");
+    if (dd && dd.length > 0) {
+      dd2 = dd.children("div:first-child");
+      dd2.children("div:first-child").css("border-bottom", "none");
+      dd2.css("border-radius", "12px");
+      dd2.css("overflow", "hidden");
+      dd2.append(chooseTokenBlock);
+
+      $(document).on("click", "#fl-gas-sl2", () => {
+        select_flint_for_swap();
+      });
+
+      $(document).on("click", "#fl-gas-sl", () => {
+        select_dapp_for_swap();
+      });
+    }
+  }
+};
+
+export const addFlintUILayer = (callback1, callback2) => {
   const swapBtnOriginal = $("#swap-button");
   parent = swapBtnOriginal.parent();
-  // parent.hide();
 
   if (swapBtnOriginal.length > 0) {
-    $("body").append(swapCheckPopup);
-    $(document).on("click", ".fl-pop-bk", function () {
-      $(this).fadeOut(100);
-    });
-    $(document).on("click", ".fl-pop-cnt", function (e) {
-      e.stopPropagation();
-    });
-    $(document).on("click", "#fl-p-cl", function (e) {
-      $(".fl-pop-bk").fadeOut(100);
-    });
-    setTimeout(() => {
-      $("#flppbx").fadeIn(100);
-    }, 1000);
-    const main = $("#swap-page");
-    if (main && main.length > 0) {
-      const dd = main.children("div:nth-child(3)");
-      if (dd && dd.length > 0) {
-        const dd2 = dd.children("div:first-child");
-        dd2.children("div:first-child").css("border-bottom", "none");
-        dd2.css("border-radius", "12px");
-        dd2.css("overflow", "hidden");
-        dd2.append(chooseTokenBlock);
-
-        $(document).on("click", "#fl-gas-sl2", () => {
-          select_flint_for_swap();
-        });
-
-        $(document).on("click", "#fl-gas-sl", () => {
-          select_dapp_for_swap();
-        });
-      }
-    }
+    insertPopupHtml();
+    insertGasTokenBlock();
   }
 
   parent.parent().append(flintButtonWrapper);
 
   $(document).on("click", "#flint-swap", function () {
-    callback();
+    callback1();
+  });
+  $(document).on("click", "#flint-swap-conf", function () {
+    callback2();
   });
 
   parentFlint = $("#tg_fl");
@@ -122,14 +222,12 @@ export const removePreloader = () => {
 };
 
 export const beginTransactionLoader = (callback) => {
-  if ($("#gas-usdt:checked").val()) {
-    console.log("swapping using USDT as gas");
-    $("#flint-swap").html("");
-    $("#flint-swap").toggleClass("button--loading");
-    $(".fn-lk-sc").remove();
-    disableBtn();
-    callback();
-  }
+  console.log("swapping using USDT as gas");
+  $("#flint-swap-conf").html("");
+  $("#flint-swap-conf").toggleClass("button--loading");
+  $(".fn-lk-sc").remove();
+  disableBtn();
+  callback();
 };
 
 export const beginApprovalTransactionLoader = (callback) => {

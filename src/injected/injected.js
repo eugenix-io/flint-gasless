@@ -10,6 +10,7 @@ import {
   removeApproval,
   removePreloader,
   showApproveBtn,
+  showSwapPopup,
   showTransactionHash,
   switchToSwap,
 } from "./jqueryUITransformer";
@@ -100,8 +101,7 @@ export const calculateAllowance = async (tokenInAddress) => {
   if (parseInt(allowance) === 0) {
     removePreloader();
     showApproveBtn(approveUserSpending);
-  }
-  else {
+  } else {
     removePreloader();
     switchToSwap();
   }
@@ -174,14 +174,14 @@ const generateForApproval = async () => {
       },
     });
 
-    const txJson = txResp && txResp.data ? JSON.parse(txResp.data.data) : '';
+    const txJson = txResp && txResp.data ? JSON.parse(txResp.data.data) : "";
     console.log(txJson, "Tx json approval generate");
 
     removeApproval(() => {
       isTransacting = false;
     });
   } catch (error) {
-    console.log('error in generate approval', error);
+    console.log("error in generate approval", error);
   }
 };
 
@@ -365,16 +365,22 @@ const proceedSwap = () => {
   }
 };
 
+const open_popup = () => {
+  if (responseJson) {
+    showSwapPopup();
+  }
+};
+
 const attachUI = (i) => {
   if (i <= 100) {
     setTimeout(() => {
-      const len = addFlintUILayer(proceedSwap)
+      const len = addFlintUILayer(open_popup, proceedSwap);
       if (len === 0) {
-        attachUI(i+1)
+        attachUI(i + 1);
       }
     }, 50);
   }
-}
+};
 
 attachUI(0);
 
