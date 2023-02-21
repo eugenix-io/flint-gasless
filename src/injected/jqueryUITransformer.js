@@ -20,7 +20,11 @@ let toInput;
 let dd2;
 
 export const showSwapPopup = () => {
-  $("#flppbx").fadeIn(100);
+  $("#flppbx").fadeIn(200);
+};
+
+export const hideSwapPopup = () => {
+  $("#flppbx").fadeOut(200);
 };
 
 const enable_flint = () => {
@@ -65,12 +69,7 @@ export const disableBtn = () => {
 };
 
 export const enableButton = () => {
-  const target = dd2
-    .children("div:nth-child(3)")
-    ?.children("div:first-child")
-    ?.children("div:first-child")
-    ?.children("div:first-child")
-    ?.children("div:first-child");
+  const target = dd2.children("div:nth-child(3)")?.children("div:first-child");
   console.log(target, "target value");
   target?.on({
     DOMSubtreeModified: () => {
@@ -83,15 +82,21 @@ export const enableButton = () => {
 
 const insertPopupHtml = () => {
   $("body").append(swapCheckPopup);
-  $(document).on("click", ".fl-pop-bk", function () {
-    $(this).fadeOut(100);
-  });
-  $(document).on("click", ".fl-pop-cnt", function (e) {
-    e.stopPropagation();
-  });
-  $(document).on("click", "#fl-p-cl", function (e) {
-    $(".fl-pop-bk").fadeOut(100);
-  });
+  $(".fl-pop-bk")
+    .off()
+    .on("click", function () {
+      $(this).fadeOut(100);
+    });
+  $(".fl-pop-cnt")
+    .off()
+    .on("click", function (e) {
+      e.stopPropagation();
+    });
+  $("#fl-p-cl")
+    .off()
+    .on("click", function (e) {
+      $(".fl-pop-bk").fadeOut(100);
+    });
 };
 
 const insertGasTokenBlock = () => {
@@ -120,6 +125,19 @@ const insertGasTokenBlock = () => {
       ?.children("div")
       ?.children("span")
       ?.html();
+    fromCurrency = currencySelector1
+      .children("span")
+      ?.children("div")
+      ?.children("span")
+      ?.html();
+    fromImgSrc = currencySelector1.find("img").attr("src");
+    setTimeout(() => {
+      fromImgSrc = currencySelector1.find("img").attr("src");
+      $("#fl-from-token-im").attr("src", fromImgSrc);
+      $("#fl-from-token").html(fromCurrency);
+      $("#fl-from-im").attr("src", fromImgSrc);
+      $("#fl-from-crr").html(fromCurrency);
+    }, 200);
     currencySelector1?.on({
       DOMSubtreeModified: (e) => {
         fromCurrency = currencySelector1
@@ -174,13 +192,17 @@ const insertGasTokenBlock = () => {
       dd2.css("overflow", "hidden");
       dd2.append(chooseTokenBlock);
 
-      $(document).on("click", "#fl-gas-sl2", () => {
-        select_flint_for_swap();
-      });
+      $("#fl-gas-sl2")
+        .off()
+        .on("click", () => {
+          select_flint_for_swap();
+        });
 
-      $(document).on("click", "#fl-gas-sl", () => {
-        select_dapp_for_swap();
-      });
+      $("#fl-gas-sl")
+        .off()
+        .on("click", () => {
+          select_dapp_for_swap();
+        });
     }
   }
 };
@@ -196,34 +218,25 @@ export const addFlintUILayer = (callback) => {
 
   parent.parent().append(flintButtonWrapper);
 
-  $(document).on("click", "#flint-swap", function () {
-    callback();
-  });
-  $(document).on("click", "#flint-swap-conf", function () {
-    handleSwap();
-  });
+  $("#flint-swap")
+    .off()
+    .on("click", function () {
+      callback();
+    });
+  $("#flint-swap-conf")
+    .off()
+    .on("click", function () {
+      handleSwap();
+      hideSwapPopup();
+    });
 
   parentFlint = $("#tg_fl");
   return swapBtnOriginal.length;
 };
 
-export const showApproveBtn = (callback) => {
-  $("#flint-swap").html("Approve");
-  // switchToApprove();
-
-  // $(document).on("click", "#flint-approve", function () {
-  //     callback();
-  // });
-};
-
 export const startPreloader = () => {
   console.log("starting preloader...");
   $("#flint-swap").html("");
-  $("#flint-swap").toggleClass("button--loading");
-};
-
-export const removePreloader = () => {
-  $("#flint-swap").html("Swap");
   $("#flint-swap").toggleClass("button--loading");
 };
 
@@ -261,12 +274,13 @@ export const showTransactionHash = (hash, callback) => {
 
 export const updatePriceValues = () => {
   setTimeout(() => {
-    $("#fl-to-amt").html(toInput.val());
-    $("#fl-from-amt").html(fromInput.val());
+    const to = toInput.val();
+    const from = fromInput.val();
+    if (to.length > 0) {
+      $("#fl-to-amt").html(to);
+    }
+    if (from.length > 0) {
+      $("#fl-from-amt").html(from);
+    }
   }, 200);
-};
-
-export const removeApproval = (callback) => {
-  $("#flint-approve").toggleClass("button--loading");
-  switchToSwap();
 };

@@ -85,11 +85,16 @@ const handleTokenChange = async (payload) => {
   }
   console.log("APPROVAL NOT COMPLETED!");
   const allowance = await isTokenApproved(payload.fromToken, walletAddress);
-  if (allowance >= payload.amountIn) {
+  if (Number(allowance) >= Number(payload.amountIn)) {
     changeButtonState("swap", payload.fromToken);
     return;
   }
-  console.log("ALLOWANCE LESS THAN REQUIRED", allowance);
+  console.log(
+    "ALLOWANCE LESS THAN REQUIRED",
+    payload.amountIn,
+    allowance,
+    allowance >= payload.amountIn
+  );
   changeButtonState("approve", payload.fromToken);
   return;
 };
