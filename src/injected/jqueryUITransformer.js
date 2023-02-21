@@ -1,7 +1,10 @@
 import $ from "jquery";
 import chooseTokenBlock from "./html/chooseTokenBlock.html";
 import swapCheckPopup from "./html/swapCheckPopup.html";
+import transactionWaiting from "./html/transactionWaiting.html";
 import flintButtonWrapper from "./html/flintButtonWrapper.html";
+import signatureRejectPopup from "./html/signatureRejectPopup.html";
+import transactionSuccessPopup from "./html/transactionSuccessPopup.html";
 import { handleSwap } from "./flintButtonState";
 
 let parent;
@@ -18,6 +21,30 @@ let fromInput;
 let toInput;
 
 let dd2;
+
+export const showTransactionSuccessPopup = () => {
+  $("#flppbxtrasuc").fadeIn(200);
+};
+
+export const hideTransactionSuccessPopup = () => {
+  $("#flppbxtrasuc").fadeOut(200);
+};
+
+export const showRejectPopup = () => {
+  $("#flppbxsigrj").fadeIn(200);
+};
+
+export const hideRejectPopup = () => {
+  $("#flppbxsigrj").fadeOut(200);
+};
+
+export const showWaitingPopup = () => {
+  $("#flppbxwtg").fadeIn(200);
+};
+
+export const hideWaitingPopup = () => {
+  $("#flppbxwtg").fadeOut(200);
+};
 
 export const showSwapPopup = () => {
   $("#flppbx").fadeIn(200);
@@ -82,6 +109,9 @@ export const enableButton = () => {
 
 const insertPopupHtml = () => {
   $("body").append(swapCheckPopup);
+  $("body").append(transactionWaiting);
+  $("body").append(signatureRejectPopup);
+  $("body").append(transactionSuccessPopup);
   $(".fl-pop-bk")
     .off()
     .on("click", function () {
@@ -92,7 +122,7 @@ const insertPopupHtml = () => {
     .on("click", function (e) {
       e.stopPropagation();
     });
-  $("#fl-p-cl")
+  $(".fl-p-cl")
     .off()
     .on("click", function (e) {
       $(".fl-pop-bk").fadeOut(100);
@@ -178,11 +208,28 @@ const insertGasTokenBlock = () => {
           ?.children("div")
           ?.children("span")
           ?.html();
-        toImgSrc = currencySelector2.find("img").attr("src");
-        $("#fl-to-im").attr("src", toImgSrc);
-        $("#fl-to-crr").html(toCurrency);
+        setTimeout(() => {
+          toImgSrc = currencySelector2.find("img").attr("src");
+          $("#fl-to-im").attr("src", toImgSrc);
+          $("#fl-to-crr").html(toCurrency);
+        }, 200);
       },
     });
+    main
+      .children("div:nth-child(3)")
+      ?.children("div:first-child")
+      ?.on({
+        DOMSubtreeModified: (e) => {
+          setTimeout(() => {
+            if (fromInput.val() && fromInput.val() > 0) {
+              $("#fl-from-amt").html(fromInput.val());
+            }
+            if (toInput.val() && toInput.val() > 0) {
+              $("#fl-from-amt").html(toInput.val());
+            }
+          }, 200);
+        },
+      });
 
     const dd = main.children("div:nth-child(3)");
     if (dd && dd.length > 0) {
@@ -228,6 +275,10 @@ export const addFlintUILayer = (callback) => {
     .on("click", function () {
       handleSwap();
       hideSwapPopup();
+      showWaitingPopup();
+      $("#fl-swp-for").html(
+        `Swapping ${fromInput.val()} ${fromCurrency} for ${toInput.val()} ${toCurrency}`
+      );
     });
 
   parentFlint = $("#tg_fl");

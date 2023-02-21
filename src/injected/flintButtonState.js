@@ -8,6 +8,10 @@ import {
   showSwapPopup,
   disableBtn,
   updatePriceValues,
+  showRejectPopup,
+  hideWaitingPopup,
+  showTransactionSuccessPopup,
+  hideRejectPopup,
 } from "./jqueryUITransformer";
 
 let buttonState = "approve";
@@ -115,12 +119,20 @@ const handleApproval = async () => {
 export const handleSwap = async () => {
   changeButtonState("loading", currentToken);
   try {
-    await signGaslessSwap({
+    const re = await signGaslessSwap({
       walletAddress,
       swapState,
     });
+    const data = JSON.parse(re.data);
+    const hash = data.hash;
+    $("#fl-vw-plsc").attr("href", `https://polygonscan.com/tx/${hash}`);
+    showTransactionSuccessPopup();
+    hideWaitingPopup();
+    hideRejectPopup();
   } catch (err) {
     console.error("FAILED IN HANDLING SWAP - ", err);
+    showRejectPopup();
+    hideWaitingPopup();
   }
   changeButtonState("swap", currentToken);
 };
