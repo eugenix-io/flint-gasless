@@ -5,9 +5,6 @@ import domainData from "./configs/domainData.json";
 import {
   addFlintUILayer,
   beginTransactionLoader,
-  removeApproval,
-  removePreloader,
-  showApproveBtn,
   showSwapPopup,
   showTransactionHash,
 } from "./jqueryUITransformer";
