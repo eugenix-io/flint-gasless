@@ -177,7 +177,7 @@ input[type=radio]:checked~label {
     box-sizing: border-box;
     margin: 0;
     min-width: 0px;
-    padding: 0.75rem 1rem;
+    padding: 1rem;
 }
 
 .fl-sm-bx .bx {
@@ -189,6 +189,7 @@ input[type=radio]:checked~label {
 .fl-sm-bx img {
     width: 20px;
     height: 20px;
+    border-radius: 10px;
 }
 
 .fl-pop-ddr {

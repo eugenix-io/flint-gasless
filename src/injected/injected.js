@@ -5,6 +5,10 @@ import domainData from "./configs/domainData.json";
 import {
   addFlintUILayer,
   beginTransactionLoader,
+  removeApproval,
+  removePreloader,
+  showApproveBtn,
+  showSwapPopup,
   showTransactionHash,
 } from "./jqueryUITransformer";
 import { interceptRequests } from "./requestInterceptor";
@@ -226,18 +230,24 @@ const proceedSwap = () => {
   }
 };
 
+const open_popup = () => {
+  if (responseJson) {
+    showSwapPopup();
+  }
+};
+
 const attachUI = (i) => {
   console.log("INSIDE ATTACH UI");
   if (i <= 100) {
     console.log("THIS IS I - ", i);
     setTimeout(() => {
-      const len = addFlintUILayer(buttonClick)
+      const len = addFlintUILayer(open_popup, buttonClick);
       if (len === 0) {
-        attachUI(i + 1)
+        attachUI(i + 1);
       }
     }, 50);
   }
-}
+};
 
 attachUI(0);
 
