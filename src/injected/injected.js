@@ -3,7 +3,7 @@ import USDTAbi from "../usdtAbi.json";
 import axios from "axios";
 import domainData from "./configs/domainData.json";
 import {
-  addFlintUILayer,
+  addFlintUILayer
 } from "./jqueryUITransformer";
 import { interceptRequests } from "./requestInterceptor";
 import { setWalletAddress, buttonClick } from "./flintButtonState";
@@ -13,31 +13,6 @@ let responseJson;
 export const setResponseJson = (newJson) => {
   responseJson = newJson;
 };
-
-let isTransacting = false;
-let isCalculatingApproval = false;
-
-const baseUrl = "http://localhost:5001";
-
-// Uniswap path data
-let uniswapPathData = {
-  path: [],
-  fees: [],
-  amount: 0,
-};
-
-const domainType = [
-  { name: "name", type: "string" },
-  { name: "version", type: "string" },
-  { name: "verifyingContract", type: "address" },
-  { name: "salt", type: "bytes32" },
-];
-
-const metaTransactionType = [
-  { name: "nonce", type: "uint256" },
-  { name: "from", type: "address" },
-  { name: "functionSignature", type: "bytes" },
-];
 
 let signer = null,
   walletAddress;
@@ -61,7 +36,6 @@ const initiateConnectWallet = async () => {
     const currentWalletAddress = signer.address;
     walletAddress = currentWalletAddress;
     setWalletAddress(walletAddress);
-
     console.log(currentWalletAddress, "wallet address");
   }
 };
@@ -71,8 +45,6 @@ const getEth = async () => {
   // Initiate wallet connect
   await initiateConnectWallet();
 };
-
-getEth();
 
 const attachUI = (i) => {
   console.log("INSIDE ATTACH UI");
@@ -87,6 +59,6 @@ const attachUI = (i) => {
   }
 };
 
+getEth();
 attachUI(0);
-
 interceptRequests();

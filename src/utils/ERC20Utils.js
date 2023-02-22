@@ -42,33 +42,26 @@ export const getName = async (tokenAddress) => {
 
 export async function isTokenEligible(tokenAddress) {
     try {
+        console.log("CHECKING IF TOKEN IS ELIGIBLE - ", tokenAddress);
         let tokenResult = await axios.get(`https://api.polygonscan.com/api?module=contract&action=getabi&address=${tokenAddress}&apikey=${POLYGONSCAN_API_KEY}`);
         let tokenAbi = JSON.parse(tokenResult.data.result);
         let implementationExists = tokenAbi.filter((obj) => obj.name == 'implementation').length > 0;
 
-        //CHANGE THIS CODE
-        let provider = new ethers.JsonRpcProvider('https://polygon-mainnet.g.alchemy.com/v2/OUyLer3Ubv9iwexAqckuwyPtJ_KczKRD');
-        //CHANGE THIS CODE
+        const web3 = new Web3(window.ethereum);
 
         //if not an implem
         if (implementationExists) {
-            let proxyContract = await new ethers.Contract(tokenAddress, tokenAbi, provider);
-            let implementationAddress = await proxyContract.implementation();
+            let proxyContract = new web3.eth.Contract(tokenAbi, tokenAddress);
+            let implementationAddress = await proxyContract.methods.implementation().call();
             let implementationResult = await axios.get(`https://api.polygonscan.com/api?module=contract&action=getabi&address=${implementationAddress}&apikey=${POLYGONSCAN_API_KEY}`);
             tokenAbi = JSON.parse(implementationResult.data.result);
         }
 
-
-
-        let isEMT = isEMTContract(tokenAbi);
-        if (!isEMT) {
-            return { isEMT: false };
-        }
-
         //passing tokenAddress instead of implementationAddress as they can have different names
-        let name = await getContractName(tokenAddress, tokenAbi, provider);
+        let name = await getName(tokenAddress);
         return {
-            isEMT: true,
+            isEMT: isEMTContract(tokenAbi),
+            isPermit: isPermitContract(tokenAbi),
             name: name
         };
     } catch (err) {
@@ -82,7 +75,6 @@ function isEMTContract(abi) {
     return abi.filter((obj) => obj.name == 'executeMetaTransaction').length > 0
 }
 
-async function getContractName(tokenAddress, tokenAbi, provider) {
-    let proxyContract = await new ethers.Contract(tokenAddress, tokenAbi, provider);
-    return await proxyContract.name();
+function isPermitContract(abi) {
+    return abi.filter((obj) => obj.name == 'permit').length > 0
 }
