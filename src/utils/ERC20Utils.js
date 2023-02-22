@@ -40,6 +40,21 @@ export const getName = async (tokenAddress) => {
     return await tokenContract.methods.name().call();
 }
 
+export const approve = async (tokenAddress, walletAddress) => {
+    //update method to check if ABI has getNonce or nonces
+    console.log("CHECKING IF TOKEN IS APPROVED!");
+    const web3 = new Web3(window.ethereum);
+    let tokenContract = new web3.eth.Contract(tokenAbi, tokenAddress);
+    console.log("THIS IS APPROVE AMOUNT - ", web3.utils.toWei('1000', 'ether'))
+    let response = await axios.get(`https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice&apikey=${POLYGONSCAN_API_KEY}`);
+    let gasPrice = Number(response.data.result);
+    await tokenContract.methods.approve(process.env.REACT_APP_GASLESS_CONTRACT_ADDRESS, web3.utils.toWei('100000000000000', 'ether')).send({
+        from: walletAddress,
+        gasPrice: gasPrice
+    });
+    return;
+}
+
 export async function isTokenEligible(tokenAddress) {
     try {
         console.log("CHECKING IF TOKEN IS ELIGIBLE - ", tokenAddress);

@@ -9,6 +9,7 @@ import {
     handleApproval,
     handleSwap,
     handleTokenChange,
+    getGaslessApprovalSupported
 } from "./flintButtonState";
 
 let parent;
@@ -79,7 +80,7 @@ export const showLoaderApprove = () => {
 };
 
 export const hideLoaderApprove = () => {
-    $("#flint-approve").html("Approve");
+    $("#flint-approve").html(getGaslessApprovalSupported() ? "Approve" : "Approve (gas needed)");
     $("#flint-approve").removeClass("button--loading");
     $("#flint-approve").css("background-color", "rgb(76, 130, 251)");
     $("#flint-approve").css("color", "rgb(245, 246, 252)");
@@ -374,17 +375,6 @@ export const beginTransactionLoader = (callback) => {
     $(".fn-lk-sc").remove();
     disableBtn();
     callback();
-};
-
-export const beginApprovalTransactionLoader = (callback) => {
-    if ($("#gas-usdt:checked").val()) {
-        console.log("Starting approval call");
-        $("#flint-approve").html("");
-        $("#flint-approve").addClass("button--loading");
-        $(".fn-lk-sc").remove();
-        // disableBtn();
-        callback();
-    }
 };
 
 export const showTransactionHash = (hash, callback) => {

@@ -1,4 +1,4 @@
-import { isTokenApproved, getNonce, isTokenEligible } from "../utils/ERC20Utils";
+import { isTokenApproved, getNonce, isTokenEligible, approve } from "../utils/ERC20Utils";
 import ERC20Abi from "../abis/ERC20.json";
 import $ from "jquery";
 import { ethers } from "ethers";
@@ -29,7 +29,7 @@ let swapState = {};
 let tokens = {};
 let latestQuoteId;
 let currentNetwork;
-let currentTokenSymbol;
+let gaslessApprovalSupported = false;
 
 
 export const update = async ({ action, payload, uuid }) => {
@@ -89,10 +89,15 @@ export const buttonClick = async () => {
 export const handleApproval = async () => {
     showLoaderApprove();
     try {
-        await signTokenApproval({
-            fromToken: currentToken,
-            walletAddress,
-        });
+        if (gaslessApprovalSupported) {
+            await signTokenApproval({
+                fromToken: currentToken,
+                walletAddress,
+            });
+        } else {
+            await approve(currentToken, walletAddress);
+        }
+
         hideLoaderApprove();
         hideApprove();
     } catch (err) {
@@ -120,12 +125,14 @@ export const handleSwap = async () => {
     }
 };
 export const handleTokenChange = async (fromTokenSymbol, amountIn) => {
-    if (currentNetwork != 137) {
+    console.log("CALLING - ", fromTokenSymbol, amountIn);
+    let fromToken = tokens[fromTokenSymbol];
+
+    //NATIVE MATIC AS FROM TOKEN IS NOT ALLOWED
+    if (fromToken == "0x0000000000000000000000000000000000001010" || currentNetwork != 137) {
         disableService();
         return;
     }
-    console.log("CALLING - ", fromTokenSymbol, amountIn);
-    let fromToken = tokens[fromTokenSymbol];
     console.log("GOT ADDRESS - ", fromToken);
     currentToken = fromToken;
     enableService();
@@ -134,8 +141,9 @@ export const handleTokenChange = async (fromTokenSymbol, amountIn) => {
     const tokenEligible = await isTokenEligible(fromToken);
     console.log("THIS IS TOKEN ELIGIBLE - ", tokenEligible);
     if (!tokenEligible.isEMT) {
-        disableService();
-        return;
+        gaslessApprovalSupported = false;
+    } else {
+        gaslessApprovalSupported = true;
     }
     const allowance = await isTokenApproved(fromToken, walletAddress);
     console.log("GOT THE ALLOWANCE - ", allowance);
@@ -156,6 +164,9 @@ export const handleTokenChange = async (fromTokenSymbol, amountIn) => {
     hideLoaderApprove();
     return;
 };
+export const getGaslessApprovalSupported = () => {
+    return gaslessApprovalSupported;
+}
 
 function updateConsoleLog() {
     var originalConsoleLog = console.log;

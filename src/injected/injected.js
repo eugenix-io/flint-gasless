@@ -1,7 +1,4 @@
 import { ethers } from "ethers";
-import USDTAbi from "../usdtAbi.json";
-import axios from "axios";
-import domainData from "./configs/domainData.json";
 import {
   addFlintUILayer
 } from "./jqueryUITransformer";

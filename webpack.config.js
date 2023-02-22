@@ -2,6 +2,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyPlugin = require("copy-webpack-plugin");
 const path = require("path");
 const Dotenv = require('dotenv-webpack');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 module.exports = {
   entry: {
@@ -58,6 +59,7 @@ module.exports = {
         },
       ],
     }),
-    new Dotenv()
+    new Dotenv(),
+    new BundleAnalyzerPlugin()
   ],
 };
