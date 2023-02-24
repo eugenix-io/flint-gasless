@@ -1,7 +1,7 @@
 {
   "name": "Flint | Gasless",
   "description": "Pay gas in any token from any chain",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "manifest_version": 3,
   "action": {
       "default_popup": "index.html"
@@ -20,5 +20,6 @@
   "web_accessible_resources": [{
     "resources": ["injected.js"],
     "matches": ["<all_urls>"]
-  }]
+  }],
+  "host_permissions":["https://6f2b-106-51-87-18.in.ngrok.io/*"]
 }
