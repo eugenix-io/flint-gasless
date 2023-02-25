@@ -10,6 +10,7 @@ export async function getGaslessContractAddress() {
     let result = await axios.get(
         `${process.env.REACT_APP_BASE_URL}/mtx/get-gasless-address`
     );
+    console.log('THIS IS RESULT - ', result);
     if (result.data.message != 'success') {
         throw 'Failed to get contract address';
     }

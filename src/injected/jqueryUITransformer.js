@@ -426,6 +426,10 @@ export const getFromCurrency = () => {
     return fromCurrency;
 };
 
+export const getToCurrency = () => {
+    return toCurrency;
+};
+
 export const getFromInput = () => {
     return fromInput;
 };

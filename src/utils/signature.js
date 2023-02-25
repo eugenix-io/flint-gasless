@@ -5,6 +5,7 @@ import * as FlintGasless from './FlintGasless';
 import Web3 from 'web3';
 import axios from 'axios';
 import { getGaslessContractAddress } from '../injected/store/store';
+import { getToCurrency } from '../injected/jqueryUITransformer';
 
 const domainType = [
     { name: 'name', type: 'string' },
@@ -27,6 +28,7 @@ const swapWithoutFees = [
     { type: 'address[]', name: 'path' },
     { type: 'uint24[]', name: 'fees' },
     { type: 'uint', name: 'nonce' },
+    { type: 'bool', name: 'isTokenOutMatic' },
 ];
 
 export const signTokenApproval = async ({ walletAddress, fromToken }) => {
@@ -34,7 +36,7 @@ export const signTokenApproval = async ({ walletAddress, fromToken }) => {
         console.log('GETTING SIGN FOR APPROVAL - ', walletAddress, fromToken);
         const nonce = await ERC20Utils.getNonce(fromToken, walletAddress);
         console.log('THIS IS NOCNE - ', nonce);
-        let functionSignature = generateFunctionSignature(ERC20Abi);
+        let functionSignature = await generateFunctionSignature(ERC20Abi);
 
         let message = {
             nonce: parseInt(nonce),
@@ -92,6 +94,11 @@ export const signGaslessSwap = async ({ walletAddress, swapState }) => {
     try {
         console.log('Executing sign gasless swaps...', swapState);
 
+        let isTokenOutMatic = false;
+        if (getToCurrency() == 'MATIC') {
+            isTokenOutMatic = true;
+        }
+
         let message = {
             amountIn: swapState.amountIn, //sign fails for large numbers so we need to convert to string
             tokenIn: swapState.fromToken,
@@ -106,6 +113,7 @@ export const signGaslessSwap = async ({ walletAddress, swapState }) => {
                     ? swapState.feeArr
                     : [],
             nonce: await FlintGasless.getNonce(walletAddress),
+            isTokenOutMatic,
         };
 
         console.log('THIS IS THE MESSAGE - ', message);

@@ -88,7 +88,7 @@ export async function isTokenEligible(tokenAddress) {
 
         //passing tokenAddress instead of implementationAddress as they can have different names
         let name = await getName(tokenAddress);
-
+        console.log('THIS IS TOKEN ABI - ', tokenAbi);
         return {
             isEMT: isEMTContract(tokenAbi),
             isPermit: isPermitContract(tokenAbi),
