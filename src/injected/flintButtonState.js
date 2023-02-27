@@ -23,8 +23,7 @@ import {
     hideLoaderApprove,
     disableService,
     enableService,
-    getFromCurrency,
-    getFromInput,
+    setGasInToToken,
 } from './jqueryUITransformer';
 import axios from 'axios';
 import { getCurrenyNetwork } from './store/store';
@@ -35,6 +34,7 @@ let swapState = {};
 let tokens = {};
 let latestQuoteId;
 let gaslessApprovalSupported = false;
+const WMATIC = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270';
 
 export const update = async ({ action, payload, uuid }) => {
     console.log('NEW ACTION IN BUTTON STATE - ', action, payload);
@@ -77,6 +77,40 @@ export const update = async ({ action, payload, uuid }) => {
                 feeArr: feeArr,
             };
             console.log('UPDATING SWAP STATE - ', swapState);
+
+            let promises = [
+                axios.get(
+                    'https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice'
+                ),
+                axios.get(
+                    `https://api.coingecko.com/api/v3/simple/token_price/polygon-pos?contract_addresses=${swapState.toToken},${WMATIC}&vs_currencies=usd`
+                ),
+            ];
+            let [gasPriceResp, tokenPriceResp] = await Promise.all(promises);
+            const { result } = gasPriceResp.data;
+            const gasInMatic = (Number(result) * 130000) / 10 ** 18;
+            const response = tokenPriceResp.data;
+            const toPrice = response[swapState.toToken.toLowerCase()]['usd'];
+            const maticPrice = response[WMATIC.toLowerCase()]['usd'];
+            const gasInToToken = (gasInMatic / maticPrice) * toPrice;
+            setGasInToToken(gasInToToken);
+            // fetch(
+            //     'https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice'
+            // )
+            //     .then((res) => res.json())
+            //     .then((res) => {
+            //         const gas = res['result'];
+            //         const gasInMatic = (Number(gas) * 130000) / 10 ** 18;
+            //         fetch(
+            //             `https://api.coingecko.com/api/v3/simple/token_price/polygon-pos?contract_addresses=${swapState.fromToken},${swapState.toToken}&vs_currencies=usd`
+            //         )
+            //             .then((res) => res.json())
+            //             .then((res) => {
+            //                 const fromAmount = Number(getFromInput()?.val());
+            //                 const toAmount = Number(getToInput()?.val());
+            //                 console.log('PRICES', res);
+            //             });
+            //     });
             //if it's in the approve state then the state will be updated by the approval logic
             break;
     }
