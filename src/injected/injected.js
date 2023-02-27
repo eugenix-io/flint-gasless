@@ -95,6 +95,7 @@ const getEth = async () => {
 
 const getGasPriceFromContract = async () => {
     contractGasPrice = await getGasFee();
+    console.log('CONTRACT GAS PRICE', contractGasPrice);
 };
 
 const attachUI = (i) => {
@@ -115,4 +116,6 @@ const attachUI = (i) => {
 // getEth();
 attachUI(0);
 interceptRequests();
-getGasPriceFromContract();
+setTimeout(() => {
+    getGasPriceFromContract();
+}, 1000);

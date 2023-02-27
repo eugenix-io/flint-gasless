@@ -11,16 +11,16 @@ const getContract = async () => {
 };
 
 export const getName = async () => {
-    let contract = getContract();
+    let contract = await getContract();
     return await contract.methods.name().call();
 };
 
 export const getNonce = async (walletAddress) => {
-    let contract = getContract();
+    let contract = await getContract();
     return await contract.methods.nonces(walletAddress).call();
 };
 
-export const getGasFee = async (walletAddress) => {
-    let contract = getContract();
+export const getGasFee = async () => {
+    let contract = await getContract();
     return await contract?.methods?.gasForSwap().call();
 };
