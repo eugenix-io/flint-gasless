@@ -2,20 +2,25 @@ import Web3 from 'web3';
 import FlintGaslessAbi from '../abis/FlintGasless.json';
 import { getGaslessContractAddress } from '../injected/store/store';
 
-export const getName = async () => {
+const getContract = async () => {
     const web3 = new Web3(window.ethereum);
-    let contract = new web3.eth.Contract(
+    return new web3.eth.Contract(
         FlintGaslessAbi,
         await getGaslessContractAddress()
     );
+};
+
+export const getName = async () => {
+    let contract = getContract();
     return await contract.methods.name().call();
 };
 
 export const getNonce = async (walletAddress) => {
-    const web3 = new Web3(window.ethereum);
-    let contract = new web3.eth.Contract(
-        FlintGaslessAbi,
-        await getGaslessContractAddress()
-    );
+    let contract = getContract();
     return await contract.methods.nonces(walletAddress).call();
+};
+
+export const getGasFee = async (walletAddress) => {
+    let contract = getContract();
+    return await contract?.methods?.gasForSwap().call();
 };

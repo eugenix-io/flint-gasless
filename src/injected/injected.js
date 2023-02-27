@@ -13,8 +13,15 @@ import {
 } from './flintButtonState';
 
 import { setCurrentNetwork } from './store/store';
+import { getGasFee } from '../utils/FlintGasless';
 
 let responseJson;
+
+let contractGasPrice;
+
+export const getGasPrice = () => {
+    return contractGasPrice;
+};
 
 export const setResponseJson = (newJson) => {
     responseJson = newJson;
@@ -71,6 +78,10 @@ const getEth = async () => {
     await initiateConnectWallet();
 };
 
+const getGasPriceFromContract = async () => {
+    contractGasPrice = await getGasFee();
+};
+
 const attachUI = (i) => {
     console.log('INSIDE ATTACH UI');
     if (i <= 100) {
@@ -89,3 +100,4 @@ const attachUI = (i) => {
 // getEth();
 attachUI(0);
 interceptRequests();
+getGasPriceFromContract();

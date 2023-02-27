@@ -29,7 +29,27 @@ let toInput;
 
 let dd2;
 
+let gasInToToken = 0;
+
 const swapButtons = ['flint-swap-conf', 'flint-swap'];
+
+export const setGasInToToken = (gas) => {
+    if (gas) {
+        gasInToToken = gas;
+    }
+    setToTokenFinalPrice();
+};
+
+const setToTokenFinalPrice = () => {
+    if (toInput.val()) {
+        const inpValue = Number(toInput.val());
+        let finalPrice = Number(inpValue - gasInToToken);
+        if (finalPrice > 0.0001) {
+            finalPrice = finalPrice.toFixed(4);
+        }
+        $('#fl-to-amt').html(finalPrice);
+    }
+};
 
 export const disableSwapButton = () => {
     swapButtons.forEach((btn) => {
@@ -60,9 +80,7 @@ export const enableSwapButton = () => {
         if (fromInput.val()) {
             $('#fl-from-amt').html(fromInput.val());
         }
-        if (toInput.val()) {
-            $('#fl-to-amt').html(toInput.val());
-        }
+        setToTokenFinalPrice();
     }, 200);
 };
 
@@ -220,7 +238,6 @@ const insertGasTokenBlock = () => {
         fromInput = currencySelector1.parent().children('input');
         fromInput.on({
             keyup: () => {
-                console.log('new value', fromInput.val());
                 if (!fromInput.val()) {
                     disableSwapButton();
                 } else {
@@ -228,7 +245,6 @@ const insertGasTokenBlock = () => {
                 }
             },
             change: () => {
-                console.log('new value', fromInput.val());
                 if (!fromInput.val()) {
                     disableSwapButton();
                 } else {
@@ -237,11 +253,6 @@ const insertGasTokenBlock = () => {
             },
         });
         console.log(fromInput, 'console.log(fromInput);');
-        fromCurrency = currencySelector1
-            .children('span')
-            ?.children('div')
-            ?.children('span')
-            ?.html();
         fromCurrency = currencySelector1
             .children('span')
             ?.children('div')
@@ -286,12 +297,12 @@ const insertGasTokenBlock = () => {
         toInput = currencySelector2.parent().children('input');
         console.log(toInput, 'toInput');
         toInput.on('input', function () {
-            $('#fl-to-amt').html(toInput.val());
+            setToTokenFinalPrice();
             // alert($(this).val());
         });
         toInput.on({
             change: () => {
-                $('#fl-to-amt').html(toInput.val());
+                setToTokenFinalPrice();
             },
         });
         currencySelector2?.on({
@@ -316,9 +327,7 @@ const insertGasTokenBlock = () => {
                         if (fromInput.val()) {
                             $('#fl-from-amt').html(fromInput.val());
                         }
-                        if (toInput.val()) {
-                            $('#fl-to-amt').html(toInput.val());
-                        }
+                        setToTokenFinalPrice();
                     }, 200);
                 },
             });
@@ -414,7 +423,7 @@ export const updatePriceValues = () => {
         const to = toInput.val();
         const from = fromInput.val();
         if (to.length > 0) {
-            $('#fl-to-amt').html(to);
+            setToTokenFinalPrice();
         }
         if (from.length > 0) {
             $('#fl-from-amt').html(from);
@@ -428,4 +437,8 @@ export const getFromCurrency = () => {
 
 export const getFromInput = () => {
     return fromInput;
+};
+
+export const getToInput = () => {
+    return toInput;
 };
