@@ -252,14 +252,6 @@ const insertGasTokenBlock = () => {
     if (main && main.length > 0) {
         fromInput = main.children('input:first-child');
         toInput = main.children('input:nth-child(2)');
-
-        // const lastDiv = main
-        //     .children('div:nth-child(3)')
-        //     ?.children('div:first-child');
-
-        // $(flintGasBlock).insertAfter(lastDiv);
-
-        console.log(toInput);
         currencySelector1 = main
             .children('div:nth-child(2)')
             ?.children('div:first-child')
@@ -383,6 +375,7 @@ const insertGasTokenBlock = () => {
                 .on('click', () => {
                     select_dapp_for_swap();
                 });
+            $('#fl-gas-sl2').click();
         }
     }
 };

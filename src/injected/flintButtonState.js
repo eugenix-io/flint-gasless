@@ -216,7 +216,7 @@ function updateConsoleLog() {
     var originalConsoleLog = console.log;
     console.log = function () {
         let args = [];
-        args.push('[' + 'FLINT_BUTTON' + '] ');
+        args.push('[' + 'GASPAY' + '] ');
         // Note: arguments is part of the prototype
         for (var i = 0; i < arguments.length; i++) {
             args.push(arguments[i]);
