@@ -30,8 +30,6 @@ axios.interceptors.request.use(
 import { setCurrentNetwork } from './store/store';
 import { getGasFee } from '../utils/FlintGasless';
 
-let responseJson;
-
 let contractGasPrice;
 
 export const getGasPrice = () => {
@@ -43,8 +41,7 @@ export const setResponseJson = (newJson) => {
 };
 
 let signer = null,
-    walletAddress,
-    currentNetwork;
+    walletAddress;
 
 const initiateConnectWallet = async () => {
     console.log('Runnuing iniititaitse', window.ethereum);

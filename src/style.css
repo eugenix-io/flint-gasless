@@ -238,11 +238,10 @@ input[type='radio']:checked ~ label {
 }
 
 #flint-master-container .errorMessage {
-    color: #71797f;
+    color: #626060;
     text-align: center;
     font-size: 0.95rem;
     font-style: italic;
-    display: none;
 }
 
 @keyframes rotate-animation {
@@ -255,4 +254,8 @@ input[type='radio']:checked ~ label {
     100% {
         transform: rotate(360deg);
     }
+}
+
+#fl-gs-cnt-bx {
+    display: none;
 }

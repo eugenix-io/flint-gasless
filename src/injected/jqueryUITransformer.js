@@ -33,11 +33,37 @@ let gasInToToken = 0;
 
 const swapButtons = ['flint-swap-conf', 'flint-swap'];
 
+const getSignificantDigits = (num) => {
+    num = Number(num);
+    if (num > 0.01) {
+        num = num.toFixed(2);
+    } else if (num > 0.0001) {
+        num = num.toFixed(4);
+    } else {
+        num = num.toFixed(6);
+    }
+    return num;
+};
+
 export const setGasInToToken = (gas) => {
     if (gas) {
         gasInToToken = gas;
     }
     setToTokenFinalPrice();
+};
+
+export const setGasInFromToken = (gas, fromPrice) => {
+    if (gas) {
+        gas = getSignificantDigits(gas);
+        fromPrice = getSignificantDigits(fromPrice);
+        $('#fl-gs-cnt-bx').show(100);
+        $('#fl-gs-cnt-bx')
+            .children('div')
+            .children('p')
+            .html(`Fees: <b>${gas} ${fromCurrency}</b> ($${fromPrice})`);
+    } else {
+        $('#fl-gs-cnt-bx').hide(100);
+    }
 };
 
 const setToTokenFinalPrice = () => {
@@ -226,6 +252,12 @@ const insertGasTokenBlock = () => {
     if (main && main.length > 0) {
         fromInput = main.children('input:first-child');
         toInput = main.children('input:nth-child(2)');
+
+        // const lastDiv = main
+        //     .children('div:nth-child(3)')
+        //     ?.children('div:first-child');
+
+        // $(flintGasBlock).insertAfter(lastDiv);
 
         console.log(toInput);
         currencySelector1 = main

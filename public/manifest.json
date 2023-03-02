@@ -7,7 +7,7 @@
         "default_popup": "index.html"
     },
     "icons": {
-        "128": "gaspay.png"
+        "128": "gasly.png"
     },
     "content_scripts": [
         {

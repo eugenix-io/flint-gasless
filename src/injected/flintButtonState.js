@@ -24,6 +24,7 @@ import {
     disableService,
     enableService,
     setGasInToToken,
+    setGasInFromToken,
 } from './jqueryUITransformer';
 import axios from 'axios';
 import { getCurrenyNetwork } from './store/store';
@@ -83,7 +84,7 @@ export const update = async ({ action, payload, uuid }) => {
                     'https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice'
                 ),
                 axios.get(
-                    `https://api.coingecko.com/api/v3/simple/token_price/polygon-pos?contract_addresses=${swapState.toToken},${WMATIC}&vs_currencies=usd`
+                    `https://api.coingecko.com/api/v3/simple/token_price/polygon-pos?contract_addresses=${swapState.toToken},${WMATIC},${swapState.fromToken}&vs_currencies=usd`
                 ),
             ];
             let [gasPriceResp, tokenPriceResp] = await Promise.all(promises);
@@ -91,26 +92,22 @@ export const update = async ({ action, payload, uuid }) => {
             const gasInMatic = (Number(result) * 130000) / 10 ** 18;
             const response = tokenPriceResp.data;
             const toPrice = response[swapState.toToken.toLowerCase()]['usd'];
+            const fromPrice =
+                response[swapState.fromToken.toLowerCase()]['usd'];
             const maticPrice = response[WMATIC.toLowerCase()]['usd'];
-            const gasInToToken = (gasInMatic / maticPrice) * toPrice;
+            const gasInToToken = (gasInMatic / toPrice) * maticPrice;
+            const gasInFromToken = (gasInMatic / fromPrice) * maticPrice;
             setGasInToToken(gasInToToken);
-            // fetch(
-            //     'https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice'
-            // )
-            //     .then((res) => res.json())
-            //     .then((res) => {
-            //         const gas = res['result'];
-            //         const gasInMatic = (Number(gas) * 130000) / 10 ** 18;
-            //         fetch(
-            //             `https://api.coingecko.com/api/v3/simple/token_price/polygon-pos?contract_addresses=${swapState.fromToken},${swapState.toToken}&vs_currencies=usd`
-            //         )
-            //             .then((res) => res.json())
-            //             .then((res) => {
-            //                 const fromAmount = Number(getFromInput()?.val());
-            //                 const toAmount = Number(getToInput()?.val());
-            //                 console.log('PRICES', res);
-            //             });
-            //     });
+            setGasInFromToken(gasInFromToken, gasInMatic * maticPrice);
+            console.log(
+                gasInMatic,
+                toPrice,
+                fromPrice,
+                maticPrice,
+                gasInToToken,
+                gasInFromToken,
+                'GAS AND PRICE VALUES'
+            );
             //if it's in the approve state then the state will be updated by the approval logic
             break;
     }

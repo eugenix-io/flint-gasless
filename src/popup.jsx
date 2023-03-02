@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
-import Logo from './assets/gaspay_large.svg';
+import Logo from './assets/gasly.svg';
 
 // const top_currencies = ['bitcoin', 'ethereum']
 // const base_currency = 'usd'

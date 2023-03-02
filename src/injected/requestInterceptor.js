@@ -1,4 +1,5 @@
 import { update } from './flintButtonState';
+import { setGasInFromToken } from './jqueryUITransformer';
 
 const getTokenInAddress = (str) => {
     const newStr = str.split('?')[1];
@@ -28,6 +29,7 @@ export const interceptRequests = () => {
                 uuid,
                 payload: { fromToken: tokenInAddress, amountIn: amount },
             });
+            setGasInFromToken();
         }
 
         let response = await originalFetch(resource, config);
