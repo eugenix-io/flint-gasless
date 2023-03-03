@@ -3,6 +3,7 @@ import {
     getNonce,
     isTokenEligible,
     approve,
+    getTokenBalance,
 } from '../utils/ERC20Utils';
 import ERC20Abi from '../abis/ERC20.json';
 import $ from 'jquery';
@@ -25,6 +26,9 @@ import {
     enableService,
     setGasInToToken,
     setGasInFromToken,
+    getFromInput,
+    insufficientBalance,
+    activeSwap,
 } from './jqueryUITransformer';
 import axios from 'axios';
 import { getCurrenyNetwork } from './store/store';
@@ -51,8 +55,6 @@ export const update = async ({ action, payload, uuid }) => {
             if (latestQuoteId !== uuid) {
                 return;
             }
-            enableSwapButton();
-            updatePriceValues();
             console.log('STARTING NEW QUOTE REQ', payload);
             const route = payload?.route[0];
             const tokenArray = [
@@ -108,6 +110,28 @@ export const update = async ({ action, payload, uuid }) => {
                 gasInFromToken,
                 'GAS AND PRICE VALUES'
             );
+            const currentTokenBalance = await getTokenBalance(
+                swapState.fromToken,
+                walletAddress
+            );
+            const fromAmount = getFromInput()?.val();
+            console.log(
+                'MINIMUM AMOUNT CHECK',
+                currentTokenBalance,
+                fromAmount,
+                gasInFromToken
+            );
+            // checking if the requested amount is more than available balance and gas required
+            if (
+                currentTokenBalance >= fromAmount &&
+                fromAmount > gasInFromToken * 1.5
+            ) {
+                activeSwap();
+                enableSwapButton();
+                updatePriceValues();
+            } else {
+                insufficientBalance();
+            }
             //if it's in the approve state then the state will be updated by the approval logic
             break;
     }
@@ -121,7 +145,6 @@ export const buttonClick = async () => {
     if (swapState.fromToken) {
         showSwapPopup();
     }
-    console.log('Button was clicked!!');
 };
 
 export const handleApproval = async () => {

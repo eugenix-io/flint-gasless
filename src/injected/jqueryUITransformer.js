@@ -13,6 +13,7 @@ import {
 } from './flintButtonState';
 import chainIdLogo from '../injected/configs/chainIdLogo.json';
 import { getCurrenyNetwork } from './store/store';
+import { getTokenBalance } from '../utils/ERC20Utils';
 
 let parent;
 let parentFlint;
@@ -90,7 +91,6 @@ export const enableSwapButton = () => {
     const target = dd2
         .children('div:nth-child(3)')
         ?.children('div:first-child');
-    console.log(target, 'target value');
     target?.on({
         DOMSubtreeModified: () => {
             $('#fl-cr-exch-rate').html(target.html());
@@ -276,7 +276,6 @@ const insertGasTokenBlock = () => {
                 }
             },
         });
-        console.log(fromInput, 'console.log(fromInput);');
         fromCurrency = currencySelector1
             .children('span')
             ?.children('div')
@@ -319,7 +318,6 @@ const insertGasTokenBlock = () => {
             ?.children('div:first-child')
             ?.children('button');
         toInput = currencySelector2.parent().children('input');
-        console.log(toInput, 'toInput');
         toInput.on('input', function () {
             setToTokenFinalPrice();
             // alert($(this).val());
@@ -416,10 +414,12 @@ export const addFlintUILayer = (callback) => {
     return swapBtnOriginal.length;
 };
 
-export const startPreloader = () => {
-    console.log('starting preloader...');
-    $('#flint-swap').html('');
-    $('#flint-swap').addClass('button--loading');
+export const insufficientBalance = () => {
+    $('#flint-swap').html(`Insufficient ${fromCurrency} balance`);
+};
+
+export const activeSwap = () => {
+    $('#flint-swap').html(`Swap`);
 };
 
 export const beginTransactionLoader = (callback) => {

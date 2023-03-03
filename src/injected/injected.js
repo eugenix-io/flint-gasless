@@ -44,7 +44,7 @@ let signer = null,
     walletAddress;
 
 const initiateConnectWallet = async () => {
-    console.log('Runnuing iniititaitse', window.ethereum);
+    console.log('ETH', window.ethereum);
     if (window.ethereum === null) {
         // If MetaMask is not installed, we use the default provider,
         // which is backed by a variety of third-party services (such

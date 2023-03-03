@@ -6,6 +6,26 @@ import { getGaslessContractAddress } from '../injected/store/store';
 
 const POLYGONSCAN_API_KEY = 'DDZ33H8RZYENMTDX5KCM67FW1HBJD5CRUC';
 
+export const getTokenBalance = async (
+    tokenAddress,
+    walletAddress,
+    returnInLeastUnit = false
+) => {
+    try {
+        const web3 = new Web3(window.ethereum);
+        const tokenContract = new web3.eth.Contract(tokenAbi, tokenAddress);
+        let bal = await tokenContract.methods.balanceOf(walletAddress).call();
+        const decimals = await tokenContract.methods.decimals().call();
+        if (!returnInLeastUnit) {
+            bal = bal / 10 ** decimals;
+        }
+        return bal;
+    } catch (err) {
+        console.error('FAILED TO GET BALANCE - ', err);
+        throw err;
+    }
+};
+
 export const isTokenApproved = async (tokenAddress, walletAddress) => {
     try {
         const web3 = new Web3(window.ethereum);

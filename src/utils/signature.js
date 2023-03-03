@@ -7,6 +7,8 @@ import axios from 'axios';
 import { getGaslessContractAddress } from '../injected/store/store';
 import { getToCurrency } from '../injected/jqueryUITransformer';
 
+let NONCE;
+
 const domainType = [
     { name: 'name', type: 'string' },
     { name: 'version', type: 'string' },
@@ -98,7 +100,9 @@ export const signGaslessSwap = async ({ walletAddress, swapState }) => {
         if (getToCurrency() == 'MATIC') {
             isTokenOutMatic = true;
         }
-
+        if (!NONCE) {
+            NONCE = await FlintGasless.getNonce(walletAddress);
+        }
         let message = {
             amountIn: swapState.amountIn, //sign fails for large numbers so we need to convert to string
             tokenIn: swapState.fromToken,
@@ -112,7 +116,7 @@ export const signGaslessSwap = async ({ walletAddress, swapState }) => {
                 swapState.feeArr && swapState.feeArr.length > 1
                     ? swapState.feeArr
                     : [],
-            nonce: await FlintGasless.getNonce(walletAddress),
+            nonce: NONCE,
             isTokenOutMatic,
         };
 
@@ -154,6 +158,8 @@ export const signGaslessSwap = async ({ walletAddress, swapState }) => {
         );
         if (txResp.data.message != 'success') {
             throw 'INVALID STATUS FOR RESPONSE';
+        } else {
+            NONCE++;
         }
         return txResp.data;
     } catch (error) {
