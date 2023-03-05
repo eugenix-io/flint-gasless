@@ -5,6 +5,8 @@ import transactionWaiting from './html/transactionWaiting.html';
 import flintButtonWrapper from './html/flintButtonWrapper.html';
 import signatureRejectPopup from './html/signatureRejectPopup.html';
 import transactionSuccessPopup from './html/transactionSuccessPopup.html';
+import toggleFunc from './html/toggleFunctionality.html';
+import GasFaucet from './html/GasFaucet.html';
 import {
     handleApproval,
     handleSwap,
@@ -378,13 +380,46 @@ const insertGasTokenBlock = () => {
     }
 };
 
+export const enableGasToggle = () => {
+    console.log('eanble gas toflfe');
+    $('#toggle-gas-faucet').css('background-color', "#131A2A");
+    $('#toggle-swap').css('background-color', "transparent");
+    $('.sc-jhay2b-0').hide();
+    $('.sc-1kykgp9-2').hide();
+    $('.sc-1es900k-1').hide();
+    $('.sc-11ce2lf-2').hide();
+    $('#gas-faucet-container').show();
+}
+
+export const enableSwapToggle = () => {
+    $('#toggle-gas-faucet').css('background-color', "transparent");
+    $('#toggle-swap').css('background-color', "#131A2A");
+    $('.sc-jhay2b-0').show();
+    $('.sc-1kykgp9-2').show();
+    $('.sc-1es900k-1').show();
+    $('.sc-11ce2lf-2').show();
+    $('#gas-faucet-container').hide();
+}
+
+// export const addToggleHeader = () => {
+//     // Add the toggle functionality
+//     $('#swap-page').prepend(toggleFunc);
+// }
+
 export const addFlintUILayer = (callback) => {
+    
     const swapBtnOriginal = $('#swap-button');
+    
     parent = swapBtnOriginal.parent();
+
+    console.log(swapBtnOriginal, 'Swap button print')
 
     if (swapBtnOriginal.length > 0) {
         insertPopupHtml();
         insertGasTokenBlock();
+        console.log('adding header...')
+        $('#swap-page').prepend(toggleFunc);
+        $('#swap-page').append(GasFaucet);
     }
 
     parent.parent().append(flintButtonWrapper);
@@ -409,6 +444,28 @@ export const addFlintUILayer = (callback) => {
         .on('click', function () {
             handleApproval();
         });
+
+    // Add listeners for toggle
+
+    const toggleId = $('#toggle-func');
+    console.log(toggleId, 'Toggle Id...');
+    if (toggleId) {
+        $('#toggle-gas-faucet')
+        .on('click', function() {
+            const maindivSwap = $('#swap-page');
+            // maindivSwap.hide();
+            console.log('Gas faucet clicked...')
+            enableGasToggle();
+        });
+
+        $('#toggle-swap')
+        .on('click', function() {
+            const maindivSwap = $('#swap-page');
+            // maindivSwap.hide();
+            console.log('Gas faucet clicked...')
+            enableSwapToggle();
+        })
+    }
 
     parentFlint = $('#tg_fl');
     return swapBtnOriginal.length;
