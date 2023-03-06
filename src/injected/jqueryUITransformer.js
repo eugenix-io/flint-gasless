@@ -7,6 +7,8 @@ import signatureRejectPopup from './html/signatureRejectPopup.html';
 import transactionSuccessPopup from './html/transactionSuccessPopup.html';
 import toggleFunc from './html/toggleFunctionality.html';
 import GasFaucet from './html/GasFaucet.html';
+import selectChainTokenModal from './html/selectChainTokenModal.html';
+import toChainList from './html/toChainList.html'
 import {
     handleApproval,
     handleSwap,
@@ -166,6 +168,15 @@ export const showSwapPopup = () => {
     $('#flppbx').fadeIn(200);
 };
 
+export const showChainTokenPopup = () => {
+    $('#flppsct').fadeIn(200);
+}
+
+export const showToChainListPopup = () => {
+    console.log('showing popopo to cjain list');
+    $('#flpptocl').fadeIn(200);
+}
+
 export const hideSwapPopup = () => {
     $('#flppbx').fadeOut(200);
 };
@@ -232,6 +243,8 @@ const insertPopupHtml = () => {
     $('body').append(transactionWaiting);
     $('body').append(signatureRejectPopup);
     $('body').append(transactionSuccessPopup);
+    $('body').append(selectChainTokenModal);
+    $('body').append(toChainList)
     $('.fl-pop-bk')
         .off()
         .on('click', function () {
@@ -464,7 +477,41 @@ export const addFlintUILayer = (callback) => {
             // maindivSwap.hide();
             console.log('Gas faucet clicked...')
             enableSwapToggle();
-        })
+        });
+
+        $('#chain-token-btn')
+        .on('click', function() {
+            showChainTokenPopup();
+        });
+
+        $('#to-chain-btn')
+        .on('click', function() {
+            console.log('to chain btn clicked');
+            showToChainListPopup();
+        });
+
+        // Listener of selecting chain
+
+        $('.chain-select')
+        .on('click', function() {
+            // Make all the background colors as transparent 
+            // Only change the color of the selected div
+            $('.chain-select').css("background-color", "transparent");
+            $(this).css("background-color", "#293249")
+            const text = $(this).text();
+            console.log('You selected the chain', text);
+        });
+
+        // Listener of selecting token
+        $('.token-select')
+        .on('click', function() {
+            // Make all the background colors as transparent 
+            // Only change the color of the selected div
+            $('.token-select').css("background-color", "transparent");
+            $(this).css("background-color", "#293249")
+            const text = $(this).text();
+            console.log('You selected the chain', text);
+        });
     }
 
     parentFlint = $('#tg_fl');

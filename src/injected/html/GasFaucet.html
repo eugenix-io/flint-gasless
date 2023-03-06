@@ -1,28 +1,54 @@
-<div id="gas-faucet-container" style="display: none">
-    <div style="margin-top: 50px; display: flex; flex-direction: column;">
-        <span style="font-size: 30px;">Gas</span>
-    
-        <div style="margin-left: 10px; display: flex; flex-direction: column;">
+<div id="gas-faucet-container"
+    style="display: none; background-color: #131A2A; padding: 20px; margin-top: 50px; border-radius: 10px;">
+    <div style="display: flex; flex-direction: column;">
+        <div style="">
+            <span style="font-size: 30px;">Gas</span>
+        </div>
+
+        <span style="font-size: 16px; margin-top: 30px;">From</span>
+
+        <div id="chain-token-btn"
+            style="display: flex; flex-direction: row; cursor: pointer; margin-top: 10px; background-color: #293249; padding: 10px; border-radius: 10px; align-items: center;">
             <div style="">
-                <span style="font-size: 16px">From</span>
-                <div>
-                    <span style="font-size: 14px">Select chain and token</span>
+                <!-- Selected Chain  -->
+                <div
+                    style="width: 40px; height:40px; overflow: hidden;  border-radius: 20px; background-color: #131A2A">
+                    <img style="width: 100%; height: 100%" id="dynamic-chain"
+                        src="https://dnj9s9rkg1f49.cloudfront.net/matic.svg" />
+                </div>
+                <div
+                    style="width: 16px; height:16px; overflow: hidden; border-radius: 8px; border: 1px solid black; background-color: #131A2A; float: right; margin-top: -15px; margin-left: 30px; z-index: 100;">
+                    <img style="width: 100%; height: 100%" id="dynamic-chain-token"
+                        src="https://dnj9s9rkg1f49.cloudfront.net/usdt.svg" />
+                </div>
+            </div>
+            <div style=" margin-left: 10px;">
+                <div style="display: flex; flex-direction: column">
+                    <span style="font-size: 14px">Polygon</span>
+                    <span style="font-size: 12px; opacity: 0.7; margin-top: 5px;">USDT</span>
                 </div>
             </div>
         </div>
-    
+
+        <span style="font-size: 16px; margin-top: 30px;">To</span>
+
         <!-- To chain -->
-        <div style="margin-left: 10px;  display: flex; flex-direction: column;">
-            <div style="">
-                <span style="font-size: 16px">To</span>
-                <div>
-                    <span style="font-size: 14px">Select chain</span>
-                </div>
+        <div id="to-chain-btn"
+            style="display: flex; cursor: pointer; margin-top: 10px; flex-direction: row; background-color: #293249; padding: 10px; border-radius: 10px;">
+            <!-- Selected Chain  -->
+            <div style="width: 40px; height:40px; overflow: hidden;  border-radius: 20px; background-color: #131A2A">
+                <img style="width: 100%; height: 100%" id="dynamic-chain"
+                    src="https://dnj9s9rkg1f49.cloudfront.net/eth.svg" />
+            </div>
+
+            <div style="display: flex; justify-content: center; align-items: center; margin-left: 10px;">
+                <span>Ethereum</span>
             </div>
         </div>
-    
+
         <!-- You pay -->
-        <div style="margin-left: 10px;  display: flex; flex-direction: column;">
+        <div
+            style="display: flex; margin-top: 20px; flex-direction: column; background-color: #293249; padding: 10px; border-radius: 10px;">
             <div style="">
                 <span style="font-size: 16px">You pay</span>
                 <div style="display: flex; flex-direction: column;">
@@ -31,10 +57,11 @@
                 </div>
             </div>
         </div>
-    
+
         <!-- Get gas button -->
-    
-        <div style="margin-left: 10px;  display: flex; background-color: #5f3d9d;">
+
+        <div
+            style="display: flex; margin-top: 20px; background-color: #5f3d9d; padding: 10px 50px; border-radius: 25px; justify-content: center; align-items: center;">
             <span>Get gas</span>
         </div>
     </div>

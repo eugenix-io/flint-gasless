@@ -112,7 +112,6 @@ const attachUI = (i) => {
 
 // getEth();
 attachUI(0);
-
 interceptRequests();
 setTimeout(() => {
     getGasPriceFromContract();
