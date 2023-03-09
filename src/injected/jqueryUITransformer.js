@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import chooseTokenBlock from './html/chooseTokenBlock.html';
+import chooseDifferentTokenBlock from './html/chooseDifferentToken.html';
 import swapCheckPopup from './html/swapCheckPopup.html';
 import transactionWaiting from './html/transactionWaiting.html';
 import flintButtonWrapper from './html/flintButtonWrapper.html';
@@ -76,6 +77,14 @@ const setToTokenFinalPrice = () => {
         }
         $('#fl-to-amt').html(finalPrice);
     }
+};
+
+const switchToLightTheme = () => {
+    $('#diffTokBanner').css('background-color', '#E9ECFA');
+};
+
+const switchToDarkTheme = () => {
+    $('#diffTokBanner').css('background-color', 'rgb(19, 26, 42)');
 };
 
 export const disableSwapButton = () => {
@@ -176,13 +185,15 @@ export const switchToSwap = () => {
 export const disableService = () => {
     select_dapp_for_swap();
     $('#fl-gas-sl2').addClass('disabled');
-    $('#flint-error-message').show();
+    // $('#flint-error-message').show();
+    $('#diffTokBanner').show();
 };
 
 export const enableService = () => {
     select_flint_for_swap();
     $('#fl-gas-sl2').removeClass('disabled');
-    $('#flint-error-message').hide();
+    // $('#flint-error-message').hide();
+    $('#diffTokBanner').hide();
 };
 
 export const setNativeTokenNameAndLogo = () => {
@@ -361,6 +372,7 @@ const insertGasTokenBlock = () => {
             dd2.css('border-radius', '12px');
             dd2.css('overflow', 'hidden');
             dd2.append(chooseTokenBlock);
+            dd2.append(chooseDifferentTokenBlock);
 
             $('#fl-gas-sl2')
                 .off()

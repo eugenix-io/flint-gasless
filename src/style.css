@@ -241,9 +241,8 @@ input[type='radio']:checked ~ label {
     color: #626060;
     text-align: center;
     font-size: 0.95rem;
-    font-style: italic;
+    /* font-style: italic; */
 }
-
 @keyframes rotate-animation {
     0% {
         transform: rotate(0deg);
