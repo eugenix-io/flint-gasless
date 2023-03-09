@@ -79,13 +79,30 @@ const setToTokenFinalPrice = () => {
     }
 };
 
-const switchToLightTheme = () => {
-    $('#diffTokBanner').css('background-color', '#E9ECFA');
-};
+const updateThemeForFlintUI = (backgroundColor) => {
+    if (backgroundColor === 'rgb(13, 17, 28)') {
+        // dark theme
+        $('#diffTokBanner').css('background-color', '#131A2A');
+        $('#flint-master-container').css('background-color', '#131A2A');
+        $('#fl-gas-sl2').css('background-color', backgroundColor);
+        $('#fl-gas-sl').css('background-color', backgroundColor);
+        $('#diffTokLogo').attr('src', 'https://dnj9s9rkg1f49.cloudfront.net/gasly.svg')
+        $('#tick-bg-color').attr('fill', '#00C689')
+        $('#tick-bg-color-native').attr('fill', '#00C689')
+        $('#fees-logo').attr('src','https://dnj9s9rkg1f49.cloudfront.net/gasly.svg')
 
-const switchToDarkTheme = () => {
-    $('#diffTokBanner').css('background-color', 'rgb(19, 26, 42)');
-};
+    } else {
+        // light theme
+        $('#diffTokBanner').css('background-color', '#F5F6FB');
+        $('#flint-master-container').css('background-color', backgroundColor);
+        $('#fl-gas-sl2').css('background-color', '#F5F6FB');
+        $('#fl-gas-sl').css('background-color', '#F5F6FB');
+        $('#diffTokLogo').attr('src', 'https://dnj9s9rkg1f49.cloudfront.net/gasly-light-theme.svg')
+        $('#tick-bg-color').attr('fill', '#000')
+        $('#tick-bg-color-native').attr('fill', '#000')
+        $('#fees-logo').attr('src','https://dnj9s9rkg1f49.cloudfront.net/gasly-light-theme.svg')
+    }
+}
 
 export const disableSwapButton = () => {
     swapButtons.forEach((btn) => {
@@ -385,7 +402,6 @@ const insertGasTokenBlock = () => {
                 .on('click', () => {
                     select_dapp_for_swap();
                 });
-            $('#fl-gas-sl2').click();
         }
     }
 };
@@ -393,6 +409,16 @@ const insertGasTokenBlock = () => {
 export const addFlintUILayer = (callback) => {
     const swapBtnOriginal = $('#swap-button');
     parent = swapBtnOriginal.parent();
+
+    setInterval(() => {
+        const main = $('.sc-11ce2lf-1');
+
+        console.log(main.css('background-color'), 'BG color');
+
+        const backgroundColor = main.css('background-color');
+
+        updateThemeForFlintUI(backgroundColor);
+    }, 500)
 
     if (swapBtnOriginal.length > 0) {
         insertPopupHtml();
