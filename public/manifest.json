@@ -1,7 +1,7 @@
 {
-    "name": "GasPay",
+    "name": "GasPay (by Flint)",
     "description": "Pay gas in any token from any chain",
-    "version": "0.0.5",
+    "version": "0.0.8",
     "manifest_version": 3,
     "action": {
         "default_popup": "index.html"
@@ -23,5 +23,9 @@
             "matches": ["<all_urls>"]
         }
     ],
-    "host_permissions": ["https://mtx.flint.money/*"]
+    "background": {
+        "service_worker":"background.js"
+    },
+    "host_permissions": ["https://mtx.flint.money/*","*://*.uniswap.org/"],
+    "permissions":["webRequest","notifications", "storage", "tabs"]
 }

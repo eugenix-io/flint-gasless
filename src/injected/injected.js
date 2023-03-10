@@ -76,6 +76,29 @@ async function getChainId() {
 
 const handleChainChange = async () => {
     let chainId = await getChainId();
+    const USDT = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
+    var searchParams = new URLSearchParams(window.location.search);
+    if (
+        chainId != 137 &&
+        window.location.href.includes(`inputCurrency=${USDT}`)
+    ) {
+        if (searchParams.get('inputCurrency') != 'ETH') {
+            searchParams.set('inputCurrency', 'ETH');
+            window.location.href = `https://app.uniswap.org/#/swap?inputCurrency=ETH`;
+            window.location.reload();
+            // window.location.search = searchParams.toString();
+        }
+    } else if (
+        chainId == 137 &&
+        window.location.href.includes(`inputCurrency=ETH`)
+    ) {
+        if (searchParams.get('inputCurrency') != USDT) {
+            searchParams.set('inputCurrency', USDT);
+            window.location.href = `https://app.uniswap.org/#/swap?inputCurrency=${USDT}`;
+            window.location.reload();
+            // window.location.search = searchParams.toString();
+        }
+    }
     setCurrentNetwork(chainId);
     setNativeTokenNameAndLogo();
     handleTokenChange(
