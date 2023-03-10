@@ -14,7 +14,6 @@ import {
 } from './flintButtonState';
 import chainIdLogo from '../injected/configs/chainIdLogo.json';
 import { getCurrenyNetwork } from './store/store';
-import { getTokenBalance } from '../utils/ERC20Utils';
 
 let parent;
 let parentFlint;
@@ -32,6 +31,7 @@ let toInput;
 let dd2;
 
 let gasInToToken = 0;
+let theme = 'light';
 
 const swapButtons = ['flint-swap-conf', 'flint-swap'];
 
@@ -81,16 +81,23 @@ const setToTokenFinalPrice = () => {
 
 const updateThemeForFlintUI = (backgroundColor) => {
     if (backgroundColor === 'rgb(13, 17, 28)') {
+        theme = 'dark';
         // dark theme
         $('#diffTokBanner').css('background-color', '#131A2A');
         $('#flint-master-container').css('background-color', '#131A2A');
-        $('#fl-gas-sl2').css('background-color', backgroundColor);
-        $('#fl-gas-sl').css('background-color', backgroundColor);
-        $('#diffTokLogo').attr('src', 'https://dnj9s9rkg1f49.cloudfront.net/gasly.svg')
-        $('#tick-bg-color').attr('fill', '#00C689')
-        $('#tick-bg-color-native').attr('fill', '#00C689')
-        $('#fees-logo').attr('src','https://dnj9s9rkg1f49.cloudfront.net/gasly.svg')
-        $('#swapConfModal').css('background-color', backgroundColor);
+        $('.fl-ck-bx-n').css('background-color', 'rgb(41, 50, 73)');
+        $('#diffTokLogo').attr(
+            'src',
+            'https://dnj9s9rkg1f49.cloudfront.net/gasly.svg'
+        );
+        $('#tick-bg-color').attr('fill', '#00C689');
+        $('#tick-bg-color-native').attr('fill', '#00C689');
+        $('#fees-logo').attr(
+            'src',
+            'https://dnj9s9rkg1f49.cloudfront.net/gasly.svg'
+        );
+        $('.fl-pop-cnt').css('background-color', backgroundColor);
+        $('.fl-pop-cnt').css('border-color', backgroundColor);
         $('#swapConfTo').css('background-color', '#131A2A');
         $('#swapConfFrom').css('background-color', '#131A2A');
         $('#swapConfFrom').css('border', '1px solid rgb(41, 50, 73)');
@@ -107,21 +114,31 @@ const updateThemeForFlintUI = (backgroundColor) => {
         $('#txnPendingCont').css('background-color', backgroundColor);
         $('#txnPendingPath').attr('stroke', '#2172E5');
         $('#txnWaitingText').css('color', 'rgb(152, 161, 192)');
-        
     } else {
+        //rgb(255, 255, 255)
         // light theme
+        theme = 'light';
         $('#diffTokBanner').css('background-color', '#F5F6FB');
-        $('#flint-master-container').css('background-color', backgroundColor);
-        $('#fl-gas-sl2').css('background-color', '#F5F6FB');
-        $('#fl-gas-sl').css('background-color', '#F5F6FB');
-        $('#diffTokLogo').attr('src', 'https://dnj9s9rkg1f49.cloudfront.net/gasly-light-theme.svg')
-        $('#tick-bg-color').attr('fill', '#000')
-        $('#tick-bg-color-native').attr('fill', '#000')
-        $('#fees-logo').attr('src','https://dnj9s9rkg1f49.cloudfront.net/gasly-light-theme.svg')
+        $('#flint-master-container').css(
+            'background-color',
+            'rgb(245, 246, 252)'
+        );
+        $('.fl-ck-bx-n').css('background-color', 'rgb(232, 236, 251)');
+        $('#diffTokLogo').attr(
+            'src',
+            'https://dnj9s9rkg1f49.cloudfront.net/gasly-light-theme.svg'
+        );
+        $('#tick-bg-color').attr('fill', '#000');
+        $('#tick-bg-color-native').attr('fill', '#000');
+        $('#fees-logo').attr(
+            'src',
+            'https://dnj9s9rkg1f49.cloudfront.net/gasly-light-theme.svg'
+        );
 
-        $('#swapConfModal').css('background-color', '#fff');
+        $('.fl-pop-cnt').css('background-color', '#fff');
+        $('.fl-pop-cnt').css('border-color', 'rgb(255, 255, 255)');
         $('#swapConfTo').css('background-color', '#F5F6FB');
-        $('#swapConfFrom').css('background-color', '#F5F6FB')
+        $('#swapConfFrom').css('background-color', '#F5F6FB');
         $('#swapConfFrom').css('border', 'none');
         $('#swapConfTo').css('border', 'none');
         $('#swapConfArrow').attr('stroke', '#000');
@@ -138,14 +155,18 @@ const updateThemeForFlintUI = (backgroundColor) => {
         $('#txnPendingCont').css('background-color', '#F5F6FB');
         $('#txnPendingPath').attr('stroke', '#FA108E');
         $('#txnWaitingText').css('color', '#FA108E');
-
     }
-}
+};
 
 export const disableSwapButton = () => {
     swapButtons.forEach((btn) => {
-        $(`#${btn}`).css('background-color', 'rgb(41, 50, 73)');
-        $(`#${btn}`).css('color', 'rgb(152, 161, 192);');
+        if (theme === 'light') {
+            $(`#${btn}`).css('background-color', 'rgb(245, 246, 252)');
+            $(`#${btn}`).css('color', 'rgb(119, 128, 160)');
+        } else {
+            $(`#${btn}`).css('background-color', 'rgb(19, 26, 42)');
+            $(`#${btn}`).css('color', 'rgb(152, 161, 192)');
+        }
         $(`#${btn}`).css('cursor', 'default');
         $(`#${btn}`).css('pointer-events', 'none');
     });
@@ -153,14 +174,14 @@ export const disableSwapButton = () => {
 
 export const enableSwapButton = () => {
     // Check for theme
-    let theme = 'light';
-    const main = $('.sc-11ce2lf-1');
+
+    const main = $('#swap-page');
 
     const backgroundColor = main.css('background-color');
-    
+
     if (backgroundColor === 'rgb(13, 17, 28)') {
         // dark theme
-        theme = 'dark'
+        theme = 'dark';
     }
 
     const target = dd2
@@ -203,8 +224,13 @@ export const hideApprove = () => {
 export const showLoaderApprove = () => {
     $('#flint-approve').html('');
     $('#flint-approve').addClass('button--loading');
-    $('#flint-approve').css('background-color', 'rgb(41, 50, 73)');
-    $('#flint-approve').css('color', 'rgb(152, 161, 192);');
+    if (theme === 'light') {
+        $('#flint-approve').css('background-color', 'rgb(245, 246, 252)');
+        $('#flint-approve').css('color', 'rgb(119, 128, 160)');
+    } else {
+        $('#flint-approve').css('background-color', 'rgb(41, 50, 73)');
+        $('#flint-approve').css('color', 'rgb(152, 161, 192);');
+    }
 };
 
 export const hideLoaderApprove = () => {
@@ -460,19 +486,19 @@ const insertGasTokenBlock = () => {
     }
 };
 
+setInterval(() => {
+    const main = $('#swap-page');
+
+    console.log(main.css('background-color'), 'BG color');
+
+    const backgroundColor = main.css('background-color');
+
+    updateThemeForFlintUI(backgroundColor);
+}, 500);
+
 export const addFlintUILayer = (callback) => {
     const swapBtnOriginal = $('#swap-button');
     parent = swapBtnOriginal.parent();
-
-    setInterval(() => {
-        const main = $('.sc-11ce2lf-1');
-
-        console.log(main.css('background-color'), 'BG color');
-
-        const backgroundColor = main.css('background-color');
-
-        updateThemeForFlintUI(backgroundColor);
-    }, 500)
 
     if (swapBtnOriginal.length > 0) {
         insertPopupHtml();
