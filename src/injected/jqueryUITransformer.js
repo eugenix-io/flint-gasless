@@ -90,7 +90,24 @@ const updateThemeForFlintUI = (backgroundColor) => {
         $('#tick-bg-color').attr('fill', '#00C689')
         $('#tick-bg-color-native').attr('fill', '#00C689')
         $('#fees-logo').attr('src','https://dnj9s9rkg1f49.cloudfront.net/gasly.svg')
+        $('#swapConfModal').css('background-color', backgroundColor);
+        $('#swapConfTo').css('background-color', '#131A2A');
+        $('#swapConfFrom').css('background-color', '#131A2A');
+        $('#swapConfFrom').css('border', '1px solid rgb(41, 50, 73)');
+        $('#swapConfTo').css('border', '1px solid rgb(41, 50, 73)');
+        $('#swapConfArrow').attr('stroke', '#5D6785');
+        $('#swapConfArrCn').css('border', '4px solid rgb(13, 17, 28)');
+        $('#swapConfArrCn').css('background-color', 'rgb(41, 50, 73)');
 
+        $('#txnsSuccessPath2').attr('fill', '#5981F3');
+        $('#txnsSuccessPath1').attr('fill', '#5981F3');
+        $('#txnSuccessCont').css('background-color', backgroundColor);
+        $('#txSuccessClose').css('background-color', 'rgb(76, 130, 251)');
+
+        $('#txnPendingCont').css('background-color', backgroundColor);
+        $('#txnPendingPath').attr('stroke', '#2172E5');
+        $('#txnWaitingText').css('color', 'rgb(152, 161, 192)');
+        
     } else {
         // light theme
         $('#diffTokBanner').css('background-color', '#F5F6FB');
@@ -101,6 +118,27 @@ const updateThemeForFlintUI = (backgroundColor) => {
         $('#tick-bg-color').attr('fill', '#000')
         $('#tick-bg-color-native').attr('fill', '#000')
         $('#fees-logo').attr('src','https://dnj9s9rkg1f49.cloudfront.net/gasly-light-theme.svg')
+
+        $('#swapConfModal').css('background-color', '#fff');
+        $('#swapConfTo').css('background-color', '#F5F6FB');
+        $('#swapConfFrom').css('background-color', '#F5F6FB')
+        $('#swapConfFrom').css('border', 'none');
+        $('#swapConfTo').css('border', 'none');
+        $('#swapConfArrow').attr('stroke', '#000');
+        $('#swapConfArrCn').css('border', '4px solid white');
+        $('#swapConfArrCn').css('background-color', '#F5F6FB');
+        //FA108E pink color
+
+        $('#txnsSuccessPath2').attr('fill', '#FA108E');
+        $('#txnsSuccessPath1').attr('fill', '#FA108E');
+
+        $('#txnSuccessCont').css('background-color', '#F5F6FB');
+        $('#txSuccessClose').css('background-color', '#FA108E');
+
+        $('#txnPendingCont').css('background-color', '#F5F6FB');
+        $('#txnPendingPath').attr('stroke', '#FA108E');
+        $('#txnWaitingText').css('color', '#FA108E');
+
     }
 }
 
