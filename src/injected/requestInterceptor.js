@@ -8,6 +8,7 @@ const getTokenInAddress = (str) => {
     return {
         tokenInAddress: url.get('tokenInAddress'),
         amount: url.get('amount'),
+        type: url.get('type'),
     };
 };
 
@@ -22,12 +23,16 @@ export const interceptRequests = () => {
             (typeof resource === 'string' &&
                 resource.includes('https://api.uniswap.org/v1/quote'))
         ) {
-            const { tokenInAddress, amount } = getTokenInAddress(resource.url);
+            const { tokenInAddress, amount, type } = getTokenInAddress(
+                resource.url
+            );
             console.log('GOING TO UPDATE STATE NOW!');
+
             update({
                 action: 'NEW_QUOTE_REQUEST_INITIATED',
                 uuid,
                 payload: { fromToken: tokenInAddress, amountIn: amount },
+                type
             });
             setGasInFromToken();
         }

@@ -40,8 +40,9 @@ let tokens = {};
 let latestQuoteId;
 let gaslessApprovalSupported = false;
 const WMATIC = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270';
+let inputType = 'exactOut';
 
-export const update = async ({ action, payload, uuid }) => {
+export const update = async ({ action, payload, uuid, type }) => {
     console.log('NEW ACTION IN BUTTON STATE - ', action, payload);
     switch (action) {
         //params - fromToken,
@@ -50,6 +51,7 @@ export const update = async ({ action, payload, uuid }) => {
             //only if the user changes the token, check if we need an approval
             disableSwapButton();
             swapState = {};
+            inputType = type;
             break;
         case 'NEW_QUOTE_REQUEST_COMPLETED':
             if (latestQuoteId !== uuid) {
@@ -72,7 +74,8 @@ export const update = async ({ action, payload, uuid }) => {
                 return;
             }
             swapState = {
-                amountIn: payload.amount,
+                amountIn:
+                    inputType === 'exactIn' ? payload.amount : payload.quote,
                 routes: payload.route[0],
                 fromToken: tokenArray[0],
                 toToken: tokenArray[tokenArray.length - 1],
@@ -80,36 +83,27 @@ export const update = async ({ action, payload, uuid }) => {
                 feeArr: feeArr,
             };
             console.log('UPDATING SWAP STATE - ', swapState);
+            const gasINUSD = Number(payload.gasUseEstimateUSD);
+            let amountInToken1 = Number(payload.amountDecimals);
+            let amountInToken2 = Number(payload.quoteDecimals);
 
-            let promises = [
-                axios.get(
-                    'https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice'
-                ),
-                axios.get(
-                    `https://api.coingecko.com/api/v3/simple/token_price/polygon-pos?contract_addresses=${swapState.toToken},${WMATIC},${swapState.fromToken}&vs_currencies=usd`
-                ),
-            ];
-            let [gasPriceResp, tokenPriceResp] = await Promise.all(promises);
-            const { result } = gasPriceResp.data;
-            const gasInMatic = (Number(result) * 130000) / 10 ** 18;
-            const response = tokenPriceResp.data;
-            const toPrice = response[swapState.toToken.toLowerCase()]['usd'];
-            const fromPrice =
-                response[swapState.fromToken.toLowerCase()]['usd'];
-            const maticPrice = response[WMATIC.toLowerCase()]['usd'];
-            const gasInToToken = (gasInMatic / toPrice) * maticPrice;
-            const gasInFromToken = (gasInMatic / fromPrice) * maticPrice;
+            let gasInToToken = Number(payload.gasUseEstimateQuoteDecimals);
+
+            let gasInFromToken =
+                gasInToToken * (amountInToken1 / amountInToken2);
+
+            if (inputType !== 'exactIn') {
+                amountInToken1 = Number(payload.quoteDecimals);
+                amountInToken2 = Number(payload.amountDecimals);
+
+                gasInFromToken = Number(payload.gasUseEstimateQuoteDecimals);
+
+                gasInToToken =
+                    gasInFromToken * (amountInToken2 / amountInToken1);
+            }
+
             setGasInToToken(gasInToToken);
-            setGasInFromToken(gasInFromToken, gasInMatic * maticPrice);
-            console.log(
-                gasInMatic,
-                toPrice,
-                fromPrice,
-                maticPrice,
-                gasInToToken,
-                gasInFromToken,
-                'GAS AND PRICE VALUES'
-            );
+            setGasInFromToken(gasInFromToken, gasINUSD);
             const currentTokenBalance = await getTokenBalance(
                 swapState.fromToken,
                 walletAddress
