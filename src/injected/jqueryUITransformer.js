@@ -152,6 +152,17 @@ export const disableSwapButton = () => {
 };
 
 export const enableSwapButton = () => {
+    // Check for theme
+    let theme = 'light';
+    const main = $('.sc-11ce2lf-1');
+
+    const backgroundColor = main.css('background-color');
+    
+    if (backgroundColor === 'rgb(13, 17, 28)') {
+        // dark theme
+        theme = 'dark'
+    }
+
     const target = dd2
         .children('div:nth-child(3)')
         ?.children('div:first-child');
@@ -161,7 +172,12 @@ export const enableSwapButton = () => {
         },
     });
     swapButtons.forEach((btn) => {
-        $(`#${btn}`).css('background-color', 'rgb(76, 130, 251)');
+        if (theme === 'light') {
+            //FA108E
+            $(`#${btn}`).css('background-color', '#FA108E');
+        } else {
+            $(`#${btn}`).css('background-color', 'rgb(76, 130, 251)');
+        }
         $(`#${btn}`).css('color', 'rgb(245, 246, 252)');
         $(`#${btn}`).css('cursor', 'pointer');
         $(`#${btn}`).css('pointer-events', 'auto');
