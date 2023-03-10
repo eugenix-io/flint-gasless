@@ -141,6 +141,10 @@ export const setWalletAddress = (address) => {
     walletAddress = address;
 };
 
+export const getWalletAddress = () => {
+    return walletAddress;
+};
+
 export const buttonClick = async () => {
     if (swapState.fromToken) {
         showSwapPopup();

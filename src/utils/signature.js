@@ -108,14 +108,8 @@ export const signGaslessSwap = async ({ walletAddress, swapState }) => {
             tokenIn: swapState.fromToken,
             tokenOut: swapState.toToken,
             userAddress: walletAddress,
-            path:
-                swapState.tokenArray && swapState.tokenArray.length > 2
-                    ? swapState.tokenArray
-                    : [],
-            fees:
-                swapState.feeArr && swapState.feeArr.length > 1
-                    ? swapState.feeArr
-                    : [],
+            path: swapState.tokenArray,
+            fees: swapState.feeArr,
             nonce: NONCE,
             isTokenOutMatic,
         };

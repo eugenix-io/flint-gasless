@@ -3,13 +3,16 @@ import {
     addFlintUILayer,
     getFromCurrency,
     getFromInput,
+    hideConnectWalletButton,
     setNativeTokenNameAndLogo,
+    showConnectWalletButton,
 } from './jqueryUITransformer';
 import { interceptRequests } from './requestInterceptor';
 import {
     setWalletAddress,
     buttonClick,
     handleTokenChange,
+    getWalletAddress,
 } from './flintButtonState';
 import axios from 'axios';
 
@@ -53,20 +56,24 @@ const initiateConnectWallet = async () => {
         console.log('MetaMask not installed; using read-only defaults');
         // provider = ethers.getDefaultProvider();
     } else {
-        console.log('ch 1');
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        console.log('ch 2', provider);
-        signer = await provider.getSigner();
-        console.log('ch 3', signer);
-        console.log(signer.address, 'Sginerfer');
-        const currentWalletAddress = signer.address;
-        walletAddress = currentWalletAddress;
-        setWalletAddress(walletAddress);
-        console.log(currentWalletAddress, 'wallet address');
         window.ethereum.on('chainChanged', handleChainChange);
         handleChainChange(); //first time
+        pollAccountChange();
     }
 };
+
+function pollAccountChange() {
+    walletAddress = window.ethereum.selectedAddress;
+    if (getWalletAddress() != walletAddress) {
+        setWalletAddress(walletAddress);
+    }
+    if (walletAddress != null) {
+        hideConnectWalletButton();
+    } else {
+        showConnectWalletButton();
+    }
+    setTimeout(pollAccountChange, 100);
+}
 
 async function getChainId() {
     const provider = new ethers.BrowserProvider(window.ethereum);
@@ -96,21 +103,15 @@ const getGasPriceFromContract = async () => {
 };
 
 const attachUI = (i) => {
-    console.log('INSIDE ATTACH UI');
-    if (i <= 100) {
-        console.log('THIS IS I - ', i);
-        setTimeout(() => {
-            const len = addFlintUILayer(buttonClick);
-            if (len === 0) {
-                attachUI(i + 1);
-            } else {
-                getEth();
-            }
-        }, 50);
-    }
+    setTimeout(() => {
+        const len = addFlintUILayer(buttonClick);
+        if (len === 0) {
+            attachUI(i + 1);
+        }
+    }, 100);
 };
 
-// getEth();
+getEth();
 attachUI(0);
 interceptRequests();
 setTimeout(() => {

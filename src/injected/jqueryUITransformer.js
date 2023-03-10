@@ -14,6 +14,7 @@ import {
 import chainIdLogo from '../injected/configs/chainIdLogo.json';
 import { getCurrenyNetwork } from './store/store';
 import { getTokenBalance } from '../utils/ERC20Utils';
+import { ethers } from 'ethers';
 
 let parent;
 let parentFlint;
@@ -171,6 +172,16 @@ export const hideSwapPopup = () => {
 export const switchToSwap = () => {
     $('#flint-approve').hide();
     $('#flint-swap').show();
+};
+
+export const hideConnectWalletButton = () => {
+    $('#connected_buttons').show();
+    $('#flint-connect-wallet').hide();
+};
+
+export const showConnectWalletButton = () => {
+    $('#connected_buttons').hide();
+    $('#flint-connect-wallet').show();
 };
 
 export const disableService = () => {
@@ -408,6 +419,11 @@ export const addFlintUILayer = (callback) => {
         .off()
         .on('click', function () {
             handleApproval();
+        });
+    $('#flint-connect-wallet')
+        .off()
+        .on('click', async () => {
+            $('*[data-testid="navbar-connect-wallet"]').click();
         });
 
     parentFlint = $('#tg_fl');
