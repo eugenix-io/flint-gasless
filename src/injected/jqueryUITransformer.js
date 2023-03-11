@@ -27,6 +27,7 @@ let fromImgSrc;
 let toImgSrc;
 let fromInput;
 let toInput;
+let finalToTokenPrice;
 
 let dd2;
 
@@ -75,6 +76,7 @@ const setToTokenFinalPrice = () => {
         if (finalPrice > 0.0001) {
             finalPrice = finalPrice.toFixed(4);
         }
+        finalToTokenPrice = finalPrice;
         $('#fl-to-amt').html(finalPrice);
     }
 };
@@ -279,11 +281,22 @@ export const switchToSwap = () => {
     $('#flint-swap').show();
 };
 
-export const disableService = () => {
+export const hideConnectWalletButton = () => {
+    $('#connected_buttons').show();
+    $('#flint-connect-wallet').hide();
+};
+
+export const showConnectWalletButton = () => {
+    $('#connected_buttons').hide();
+    $('#flint-connect-wallet').show();
+};
+
+export const disableService = (message) => {
     select_dapp_for_swap();
     $('#fl-gas-sl2').addClass('disabled');
     // $('#flint-error-message').show();
     $('#diffTokBanner').show();
+    $('#flint-error-message').html(message);
 };
 
 export const enableService = () => {
@@ -413,6 +426,7 @@ const insertGasTokenBlock = () => {
                     $('#fl-from-im').attr('src', fromImgSrc);
                     $('#fl-from-crr').html(fromCurrency);
                     handleTokenChange(fromCurrency, fromInput.val());
+                    activeSwap();
                 }, 200);
             },
         });
@@ -482,6 +496,10 @@ const insertGasTokenBlock = () => {
                 .on('click', () => {
                     select_dapp_for_swap();
                 });
+
+            // if (fromCurrency === 'MATIC') {
+            //     disableService();
+            // }
         }
     }
 };
@@ -519,13 +537,18 @@ export const addFlintUILayer = (callback) => {
             hideSwapPopup();
             showWaitingPopup();
             $('#fl-swp-for').html(
-                `Swapping ${fromInput.val()} ${fromCurrency} for ${toInput.val()} ${toCurrency}`
+                `Swapping ${fromInput.val()} ${fromCurrency} for ${finalToTokenPrice} ${toCurrency}`
             );
         });
     $('#flint-approve')
         .off()
         .on('click', function () {
             handleApproval();
+        });
+    $('#flint-connect-wallet')
+        .off()
+        .on('click', async () => {
+            $('*[data-testid="navbar-connect-wallet"]').click();
         });
 
     parentFlint = $('#tg_fl');

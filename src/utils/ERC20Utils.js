@@ -1,4 +1,4 @@
-import ethers from 'ethers';
+import { ethers } from 'ethers';
 import axios from 'axios';
 import Web3 from 'web3';
 import tokenAbi from '../abis/ERC20.json';
@@ -15,11 +15,13 @@ export const getTokenBalance = async (
         const web3 = new Web3(window.ethereum);
         const tokenContract = new web3.eth.Contract(tokenAbi, tokenAddress);
         let bal = await tokenContract.methods.balanceOf(walletAddress).call();
-        const decimals = await tokenContract.methods.decimals().call();
-        if (!returnInLeastUnit) {
-            bal = bal / 10 ** decimals;
-        }
-        return bal;
+        const bigNumber = ethers.toBigInt(bal);
+        // const decimals = await tokenContract.methods.decimals().call();
+        // console.log('BEFORE DIVIDE', bal, bigNumber / 10 ** decimals);
+        // if (!returnInLeastUnit) {
+        //     bal = bal / 10 ** decimals;
+        // }
+        return bigNumber;
     } catch (err) {
         console.error('FAILED TO GET BALANCE - ', err);
         throw err;

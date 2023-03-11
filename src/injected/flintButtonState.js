@@ -73,9 +73,10 @@ export const update = async ({ action, payload, uuid, type }) => {
                 swapState = {};
                 return;
             }
+            const inputAmount =
+                inputType === 'exactIn' ? payload.amount : payload.quote;
             swapState = {
-                amountIn:
-                    inputType === 'exactIn' ? payload.amount : payload.quote,
+                amountIn: inputAmount,
                 routes: payload.route[0],
                 fromToken: tokenArray[0],
                 toToken: tokenArray[tokenArray.length - 1],
@@ -108,11 +109,13 @@ export const update = async ({ action, payload, uuid, type }) => {
                 swapState.fromToken,
                 walletAddress
             );
-            const fromAmount = getFromInput()?.val();
+            // const fromAmount = getFromInput()?.val();
+            const fromAmount = ethers.toBigInt(inputAmount);
             console.log(
                 'MINIMUM AMOUNT CHECK',
                 currentTokenBalance,
                 fromAmount,
+                Number(fromAmount),
                 gasInFromToken
             );
             // checking if the requested amount is more than available balance and gas required
@@ -133,6 +136,10 @@ export const update = async ({ action, payload, uuid, type }) => {
 
 export const setWalletAddress = (address) => {
     walletAddress = address;
+};
+
+export const getWalletAddress = () => {
+    return walletAddress;
 };
 
 export const buttonClick = async () => {
@@ -184,11 +191,11 @@ export const handleTokenChange = async (fromTokenSymbol, amountIn) => {
     console.log('GOT ADDRESS - ', fromToken);
     //NATIVE MATIC AS FROM TOKEN IS NOT ALLOWED
     console.log('THIS IS THE FROM TOKEN - ', fromToken);
-    if (
-        fromToken == '0x0000000000000000000000000000000000001010' ||
-        getCurrenyNetwork() != 137
-    ) {
-        disableService();
+    if (getCurrenyNetwork() != 137) {
+        disableService('Change to Polygon network to use GasPay.');
+        return;
+    } else if (fromToken == '0x0000000000000000000000000000000000001010') {
+        disableService('Gas will be deducted from the input token');
         return;
     }
     if (!fromToken) {
