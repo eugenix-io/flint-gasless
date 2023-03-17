@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
+import GasInProgress from './GasInProgress.jsx';
+import TransactionStatus from './TransactionStatus.jsx';
 
 const BridgeContainer = styled.div`
     display: flex;
@@ -78,10 +80,22 @@ const CoinSelector = () => {
 };
 
 const Bridge = ({ wallet }) => {
+    const [loadingGasScreen, setLoadingGasScreen] = useState(false);
+    const [transactionProgressScreen, setTransactionProgressScreen] =
+        useState(true);
+
     return (
         <BridgeContainer>
-            <WalletAddress>{wallet.address}</WalletAddress>
-            <CoinSelector></CoinSelector>
+            {loadingGasScreen ? (
+                <GasInProgress></GasInProgress>
+            ) : transactionProgressScreen ? (
+                <TransactionStatus></TransactionStatus>
+            ) : (
+                <>
+                    <WalletAddress>{wallet.address}</WalletAddress>
+                    <CoinSelector></CoinSelector>
+                </>
+            )}
         </BridgeContainer>
     );
 };
