@@ -115,6 +115,7 @@ const Instructions = () => {
                     <div style={{ display: 'flex', flexDirection: 'row' }}>
                         {instructions.map((_, index) => (
                             <div
+                                key={index}
                                 style={{
                                     width: '7px',
                                     height: '7px',

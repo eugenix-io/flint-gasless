@@ -507,8 +507,6 @@ const insertGasTokenBlock = () => {
 setInterval(() => {
     const main = $('#swap-page');
 
-    console.log(main.css('background-color'), 'BG color');
-
     const backgroundColor = main.css('background-color');
 
     updateThemeForFlintUI(backgroundColor);

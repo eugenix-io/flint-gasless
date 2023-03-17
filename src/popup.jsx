@@ -66,6 +66,7 @@ const App = () => {
             <Navbar>
                 {navbarItems.map((item, index) => (
                     <NavbarItem
+                        key={index}
                         selected={index == navbarSelected}
                         onClick={() => setNavbarSelected(index)}
                     >
@@ -74,11 +75,13 @@ const App = () => {
                 ))}
             </Navbar>
             <BodyContainer>
-                {navbarItems.map((item, index) => {
+                {/* {navbarItems.map((item, index) => {
                     if (index == navbarSelected) {
                         return item.component;
                     }
-                })}
+                })} */}
+                {navbarItems.length > navbarSelected &&
+                    navbarItems[navbarSelected].component}
             </BodyContainer>
         </PopupContainer>
     );

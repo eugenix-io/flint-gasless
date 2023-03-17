@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
+import GasInProgress from './GasInProgress.jsx';
+import TransactionStatus from './TransactionStatus.jsx';
 import DownArrow from '../assets/img/down_arrow.svg';
 import TokenSelector from './TokenSelector.jsx';
 import faucetTokens from '../config/faucetTokens.json';
@@ -154,6 +156,9 @@ const CoinSelector = ({
 };
 
 const Bridge = ({ wallet }) => {
+    const [loadingGasScreen, setLoadingGasScreen] = useState(false);
+    const [transactionProgressScreen, setTransactionProgressScreen] =
+        useState(true);
     const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState(false);
     const [lastTokenSelector, setLastTokenSelector] = useState('');
     const [fromState, setFromState] = useState({
@@ -166,8 +171,8 @@ const Bridge = ({ wallet }) => {
     });
 
     const fromTokenClick = () => {
-        setLastTokenSelector('from');
         setIsTokenSelectorOpen(true);
+        setLastTokenSelector('from');
     };
 
     const toTokenClick = () => {
@@ -193,35 +198,54 @@ const Bridge = ({ wallet }) => {
 
     return (
         <BridgeContainer>
-            {/* <WalletAddress>{wallet.address}</WalletAddress> */}
-            {isTokenSelectorOpen ? (
-                <TokenSelector
-                    onTokenSelect={onTokenSelect}
-                    close={closeTokenSelector}
-                    chain={
-                        lastTokenSelector == 'from'
-                            ? fromState.chain
-                            : toState.chain
-                    }
-                ></TokenSelector>
+            {loadingGasScreen ? (
+                <GasInProgress></GasInProgress>
+            ) : transactionProgressScreen ? (
+                <TransactionStatus></TransactionStatus>
             ) : (
                 <>
-                    <CoinSelector
-                        heading="From:"
-                        coinLogo={faucetTokens.tokens[fromState.token].image}
-                        chainLogo={faucetTokens.chains[fromState.chain].image}
-                        symbol={faucetTokens.tokens[fromState.token].symbol}
-                        onTokenClick={fromTokenClick}
-                    ></CoinSelector>
-                    <SwapArrow src={DownArrow}></SwapArrow>
-                    <CoinSelector
-                        heading="To:"
-                        coinLogo={faucetTokens.tokens[toState.token].image}
-                        chainLogo={faucetTokens.chains[toState.chain].image}
-                        symbol={faucetTokens.tokens[toState.token].symbol}
-                        onTokenClick={toTokenClick}
-                    ></CoinSelector>
-                    <SubmitButton>Get Gas</SubmitButton>
+                    {isTokenSelectorOpen ? (
+                        <TokenSelector
+                            onTokenSelect={onTokenSelect}
+                            close={closeTokenSelector}
+                            chain={
+                                lastTokenSelector == 'from'
+                                    ? fromState.chain
+                                    : toState.chain
+                            }
+                        ></TokenSelector>
+                    ) : (
+                        <>
+                            <CoinSelector
+                                heading="From:"
+                                coinLogo={
+                                    faucetTokens.tokens[fromState.token].image
+                                }
+                                chainLogo={
+                                    faucetTokens.chains[fromState.chain].image
+                                }
+                                symbol={
+                                    faucetTokens.tokens[fromState.token].symbol
+                                }
+                                onTokenClick={fromTokenClick}
+                            ></CoinSelector>
+                            <SwapArrow src={DownArrow}></SwapArrow>
+                            <CoinSelector
+                                heading="To:"
+                                coinLogo={
+                                    faucetTokens.tokens[toState.token].image
+                                }
+                                chainLogo={
+                                    faucetTokens.chains[toState.chain].image
+                                }
+                                symbol={
+                                    faucetTokens.tokens[toState.token].symbol
+                                }
+                                onTokenClick={toTokenClick}
+                            ></CoinSelector>
+                            <SubmitButton>Get Gas</SubmitButton>
+                        </>
+                    )}
                 </>
             )}
         </BridgeContainer>
