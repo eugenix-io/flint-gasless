@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import BoxContainer from './BoxContainer.jsx';
 import CTA from './CTA.jsx';
-import $ from 'jquery';
+import SlidingContainer from './SlidingContainer.jsx';
 
 const Heading = styled.div`
     font-family: 'Gilmer';
@@ -88,7 +88,6 @@ const TimelineContainer = styled.div`
     margin-top: 20px;
     position: relative;
     width: 100%;
-    display: none;
 `;
 
 const DotContainer = styled.div`
@@ -130,10 +129,14 @@ const TimelineStatus = styled.p`
     line-height: 18px;
     color: #e0e0e0;
     opacity: 0.7;
-    margin: 30px 0 0 0;
+    padding: 30px 0 0 0;
+    margin: 0;
+    overflow: hidden;
 `;
 
 const TransactionStatus = () => {
+    const [open, setOpen] = useState(false);
+
     return (
         <>
             <Heading>Congratulations</Heading>
@@ -178,12 +181,17 @@ const TransactionStatus = () => {
                 </Header>
                 <ViewStatus
                     onClick={() => {
-                        $('#progress-timeline').slideToggle(200);
+                        setOpen(!open);
                     }}
                 >
                     View status
                     <svg
-                        style={{ marginLeft: '8px', marginTop: '2px' }}
+                        style={{
+                            marginLeft: '8px',
+                            marginTop: '2px',
+                            transition: 'transform 0.2s',
+                            transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
+                        }}
                         width="6"
                         height="10"
                         viewBox="0 0 6 10"
@@ -196,20 +204,24 @@ const TransactionStatus = () => {
                         />
                     </svg>
                 </ViewStatus>
-                <TimelineContainer id="progress-timeline">
-                    <DotContainer>
-                        <Dot active />
-                        <Dot active />
-                        <Dot />
-                        <Dot />
-                    </DotContainer>
-                    <LineContainer>
-                        <Line active />
-                        <Line />
-                        <Line />
-                    </LineContainer>
-                    <TimelineStatus>Current: Yet to be detected</TimelineStatus>
-                </TimelineContainer>
+                <SlidingContainer style={{ width: '100%' }} open={open}>
+                    <TimelineContainer>
+                        <DotContainer>
+                            <Dot active />
+                            <Dot active />
+                            <Dot />
+                            <Dot />
+                        </DotContainer>
+                        <LineContainer>
+                            <Line active />
+                            <Line />
+                            <Line />
+                        </LineContainer>
+                        <TimelineStatus>
+                            Current: Yet to be detected
+                        </TimelineStatus>
+                    </TimelineContainer>
+                </SlidingContainer>
             </BoxContainer>
 
             <CTA style={{ marginTop: '20px' }}>Request another</CTA>

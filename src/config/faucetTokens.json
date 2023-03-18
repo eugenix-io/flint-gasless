@@ -1,72 +1,90 @@
 {
-	"chains": {
-		"ethereum": {
-			"name": "Ethereum",
-			"chainId": 1,
-			"image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png?1595348880"
-		},
-		"polygon": {
-			"name": "Polygon",
-			"chainId": 137,
-			"image": "https://assets.coingecko.com/coins/images/4713/large/matic-token-icon.png?1624446912"
-		},
-		"optimism": {
-			"name": "Optimism",
-			"chainId": 10,
-			"image": "https://assets.coingecko.com/coins/images/25244/large/Optimism.png?1660904599"
-		},
-		"arbitrum": {
-			"name": "Arbitrum",
-			"chainId": 42161,
-			"image": "https://dnj9s9rkg1f49.cloudfront.net/arbitrum_logo.png"
-		},
-		"bsc": {
-			"name": "BSC",
-			"chainId": 56,
-			"image": "https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png?1644979850"
-		},
-		"avax": {
-			"name": "Avalanche",
-			"chainId": 43114,
-			"image": "https://assets.coingecko.com/coins/images/12559/large/Avalanche_Circle_RedWhite_Trans.png?1670992574"
-		}
-	},
-	"tokens": {
-		"ethereum": {
-			"symbol": "ETH",
-			"image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png?1595348880",
-			"chainIds": [1, 19, 42161, 10],
-			"live": true
-		},
-		"matic": {
-			"symbol": "MATIC",
-			"image": "https://assets.coingecko.com/coins/images/4713/large/matic-token-icon.png?1624446912",
-			"chainIds": [137],
-			"live": true
-		},
-		"bnb": {
-			"symbol": "BNB",
-			"image": "https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png?1644979850",
-			"chainIds": [56],
-			"live": true
-		},
-		"avax": {
-			"symbol": "AVAX",
-			"image": "https://assets.coingecko.com/coins/images/12559/large/Avalanche_Circle_RedWhite_Trans.png?1670992574",
-			"chainIds": [43114],
-			"live": true
-		},
-		"usdt": {
-			"symbol": "USDT",
-			"image": "https://dnj9s9rkg1f49.cloudfront.net/usdt_logo.png",
-			"chainIds": [1, 137, 10, 42161, 56, 43114],
-			"live": false
-		},
-		"usdc": {
-			"symbol": "USDC",
-			"image": "https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png?1547042389",
-			"chainIds": [1, 137, 10, 42161, 56, 43114],
-			"live": false
-		}
-	}
+    "chains": {
+        "ethereum": {
+            "name": "Ethereum",
+            "chainId": 1,
+            "tokenSymbol": "ETH",
+            "expolrerDomain": "https://etherscan.io/tx/",
+            "explorerName": "EtherScan",
+            "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png?1595348880"
+        },
+        "polygon": {
+            "name": "Polygon",
+            "chainId": 137,
+            "tokenSymbol": "MATIC",
+            "expolrerDomain": "https://polygonscan.com/tx/",
+            "explorerName": "PolygonScan",
+            "image": "https://assets.coingecko.com/coins/images/4713/large/matic-token-icon.png?1624446912"
+        },
+        "optimism": {
+            "name": "Optimism",
+            "chainId": 10,
+            "tokenSymbol": "ETH",
+            "expolrerDomain": "https://optimistic.etherscan.io/tx/",
+            "explorerName": "optimistic.etherscan",
+            "image": "https://assets.coingecko.com/coins/images/25244/large/Optimism.png?1660904599"
+        },
+        "arbitrum": {
+            "name": "Arbitrum",
+            "chainId": 42161,
+            "tokenSymbol": "ETH",
+            "expolrerDomain": "https://arbiscan.io/tx",
+            "explorerName": "ArbiScan",
+            "image": "https://dnj9s9rkg1f49.cloudfront.net/arbitrum_logo.png"
+        },
+        "bsc": {
+            "name": "BSC",
+            "chainId": 56,
+            "tokenSymbol": "BNB",
+            "expolrerDomain": "https://bscscan.com/tx/",
+            "explorerName": "BSCScan",
+            "image": "https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png?1644979850"
+        },
+        "avax": {
+            "name": "Avalanche",
+            "chainId": 43114,
+            "tokenSymbol": "AVAX",
+            "expolrerDomain": "https://snowtrace.io/tx/",
+            "explorerName": "SnowTrace",
+            "image": "https://assets.coingecko.com/coins/images/12559/large/Avalanche_Circle_RedWhite_Trans.png?1670992574"
+        }
+    },
+    "tokens": {
+        "ethereum": {
+            "symbol": "ETH",
+            "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png?1595348880",
+            "chainIds": [1, 19, 42161, 10],
+            "live": true
+        },
+        "matic": {
+            "symbol": "MATIC",
+            "image": "https://assets.coingecko.com/coins/images/4713/large/matic-token-icon.png?1624446912",
+            "chainIds": [137],
+            "live": true
+        },
+        "bnb": {
+            "symbol": "BNB",
+            "image": "https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png?1644979850",
+            "chainIds": [56],
+            "live": true
+        },
+        "avax": {
+            "symbol": "AVAX",
+            "image": "https://assets.coingecko.com/coins/images/12559/large/Avalanche_Circle_RedWhite_Trans.png?1670992574",
+            "chainIds": [43114],
+            "live": true
+        },
+        "usdt": {
+            "symbol": "USDT",
+            "image": "https://dnj9s9rkg1f49.cloudfront.net/usdt_logo.png",
+            "chainIds": [1, 137, 10, 42161, 56, 43114],
+            "live": false
+        },
+        "usdc": {
+            "symbol": "USDC",
+            "image": "https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png?1547042389",
+            "chainIds": [1, 137, 10, 42161, 56, 43114],
+            "live": false
+        }
+    }
 }

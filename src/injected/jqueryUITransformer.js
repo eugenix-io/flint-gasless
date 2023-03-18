@@ -14,6 +14,7 @@ import {
 } from './flintButtonState';
 import chainIdLogo from '../injected/configs/chainIdLogo.json';
 import { getCurrenyNetwork } from './store/store';
+import { getSignificantDigits } from '../utils/commonFunctions';
 
 let parent;
 let parentFlint;
@@ -35,18 +36,6 @@ let gasInToToken = 0;
 let theme = 'light';
 
 const swapButtons = ['flint-swap-conf', 'flint-swap'];
-
-const getSignificantDigits = (num) => {
-    num = Number(num);
-    if (num > 0.01) {
-        num = num.toFixed(2);
-    } else if (num > 0.0001) {
-        num = num.toFixed(4);
-    } else {
-        num = num.toFixed(6);
-    }
-    return num;
-};
 
 export const setGasInToToken = (gas) => {
     if (gas) {

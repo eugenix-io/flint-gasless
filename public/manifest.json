@@ -21,7 +21,18 @@
         {
             "resources": ["injected.js"],
             "matches": ["<all_urls>"]
+        },
+        {
+            "resources": ["/fonts/*.otf"],
+            "matches": ["<all_urls>"]
+        },
+        {
+            "resources": ["https://dnj9s9rkg1f49.cloudfront.net/*.otf"],
+            "matches": ["<all_urls>"]
         }
     ],
-    "host_permissions": ["https://mtx.flint.money/*"]
+    "host_permissions": [
+        "https://mtx.flint.money/*",
+        "https://dnj9s9rkg1f49.cloudfront.net/*"
+    ]
 }
