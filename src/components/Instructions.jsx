@@ -90,6 +90,7 @@ const Instructions = () => {
                         fontFamily: 'GilmerMedium',
                         fontSize: '1.2rem',
                         marginTop: '20px',
+                        height: '30px',
                     }}
                 >
                     {instructions[currentStep].title}

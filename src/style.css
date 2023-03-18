@@ -261,7 +261,7 @@ input[type='radio']:checked ~ label {
 
 @font-face {
     font-family: 'GilmerBold';
-    src: url('./assets//fonts/GilmerBold.otf') format('otf');
+    src: url('https://dnj9s9rkg1f49.cloudfront.net/GilmerBold.otf') format('otf');
 }
 @font-face {
     font-family: 'GilmerHeavy';
@@ -280,6 +280,7 @@ input[type='radio']:checked ~ label {
     src: url('./assets//fonts/GilmerOutline.otf') format('otf');
 }
 @font-face {
-    font-family: 'GilmerRegular';
-    src: url('./assets//fonts/GilmerRegular.otf') format('otf');
+    font-family: 'Gilmer';
+    src: url('https://dnj9s9rkg1f49.cloudfront.net/GilmerRegular.otf') format('otf');
+    /* src: url('/fonts/GilmerRegular.otf') format('otf'); */
 }

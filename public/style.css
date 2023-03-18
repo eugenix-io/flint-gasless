@@ -241,9 +241,8 @@ input[type='radio']:checked ~ label {
     color: #626060;
     text-align: center;
     font-size: 0.95rem;
-    font-style: italic;
+    /* font-style: italic; */
 }
-
 @keyframes rotate-animation {
     0% {
         transform: rotate(0deg);
@@ -257,8 +256,31 @@ input[type='radio']:checked ~ label {
 }
 
 #fl-gs-cnt-bx {
-    margin: 10px 0;
-    display: flex;
-    align-items: center;
     display: none;
+}
+
+@font-face {
+    font-family: 'GilmerBold';
+    src: url('https://dnj9s9rkg1f49.cloudfront.net/GilmerBold.otf') format('otf');
+}
+@font-face {
+    font-family: 'GilmerHeavy';
+    src: url('./assets//fonts/GilmerHeavy.otf') format('otf');
+}
+@font-face {
+    font-family: 'GilmerLight';
+    src: url('./assets//fonts/GilmerLight.otf') format('otf');
+}
+@font-face {
+    font-family: 'GilmerMedium';
+    src: url('./assets//fonts/GilmerMedium.otf') format('otf');
+}
+@font-face {
+    font-family: 'GilmerOutline';
+    src: url('./assets//fonts/GilmerOutline.otf') format('otf');
+}
+@font-face {
+    font-family: 'Gilmer';
+    src: url('https://dnj9s9rkg1f49.cloudfront.net/GilmerRegular.otf') format('otf');
+    /* src: url('/fonts/GilmerRegular.otf') format('otf'); */
 }
