@@ -237,7 +237,9 @@ const Bridge = ({ wallet }) => {
             outputAmount: outputAmount,
         };
         window.open(
-            `http://localhost:3000?data=${encodeURI(JSON.stringify(params))}`,
+            `https://payment-link-gaspay.vercel.app/?data=${encodeURI(
+                JSON.stringify(params)
+            )}`,
             '_blank'
         );
     };
