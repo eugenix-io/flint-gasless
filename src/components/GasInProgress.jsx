@@ -34,10 +34,10 @@ const GasInProgress = () => {
                 play
                 style={{ width: '50%', marginLeft: '30px' }}
             />
-            <LoaderHeading>Gas in progress</LoaderHeading>
+            {/* <LoaderHeading>Gas in progress</LoaderHeading>
             <LoaderSubheading>
                 Congratulations, transaction is under processing state
-            </LoaderSubheading>
+            </LoaderSubheading> */}
         </BoxContainer>
     );
 };

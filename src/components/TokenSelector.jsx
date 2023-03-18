@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import styled, { css } from 'styled-components';
-import faucetTokens from '../config/faucetTokens.json';
 import crossLogo from '../assets/img/cross.png';
 
 const TokenSelectorContainer = styled.div`
@@ -108,7 +107,7 @@ const CloseButton = styled.img`
     cursor: pointer;
 `;
 
-const TokenSelector = ({ close, onTokenSelect, chain }) => {
+const TokenSelector = ({ close, onTokenSelect, chain, faucetTokens }) => {
     const [selectedChain, setSelectedChain] = useState(chain);
     return (
         <TokenSelectorContainer>

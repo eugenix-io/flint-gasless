@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import GasInProgress from './GasInProgress.jsx';
 import TransactionStatus from './TransactionStatus.jsx';
 import DownArrow from '../assets/img/down_arrow.svg';
 import TokenSelector from './TokenSelector.jsx';
-import faucetTokens from '../config/faucetTokens.json';
+import { ethers } from 'ethers';
+import axios from 'axios';
+import { data } from 'jquery';
+import { useDebounce } from 'use-debounce';
 
 const BridgeContainer = styled.div`
     display: flex;
@@ -128,12 +131,23 @@ const SubmitButton = styled.div`
     cursor: pointer;
 `;
 
+const ErrorMessage = styled.div`
+    font-size: 0.9rem;
+    color: grey;
+    margin-top: 2%;
+    padding-left: 2%;
+    text-align: center;
+`;
+
 const CoinSelector = ({
     heading,
     coinLogo,
     chainLogo,
     symbol,
     onTokenClick,
+    onAmountChange,
+    amount,
+    inputDisabled,
 }) => {
     return (
         <CoinSelectorContainer>
@@ -142,6 +156,9 @@ const CoinSelector = ({
                 <CoinSelectorInputContainerAmount
                     type="number"
                     placeholder="11.2"
+                    onChange={(e) => onAmountChange(e.target.value)}
+                    value={amount}
+                    disabled={inputDisabled ? true : false}
                 ></CoinSelectorInputContainerAmount>
                 <CoinSelectorInputContainerCoin onClick={onTokenClick}>
                     <CoinName>{symbol}</CoinName>
@@ -156,9 +173,9 @@ const CoinSelector = ({
 };
 
 const Bridge = ({ wallet }) => {
-    const [loadingGasScreen, setLoadingGasScreen] = useState(false);
+    const [loadingGasScreen, setLoadingGasScreen] = useState(true);
     const [transactionProgressScreen, setTransactionProgressScreen] =
-        useState(true);
+        useState(false);
     const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState(false);
     const [lastTokenSelector, setLastTokenSelector] = useState('');
     const [fromState, setFromState] = useState({
@@ -167,8 +184,13 @@ const Bridge = ({ wallet }) => {
     });
     const [toState, setToState] = useState({
         token: 'ethereum',
-        chain: 'ethereum',
+        chain: 'arbitrum',
     });
+    const [errorMessage, setErrorMessage] = useState(false);
+    const [amount, setAmount] = useState();
+    const [debouncedAmount] = useDebounce(amount, 200);
+    const [outputAmount, setOutputAmount] = useState();
+    const [faucetTokens, setFaucetTokens] = useState({});
 
     const fromTokenClick = () => {
         setIsTokenSelectorOpen(true);
@@ -196,6 +218,58 @@ const Bridge = ({ wallet }) => {
         closeTokenSelector();
     };
 
+    const handleSubmit = () => {
+        if (fromState.chain == toState.chain) {
+            setErrorMessage('The from and to chain need to be different');
+            return;
+        } else if (!amount) {
+            setErrorMessage('Input amount cannot be 0');
+            return;
+        }
+        setErrorMessage('');
+
+        let params = {
+            inputChain: faucetTokens.chains[fromState.chain],
+            outputChain: faucetTokens.chains[toState.chain],
+            inputToken: faucetTokens.tokens[fromState.token],
+            outputToken: faucetTokens.tokens[toState.token],
+            inputAmount: amount,
+            outputAmount: outputAmount,
+        };
+        window.open(
+            `http://localhost:3000?data=${encodeURI(JSON.stringify(params))}`,
+            '_blank'
+        );
+    };
+
+    useEffect(() => {
+        (async () => {
+            let result = await axios.get(
+                `${
+                    process.env.REACT_APP_BASE_URL
+                }/faucet/v1/bridge/output?inputChainId=${
+                    faucetTokens.chains[fromState.chain].chainId
+                }&outputChainId=${
+                    faucetTokens.chains[toState.chain].chainId
+                }&amount=${ethers.parseEther(amount)}`
+            );
+            setOutputAmount(result.data / 10 ** 18);
+        })();
+    }, [debouncedAmount, fromState, toState]);
+
+    useEffect(() => {
+        (async () => {
+            let result = await axios.get(
+                `${process.env.REACT_APP_BASE_URL}/faucet/v1/bridge/config`
+            );
+            setFaucetTokens(result.data);
+            console.log('this is config - ', result.data);
+            setTimeout(() => {
+                setLoadingGasScreen(false);
+            }, 400);
+        })();
+    }, []);
+
     return (
         <BridgeContainer>
             {loadingGasScreen ? (
@@ -213,6 +287,7 @@ const Bridge = ({ wallet }) => {
                                     ? fromState.chain
                                     : toState.chain
                             }
+                            faucetTokens={faucetTokens}
                         ></TokenSelector>
                     ) : (
                         <>
@@ -228,6 +303,10 @@ const Bridge = ({ wallet }) => {
                                     faucetTokens.tokens[fromState.token].symbol
                                 }
                                 onTokenClick={fromTokenClick}
+                                onAmountChange={(value) => {
+                                    setAmount(value);
+                                }}
+                                amount={amount}
                             ></CoinSelector>
                             <SwapArrow src={DownArrow}></SwapArrow>
                             <CoinSelector
@@ -242,8 +321,15 @@ const Bridge = ({ wallet }) => {
                                     faucetTokens.tokens[toState.token].symbol
                                 }
                                 onTokenClick={toTokenClick}
+                                amount={outputAmount}
+                                inputDisabled={true}
                             ></CoinSelector>
-                            <SubmitButton>Get Gas</SubmitButton>
+                            <SubmitButton onClick={handleSubmit}>
+                                Get Gas
+                            </SubmitButton>
+                            {errorMessage && (
+                                <ErrorMessage>{errorMessage}</ErrorMessage>
+                            )}
                         </>
                     )}
                 </>
