@@ -3,7 +3,6 @@ import styled from 'styled-components';
 
 const Expandable = styled.div`
     overflow: hidden;
-    height: ${(props) => (props.open ? 'auto' : '0')};
     .slide-down {
         animation: slide-down 0.2s linear both;
     }
@@ -53,11 +52,15 @@ const SlidingContainer = (props) => {
     }, [props.open]);
 
     return (
-        <Expandable open={open} height={props.height} {...props}>
-            <div className={!props.open ? 'slide-up' : 'slide-down'}>
-                {props.children}
-            </div>
-        </Expandable>
+        <>
+            {open && (
+                <Expandable open={open} height={props.height} {...props}>
+                    <div className={!props.open ? 'slide-up' : 'slide-down'}>
+                        {props.children}
+                    </div>
+                </Expandable>
+            )}
+        </>
     );
 };
 
