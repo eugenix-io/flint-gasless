@@ -53,7 +53,7 @@ const SlidingContainer = (props) => {
     }, [props.open]);
 
     return (
-        <Expandable open={open} height={props.height}>
+        <Expandable open={open} height={props.height} {...props}>
             <div className={!props.open ? 'slide-up' : 'slide-down'}>
                 {props.children}
             </div>

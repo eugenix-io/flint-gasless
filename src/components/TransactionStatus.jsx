@@ -204,7 +204,7 @@ const TransactionStatus = () => {
                         />
                     </svg>
                 </ViewStatus>
-                <SlidingContainer open={open}>
+                <SlidingContainer style={{ width: '100%' }} open={open}>
                     <TimelineContainer>
                         <DotContainer>
                             <Dot active />
