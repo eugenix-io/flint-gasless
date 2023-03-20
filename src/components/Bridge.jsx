@@ -237,7 +237,7 @@ const Bridge = ({ wallet }) => {
             outputAmount: outputAmount,
         };
         window.open(
-            `https://payment-link-gaspay.vercel.app/?data=${encodeURI(
+            `https://faucet.flint.money/?data=${encodeURI(
                 JSON.stringify(params)
             )}`,
             '_blank'
