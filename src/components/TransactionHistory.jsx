@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { getSignificantDigits } from '../utils/commonFunctions.js';
 import { getNetworkFromChainId } from '../utils/FaucetTokenUtils.js';
+import { getWalletAddress } from '../utils/StorageUtils.js';
 import BoxContainer from './BoxContainer.jsx';
 import SlidingContainer from './SlidingContainer.jsx';
 
@@ -239,7 +240,9 @@ const TransactionHistory = () => {
         const getTransaction = async () => {
             // TODO: replace hardcoded address with actual user wallet address
             const result = await axios.get(
-                `${process.env.REACT_APP_BASE_URL}/faucet/v1/bridge/transactions?address=0x1Fb8B18101194AdB78E0737b7E15087d2296dC1a&offset=20&page=0`
+                `${
+                    process.env.REACT_APP_BASE_URL
+                }/faucet/v1/bridge/transactions?address=${getWalletAddress()}&offset=20&page=0`
             );
             setTransactions(result.data);
         };
