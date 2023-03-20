@@ -242,7 +242,7 @@ const TransactionHistory = () => {
             const result = await axios.get(
                 `${
                     process.env.REACT_APP_BASE_URL
-                }/faucet/v1/bridge/transactions?address=${getWalletAddress()}&offset=20&page=0`
+                }/faucet/v1/bridge/transactions?address=${await getWalletAddress()}&offset=20&page=0`
             );
             setTransactions(result.data);
         };
