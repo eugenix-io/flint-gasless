@@ -6,12 +6,12 @@ import DownArrow from '../assets/img/down_arrow.svg';
 import TokenSelector from './TokenSelector.jsx';
 import { ethers } from 'ethers';
 import axios from 'axios';
-import { data } from 'jquery';
 import { useDebounce } from 'use-debounce';
 
 const BridgeContainer = styled.div`
     display: flex;
     flex-direction: column;
+    flex: 1;
     width: 100%;
 `;
 

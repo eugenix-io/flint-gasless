@@ -6,13 +6,20 @@ import Instructions from './components/Instructions.jsx';
 import Faucet from './components/Faucet.jsx';
 import BoxContainer from './components/BoxContainer.jsx';
 import TransactionHistory from './components/TransactionHistory.jsx';
-import { getWalletAddress } from './utils/StorageUtils';
+import {
+    getnewPendingTransaction,
+    getWalletAddress,
+    removePendingTransaction,
+} from './utils/StorageUtils';
+import PendingTransaction from './components/PendingTransaction.jsx';
 
 const PopupContainer = styled.div`
     background: black;
     width: 100%;
     height: 100%;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 `;
 
 const LogoContainer = styled.div`
@@ -163,29 +170,35 @@ const App = () => {
     const [historyPage, setHistoryPage] = useState(false);
     const [walletAddress, setWalletAddress] = useState('');
     const [newTrasaction, setNewTransaction] = useState(false);
+    const [pendingTransactioHash, setPendingTrasactionHash] = useState('');
 
     useEffect(() => {
         const walletAdd = async () => {
             const wallet = await getWalletAddress();
             setWalletAddress(wallet);
         };
+        const chekNewTransaction = async () => {
+            const hash = await getnewPendingTransaction();
+            if (hash) {
+                setNewTransaction(true);
+                removePendingTransaction();
+                setPendingTrasactionHash(hash);
+            }
+        };
+
+        chekNewTransaction();
 
         walletAdd();
-
-        chrome.runtime.onMessage.addListener((res) => {
-            if (res.action === 'GAS_PAY_INTERNAL') {
-                const hash = res.metadata;
-                setNewTransaction(true);
-            }
-        });
     }, []);
 
     return (
         <PopupContainer>
-            {/* to be removed later */}
-            <p style={{ color: 'white' }}>Connected wallet - {walletAddress}</p>
             {newTrasaction ? (
-                <p style={{ color: 'white' }}>TRRrrrrr</p>
+                <PendingTransaction
+                    hash={pendingTransactioHash}
+                    setNewTransaction={setNewTransaction}
+                    setHistoryPage={setHistoryPage}
+                />
             ) : (
                 <>
                     <AppHeader>
@@ -197,6 +210,19 @@ const App = () => {
                             setClose={setHistoryPage}
                         />
                     </AppHeader>
+                    {walletAddress ? (
+                        <BoxContainer
+                            style={{
+                                padding: '10px',
+                                margin: '20px 20px 0',
+                                borderRadius: '20px',
+                                color: '#F5F5F5',
+                                fontWeight: 600,
+                            }}
+                        >
+                            {walletAddress}
+                        </BoxContainer>
+                    ) : null}
                     <ScreenContainer
                         navbarSelected={navbarSelected}
                         setNavbarSelected={setNavbarSelected}

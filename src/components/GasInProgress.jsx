@@ -5,7 +5,6 @@ import lottieJson from '../assets/lottie.json';
 import BoxContainer from './BoxContainer.jsx';
 
 const LoaderHeading = styled.div`
-
     font-style: normal;
     font-weight: 700;
     font-size: 24px;
@@ -15,7 +14,6 @@ const LoaderHeading = styled.div`
 `;
 
 const LoaderSubheading = styled.div`
-
     font-style: normal;
     font-weight: 400;
     font-size: 14px;
@@ -23,21 +21,20 @@ const LoaderSubheading = styled.div`
     text-align: center;
     letter-spacing: 0.2px;
     color: #bdbdbd;
+    margin: 20px;
 `;
 
-const GasInProgress = () => {
+const GasInProgress = ({ title, message }) => {
     return (
-        <BoxContainer>
+        <BoxContainer style={{ flex: 1 }}>
             <Lottie
                 loop
                 animationData={lottieJson}
                 play
                 style={{ width: '50%', marginLeft: '30px' }}
             />
-            {/* <LoaderHeading>Gas in progress</LoaderHeading>
-            <LoaderSubheading>
-                Congratulations, transaction is under processing state
-            </LoaderSubheading> */}
+            {title ? <LoaderHeading>{title}</LoaderHeading> : null}
+            {message ? <LoaderSubheading>{message}</LoaderSubheading> : null}
         </BoxContainer>
     );
 };
