@@ -8,6 +8,7 @@ module.exports = {
         popup: './src/popup.jsx',
         content: './src/contentScript/content.js',
         injected: './src/injected/injected.js',
+        background: './src/background/background.js',
     },
     output: {
         path: path.resolve(__dirname, 'dist'),

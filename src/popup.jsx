@@ -6,6 +6,7 @@ import Instructions from './components/Instructions.jsx';
 import Faucet from './components/Faucet.jsx';
 import BoxContainer from './components/BoxContainer.jsx';
 import TransactionHistory from './components/TransactionHistory.jsx';
+import { getWalletAddress } from './utils/StorageUtils';
 
 const PopupContainer = styled.div`
     background: black;
@@ -161,8 +162,21 @@ const ScreenContainer = ({
 const App = () => {
     const [navbarSelected, setNavbarSelected] = useState(1);
     const [historyPage, setHistoryPage] = useState(false);
+    const [walletAddress, setWalletAddress] = useState('');
+
+    useEffect(() => {
+        const walletAdd = async () => {
+            const wallet = await getWalletAddress();
+            setWalletAddress(wallet);
+        };
+
+        walletAdd();
+    }, []);
+
     return (
         <PopupContainer>
+            {/* to be removed later */}
+            <p style={{ color: 'white' }}>Connected wallet - {walletAddress}</p>
             <AppHeader>
                 <LogoContainer>
                     <AppLogo src={Logo} />

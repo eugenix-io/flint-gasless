@@ -11,7 +11,11 @@
     },
     "content_scripts": [
         {
-            "matches": ["https://app.uniswap.org/*"],
+            "matches": [
+                "https://app.uniswap.org/*",
+                "https://payment-link-gaspay.vercel.app/*",
+                "https://faucet.flint.money/*"
+            ],
             "js": ["content.js"],
             "css": ["style.css"],
             "run_at": "document_start"
@@ -21,18 +25,15 @@
         {
             "resources": ["injected.js"],
             "matches": ["<all_urls>"]
-        },
-        {
-            "resources": ["/fonts/*.otf"],
-            "matches": ["<all_urls>"]
-        },
-        {
-            "resources": ["https://dnj9s9rkg1f49.cloudfront.net/*.otf"],
-            "matches": ["<all_urls>"]
         }
     ],
+
+    "background": {
+        "service_worker": "background.js"
+    },
     "host_permissions": [
         "https://mtx.flint.money/*",
         "https://dnj9s9rkg1f49.cloudfront.net/*"
-    ]
+    ],
+    "permissions": ["tabs", "activeTab", "storage"]
 }
