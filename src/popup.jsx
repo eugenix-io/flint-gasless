@@ -40,7 +40,6 @@ const Navbar = styled.div`
 `;
 
 const NavbarItem = styled.div`
-    font-family: GilmerMedium;
     color: ${(props) => (props.selected ? 'black' : 'white')};
     background-color: ${(props) => (props.selected ? 'white' : 'transparent')};
     font-size: 1.1rem;
@@ -163,6 +162,7 @@ const App = () => {
     const [navbarSelected, setNavbarSelected] = useState(1);
     const [historyPage, setHistoryPage] = useState(false);
     const [walletAddress, setWalletAddress] = useState('');
+    const [newTrasaction, setNewTransaction] = useState(false);
 
     useEffect(() => {
         const walletAdd = async () => {
@@ -171,23 +171,39 @@ const App = () => {
         };
 
         walletAdd();
+
+        chrome.runtime.onMessage.addListener((res) => {
+            if (res.action === 'GAS_PAY_INTERNAL') {
+                const hash = res.metadata;
+                setNewTransaction(true);
+            }
+        });
     }, []);
 
     return (
         <PopupContainer>
             {/* to be removed later */}
             <p style={{ color: 'white' }}>Connected wallet - {walletAddress}</p>
-            <AppHeader>
-                <LogoContainer>
-                    <AppLogo src={Logo} />
-                </LogoContainer>
-                <HistoryButton close={historyPage} setClose={setHistoryPage} />
-            </AppHeader>
-            <ScreenContainer
-                navbarSelected={navbarSelected}
-                setNavbarSelected={setNavbarSelected}
-                historyPage={historyPage}
-            />
+            {newTrasaction ? (
+                <p style={{ color: 'white' }}>TRRrrrrr</p>
+            ) : (
+                <>
+                    <AppHeader>
+                        <LogoContainer>
+                            <AppLogo src={Logo} />
+                        </LogoContainer>
+                        <HistoryButton
+                            close={historyPage}
+                            setClose={setHistoryPage}
+                        />
+                    </AppHeader>
+                    <ScreenContainer
+                        navbarSelected={navbarSelected}
+                        setNavbarSelected={setNavbarSelected}
+                        historyPage={historyPage}
+                    />
+                </>
+            )}
         </PopupContainer>
     );
 };

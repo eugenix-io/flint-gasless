@@ -5,7 +5,7 @@ import lottieJson from '../assets/lottie.json';
 import BoxContainer from './BoxContainer.jsx';
 
 const LoaderHeading = styled.div`
-    font-family: 'Gilmer';
+
     font-style: normal;
     font-weight: 700;
     font-size: 24px;
@@ -15,7 +15,7 @@ const LoaderHeading = styled.div`
 `;
 
 const LoaderSubheading = styled.div`
-    font-family: 'Gilmer';
+
     font-style: normal;
     font-weight: 400;
     font-size: 14px;

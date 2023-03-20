@@ -5,7 +5,7 @@ import CTA from './CTA.jsx';
 import SlidingContainer from './SlidingContainer.jsx';
 
 const Heading = styled.div`
-    font-family: 'Gilmer';
+
     font-style: normal;
     font-weight: 700;
     font-size: 24px;
@@ -15,7 +15,7 @@ const Heading = styled.div`
 `;
 
 const SubHeading = styled.div`
-    font-family: 'Gilmer';
+
     font-style: normal;
     font-weight: 400;
     font-size: 14px;
@@ -33,7 +33,7 @@ const CurrencyDetailBlock = styled.div`
 `;
 
 const SectionHeading = styled.div`
-    font-family: 'Gilmer';
+
     font-style: normal;
     font-weight: 600;
     font-size: 16px;
@@ -44,7 +44,7 @@ const SectionHeading = styled.div`
 `;
 
 const CurrencyAmount = styled.div`
-    font-family: 'Gilmer';
+
     font-style: normal;
     font-weight: 600;
     font-size: 16px;
@@ -56,7 +56,7 @@ const CurrencyAmount = styled.div`
 `;
 
 const BlockHeading = styled.div`
-    font-family: 'Gilmer';
+
     font-style: normal;
     font-weight: 600;
     font-size: 16px;
@@ -72,7 +72,7 @@ const Header = styled.div`
 `;
 
 const ViewStatus = styled.div`
-    font-family: 'Gilmer';
+
     font-style: normal;
     font-weight: 600;
     font-size: 14px;
@@ -122,7 +122,7 @@ const Line = styled.div`
 `;
 
 const TimelineStatus = styled.p`
-    font-family: 'Gilmer';
+
     font-style: normal;
     font-weight: 600;
     font-size: 12px;

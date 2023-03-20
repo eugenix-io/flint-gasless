@@ -57,7 +57,7 @@ const Instructions = () => {
                     fontSize: '1.4rem',
                     marginBottom: '5%',
                     color: 'white',
-                    fontFamily: 'GilmerMedium',
+
                     marginLeft: '5px',
                 }}
             >
@@ -87,7 +87,7 @@ const Instructions = () => {
                 </video>
                 <div
                     style={{
-                        fontFamily: 'GilmerMedium',
+
                         fontSize: '1.2rem',
                         marginTop: '20px',
                         height: '30px',
@@ -97,7 +97,7 @@ const Instructions = () => {
                 </div>
                 <div
                     style={{
-                        fontFamily: 'GilmerLight',
+
                         fontSize: '0.9rem',
                         marginTop: '10px',
                     }}

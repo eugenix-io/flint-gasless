@@ -22,7 +22,7 @@ const WalletAddress = styled.div`
     padding-top: 3%;
     padding-bottom: 3%;
     text-align: center;
-    font-family: GilmerHeavy;
+
     font-size: 0.9rem;
     border: 1px solid rgb(54 53 53);
     margin-bottom: 5%;
@@ -37,7 +37,6 @@ const CoinSelectorContainer = styled.div`
 const CoinSelectorHeading = styled.div`
     font-size: 0.9rem;
     color: #bdbdbd;
-    font-family: GilmerMedium;
 `;
 
 const CoinSelectorInputContainer = styled.div`
@@ -59,7 +58,7 @@ const CoinSelectorInputContainerAmount = styled.input`
     outline: none;
     background-color: transparent;
     color: white;
-    font-family: GilmerHeavy;
+
     font-size: 1.3rem;
     border: 0;
 
@@ -82,7 +81,6 @@ const CoinSelectorInputContainerCoin = styled.div`
 
 const CoinName = styled.div`
     color: white;
-    font-family: GilmerMedium;
     margin-right: 10px;
     font-size: 1.2rem;
 `;
@@ -121,7 +119,7 @@ const SubmitButton = styled.div`
     border-radius: 50px;
     background-color: #6de573;
     color: black;
-    font-family: GilmerMedium;
+
     margin: auto;
     text-align: center;
     padding-top: 4%;

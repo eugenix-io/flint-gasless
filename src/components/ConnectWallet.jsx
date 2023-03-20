@@ -20,7 +20,7 @@ const Text = styled.div`
     font-size: 1.3rem;
     text-align: center;
     margin-bottom: 12%;
-    font-family: GilmerHeavy;
+
 `;
 
 const ConnectWalletButton = styled.div`
@@ -29,7 +29,7 @@ const ConnectWalletButton = styled.div`
     background-color: #6de573;
     width: 90%;
     margin: auto;
-    font-family: GilmerMedium;
+
     border-radius: 50px;
     padding-top: 3%;
     padding-bottom: 3%;
