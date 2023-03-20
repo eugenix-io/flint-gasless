@@ -53,6 +53,18 @@ module.exports = {
                 exclude: /node_modules/,
                 use: { loader: 'html-loader' },
             },
+            {
+                test: /\.(woff(2)?|ttf|eot|otf)(\?v=\d+\.\d+\.\d+)?$/,
+                use: [
+                    {
+                        loader: 'file-loader',
+                        options: {
+                            name: '[name].[ext]',
+                            outputPath: 'fonts/',
+                        },
+                    },
+                ],
+            },
         ],
     },
     plugins: [
@@ -67,6 +79,14 @@ module.exports = {
                 },
                 {
                     from: './src/style.css',
+                },
+            ],
+        }),
+        new CopyPlugin({
+            patterns: [
+                {
+                    from: './src/assets/fonts',
+                    to: 'fonts',
                 },
             ],
         }),
