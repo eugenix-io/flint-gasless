@@ -12,7 +12,7 @@ const TokenSelectorContainer = styled.div`
 
 const Heading = styled.div`
     color: white;
-    font-family: GilmerMedium;
+
     font-size: 1.1rem;
 `;
 
@@ -88,13 +88,13 @@ const TokenImage = styled.img`
 const TokenName = styled.div`
     font-size: 1.1rem;
     margin-left: 4%;
-    font-family: GilmerMedium;
+
 `;
 
 const TokenComingSoon = styled.div`
     font-size: 0.9rem;
     margin-left: 4%;
-    font-family: GilmerMedium;
+
     color: grey;
     margin-left: auto;
 `;

@@ -10,7 +10,10 @@ s.onload = () => {
 window.addEventListener(
     'message',
     function (event) {
-        if (event.data.type && event.data.type == 'GASPAY_SET_ADDRESS') {
+        if (
+            event.data.identifier &&
+            event.data.identifier === 'FLINT_GASPAY_EXTENSION_EVENT'
+        ) {
             browser.runtime.sendMessage(event.data);
         }
     },
