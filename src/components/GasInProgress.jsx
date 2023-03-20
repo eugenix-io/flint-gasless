@@ -21,7 +21,7 @@ const LoaderSubheading = styled.div`
     text-align: center;
     letter-spacing: 0.2px;
     color: #bdbdbd;
-    margin: 20px;
+    margin: 10px 20px;
 `;
 
 const GasInProgress = ({ title, message }) => {
@@ -31,7 +31,7 @@ const GasInProgress = ({ title, message }) => {
                 loop
                 animationData={lottieJson}
                 play
-                style={{ width: '50%', marginLeft: '30px' }}
+                style={{ width: '60%', marginLeft: '20px' }}
             />
             {title ? <LoaderHeading>{title}</LoaderHeading> : null}
             {message ? <LoaderSubheading>{message}</LoaderSubheading> : null}

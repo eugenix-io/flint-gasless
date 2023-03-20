@@ -24,6 +24,7 @@ const PendingTransaction = ({ hash, setNewTransaction, setHistoryPage }) => {
     useEffect(() => {
         const timer = setInterval(async () => {
             const transaction = await getTransaction();
+            console.log('TRANSACTION DATA RECEIVED', transaction);
             if (transaction[0].inputHash === hash) {
                 setNewTransaction(false);
                 setHistoryPage(true);
@@ -39,7 +40,7 @@ const PendingTransaction = ({ hash, setNewTransaction, setHistoryPage }) => {
             <GasInProgress
                 title={'Waiting for transaction'}
                 message={
-                    'Your transaction is processing, this may take up to 2 minutes'
+                    'Your transaction is currently being processed, which may take up to 2 minutes. You can always view the status of your transactions from the main screen.'
                 }
             />
         </Container>
