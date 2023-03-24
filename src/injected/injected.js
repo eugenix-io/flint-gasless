@@ -15,6 +15,7 @@ import {
     getWalletAddress,
 } from './flintButtonState';
 import axios from 'axios';
+import Web3 from 'web3';
 
 axios.interceptors.request.use(
     function (config) {

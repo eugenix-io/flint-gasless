@@ -31,7 +31,7 @@ import {
     activeSwap,
 } from './jqueryUITransformer';
 import axios from 'axios';
-import { getCurrenyNetwork } from './store/store';
+import { getCurrenyNetwork, getSupportedNetworks } from './store/store';
 
 let walletAddress;
 let currentToken;
@@ -176,7 +176,13 @@ export const handleSwap = async () => {
         });
         const data = JSON.parse(re.data);
         const hash = data.hash;
-        $('#fl-vw-plsc').attr('href', `https://polygonscan.com/tx/${hash}`);
+        const chainId = getCurrenyNetwork();
+        if (chainId == 137) {
+            $('#fl-vw-plsc').attr('href', `https://polygonscan.com/tx/${hash}`);
+        } else if (chainId == 42161) {
+            $('#fl-vw-plsc').attr('href', `https://arbiscan.io/tx/${hash}`);
+        }
+
         showTransactionSuccessPopup();
         hideWaitingPopup();
         hideRejectPopup();
@@ -187,14 +193,22 @@ export const handleSwap = async () => {
     }
 };
 export const handleTokenChange = async (fromTokenSymbol, amountIn) => {
-    let fromToken = tokens[fromTokenSymbol];
+    let chainId = getCurrenyNetwork();
+    console.log('[123] check this log please', tokens, chainId);
+    let fromToken = tokens[chainId][fromTokenSymbol];
     console.log('GOT ADDRESS - ', fromToken);
     //NATIVE MATIC AS FROM TOKEN IS NOT ALLOWED
     console.log('THIS IS THE FROM TOKEN - ', fromToken);
-    if (getCurrenyNetwork() != 137) {
-        disableService('Change to Polygon network to use GasPay.');
+    const supportedNetworks = await getSupportedNetworks();
+    if (!supportedNetworks.includes(chainId)) {
+        disableService('Gaspay is not supported on this network.');
         return;
-    } else if (fromToken == '0x0000000000000000000000000000000000001010') {
+    } else if (
+        (fromToken == '0x0000000000000000000000000000000000001010' &&
+            chainId == 137) ||
+        (fromToken == '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' &&
+            chainId == 42161)
+    ) {
         disableService('Gas will be deducted from the input token');
         return;
     }
@@ -252,15 +266,20 @@ function updateConsoleLog() {
 async function initTokens() {
     let result = await axios.get('https://tokens.uniswap.org');
     result.data.tokens.forEach((token) => {
-        if (token.chainId == 137) {
-            tokens[token.symbol] = token.address;
-        } else if (
-            token.extensions &&
-            token.extensions.bridgeInfo &&
-            token.extensions.bridgeInfo['137']
-        ) {
-            tokens[token.symbol] =
-                token.extensions.bridgeInfo['137'].tokenAddress;
+        if (token.chainId) {
+            if (!tokens[token.chainId]) {
+                tokens[token.chainId] = {};
+            }
+            tokens[token.chainId][token.symbol] = token.address;
+        } else if (token.extensions && token.extensions.bridgeInfo) {
+            Object.entries(token.extensions.bridgeInfo).map(([key, value]) => {
+                //key if chainId
+                if (!tokens[key]) {
+                    tokens[key] = {};
+                }
+                tokens[key][token.symbol] =
+                    token.extensions.bridgeInfo[key].tokenAddress;
+            });
         }
     });
 }
