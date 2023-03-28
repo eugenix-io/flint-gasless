@@ -148,6 +148,7 @@ input[type='radio']:checked ~ label {
     max-height: 90vh;
     display: inline-table;
     border-radius: 20px;
+    transition: height 0.3s linear !important;
 }
 
 .fl-pop-hd-br {

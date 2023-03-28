@@ -2,7 +2,13 @@ import { ethers } from 'ethers';
 import axios from 'axios';
 import Web3 from 'web3';
 import tokenAbi from '../abis/ERC20.json';
-import { getGaslessContractAddress } from '../injected/store/store';
+import arbitrumABI from '../abis/ArbitrumABI.json';
+import $ from 'jquery';
+
+import {
+    getCurrenyNetwork,
+    getGaslessContractAddress,
+} from '../injected/store/store';
 
 const POLYGONSCAN_API_KEY = 'DDZ33H8RZYENMTDX5KCM67FW1HBJD5CRUC';
 
@@ -30,22 +36,30 @@ export const getTokenBalance = async (
 
 export const isTokenApproved = async (tokenAddress, walletAddress) => {
     try {
+        console.log(tokenAddress, walletAddress, 'LOG+++++');
         const web3 = new Web3(window.ethereum);
         let tokenContract = new web3.eth.Contract(tokenAbi, tokenAddress);
-        return await tokenContract.methods
-            .allowance(walletAddress, await getGaslessContractAddress())
-            .call();
+        const add = await getGaslessContractAddress();
+        console.log(add, 'CONT ADD');
+        return await tokenContract.methods.allowance(walletAddress, add).call();
     } catch (err) {
         console.error('FAILED TO GET APPROVAL - ', err);
         throw err;
     }
 };
 
-export const getNonce = async (tokenAddress, walletAddress) => {
+export const getNonce = async (
+    tokenAddress,
+    walletAddress,
+    arbitrum = false
+) => {
     //update method to check if ABI has getNonce or nonces
-    console.log('CHECKING IF TOKEN IS APPROVED!');
+    console.log('GETTING NONCE');
     const web3 = new Web3(window.ethereum);
     let tokenContract = new web3.eth.Contract(tokenAbi, tokenAddress);
+    if (arbitrum) {
+        tokenContract = new web3.eth.Contract(arbitrumABI, tokenAddress);
+    }
     try {
         return await tokenContract.methods.getNonce(walletAddress).call();
     } catch (err) {
@@ -56,15 +70,33 @@ export const getNonce = async (tokenAddress, walletAddress) => {
 
 export const getName = async (tokenAddress) => {
     //update method to check if ABI has getNonce or nonces
-    console.log('CHECKING IF TOKEN IS APPROVED!');
+    console.log('GET NAME CALLED');
     const web3 = new Web3(window.ethereum);
     let tokenContract = new web3.eth.Contract(tokenAbi, tokenAddress);
     return await tokenContract.methods.name().call();
 };
 
+export const getVersion = async (tokenAddress) => {
+    try {
+        //update method to check if ABI has getNonce or nonces
+        console.log('GET VERSION CALLED');
+        const web3 = new Web3(window.ethereum);
+        let tokenContract = new web3.eth.Contract(tokenAbi, tokenAddress);
+        return await tokenContract.methods.version().call();
+    } catch (err) {
+        console.log('got this error in getting version - ', err);
+        return '1';
+    }
+};
+
 export const approve = async (tokenAddress, walletAddress) => {
     //update method to check if ABI has getNonce or nonces
-    console.log('CHECKING IF TOKEN IS APPROVED!');
+    console.log(
+        'APPROVE CALLED for token',
+        tokenAddress,
+        'wallet -',
+        walletAddress
+    );
     const web3 = new Web3(window.ethereum);
     let tokenContract = new web3.eth.Contract(tokenAbi, tokenAddress);
     console.log('THIS IS APPROVE AMOUNT - ', web3.utils.toWei('1000', 'ether'));
@@ -72,6 +104,7 @@ export const approve = async (tokenAddress, walletAddress) => {
         `https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice&apikey=${POLYGONSCAN_API_KEY}`
     );
     let gasPrice = Number(response.data.result);
+
     await tokenContract.methods
         .approve(
             await getGaslessContractAddress(),
@@ -81,33 +114,71 @@ export const approve = async (tokenAddress, walletAddress) => {
             from: walletAddress,
             gasPrice: gasPrice,
         });
+
+    // try {
+    //     await tokenContract.methods
+    //         .approve(
+    //             await getGaslessContractAddress(),
+    //             web3.utils.toWei('100000000000000', 'ether')
+    //         )
+    //         .send({
+    //             from: walletAddress,
+    //             gasPrice: gasPrice,
+    //         });
+    // } catch (error) {
+    //     console.log('APPROVE ERROR', error);
+    // }
     return;
 };
 
 export async function isTokenEligible(tokenAddress) {
     try {
         console.log('CHECKING IF TOKEN IS ELIGIBLE - ', tokenAddress);
+        const chainId = getCurrenyNetwork();
         let tokenResult = await axios.get(
-            `https://api.polygonscan.com/api?module=contract&action=getabi&address=${tokenAddress}&apikey=${POLYGONSCAN_API_KEY}`
+            chainId == 137
+                ? `https://api.polygonscan.com/api?module=contract&action=getabi&address=${tokenAddress}&apikey=${POLYGONSCAN_API_KEY}`
+                : `https://api.arbiscan.io/api?module=contract&action=getabi&address=${tokenAddress}&apikey=9Y8HRFVU5396NM63YQ8P2Y1K49DTC9H1MW`
         );
         let tokenAbi = JSON.parse(tokenResult.data.result);
         let implementationExists =
             tokenAbi.filter((obj) => obj.name == 'implementation').length > 0;
 
         const web3 = new Web3(window.ethereum);
+        console.log(implementationExists, 'implementationExists');
 
         //if not an implem
         if (implementationExists) {
+            console.log(chainId);
             let proxyContract = new web3.eth.Contract(tokenAbi, tokenAddress);
-            let implementationAddress = await proxyContract.methods
-                .implementation()
-                .call();
+            let implementationAddress;
+            try {
+                implementationAddress = await proxyContract.methods
+                    .implementation()
+                    .call();
+            } catch (error) {
+                console.log('error me aaya', error);
+                const web3 = new Web3(window.ethereum);
+
+                const hexAddressCode = await web3.eth.getStorageAt(
+                    tokenAddress,
+                    '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc'
+                );
+
+                console.log(hexAddressCode, 'hexAddressCode');
+
+                implementationAddress =
+                    '0x' + hexAddressCode.substring(26, hexAddressCode.length);
+            }
+            console.log(implementationAddress, 'implementationAddress');
             let implementationResult = await axios.get(
-                `https://api.polygonscan.com/api?module=contract&action=getabi&address=${implementationAddress}&apikey=${POLYGONSCAN_API_KEY}`
+                chainId == 137
+                    ? `https://api.polygonscan.com/api?module=contract&action=getabi&address=${implementationAddress}&apikey=${POLYGONSCAN_API_KEY}`
+                    : `https://api.arbiscan.io/api?module=contract&action=getabi&address=${implementationAddress}&apikey=9Y8HRFVU5396NM63YQ8P2Y1K49DTC9H1MW`
             );
+            console.log(implementationResult, 'implementationResult');
             tokenAbi = JSON.parse(implementationResult.data.result);
         }
-
         //passing tokenAddress instead of implementationAddress as they can have different names
         let name = await getName(tokenAddress);
         console.log('THIS IS TOKEN ABI - ', tokenAbi);
@@ -117,7 +188,7 @@ export async function isTokenEligible(tokenAddress) {
             name: name,
         };
     } catch (err) {
-        console.error(err);
+        console.error(err, 'error in TOKEN ABI FETCH');
         return { isEMT: false };
     }
 }

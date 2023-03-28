@@ -11,10 +11,12 @@ import {
     handleSwap,
     handleTokenChange,
     getGaslessApprovalSupported,
+    getWalletAddress,
 } from './flintButtonState';
 import chainIdLogo from '../injected/configs/chainIdLogo.json';
 import { getCurrenyNetwork } from './store/store';
 import { getSignificantDigits } from '../utils/commonFunctions';
+import axios from 'axios';
 
 let parent;
 let parentFlint;
@@ -35,7 +37,24 @@ let dd2;
 let gasInToToken = 0;
 let theme = 'light';
 
+let currentTransactionHash = '-';
+
+export const setTransactionHash = (hash) => {
+    currentTransactionHash = hash;
+    $('#gp-tohid').fadeIn();
+    $('#gaspay-success-popup-copy')
+        .html(`To view your transaction, <a id="fl-vw-plsc" target="_blank" style="text-decoration: none; font-weight: 600" href="${hash}">
+    click here.</a><br>Something exciting is brewing just for you,<br>
+    share your email to unlock it`);
+};
+
 const swapButtons = ['flint-swap-conf', 'flint-swap'];
+
+function validateEmail(email) {
+    const re =
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+}
 
 export const setGasInToToken = (gas) => {
     if (gas) {
@@ -235,6 +254,9 @@ export const hideLoaderApprove = () => {
 
 export const showTransactionSuccessPopup = () => {
     $('#flppbxtrasuc').fadeIn(200);
+    setTimeout(() => {
+        $('#gas-pay-email-collect').trigger('focus');
+    }, 300);
 };
 
 export const hideTransactionSuccessPopup = () => {
@@ -490,6 +512,66 @@ const insertGasTokenBlock = () => {
             //     disableService();
             // }
         }
+
+        $('#gas-pay-email-collect').on({
+            change: () => {
+                const email = $('#gas-pay-email-collect').val();
+                if (validateEmail(email)) {
+                    $('#emsubmit').css('background-color', 'rgb(76, 130, 251)');
+                } else {
+                    $('#emsubmit').css('background-color', 'rgb(41, 50, 73)');
+                }
+            },
+            keyup: () => {
+                const email = $('#gas-pay-email-collect').val();
+                if (validateEmail(email)) {
+                    $('#emsubmit').css('background-color', 'rgb(76, 130, 251)');
+                } else {
+                    $('#emsubmit').css('background-color', 'rgb(41, 50, 73)');
+                }
+            },
+        });
+
+        $('#gaspay-email-submit').on({
+            submit: async (e) => {
+                e.preventDefault();
+                const email = $('#gas-pay-email-collect').val();
+                if (validateEmail(email)) {
+                    $('#emsubmit').html('');
+                    $('#emsubmit').addClass('button--loading');
+                    axios
+                        .post(
+                            'https://api.airtable.com/v0/appvxjSOULMpTiniW/Table%201',
+                            {
+                                records: [
+                                    {
+                                        fields: {
+                                            email: email,
+                                            wallet: await getWalletAddress(),
+                                            hash: currentTransactionHash,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                headers: {
+                                    Authorization: 'Bearer keyJnhiCWmdKSZWOE',
+                                },
+                            }
+                        )
+                        .then((res) => {
+                            $('#emsubmit').html('Submit');
+                            $('#emsubmit').removeClass('button--loading');
+                            $('#gaspay-tweet').fadeIn(200);
+                            $('#gaspay-email-submit').fadeOut(200);
+                            $('#gaspay-success-popup-copy').html(
+                                'Did you enjoy what you just experienced?<br><br>Help us spread the word by sharing it with your friends and community who might also love it'
+                            );
+                            $('#gp-tohid').fadeOut(100);
+                        });
+                }
+            },
+        });
     }
 };
 
@@ -556,18 +638,6 @@ export const beginTransactionLoader = (callback) => {
     $('#flint-swap-conf').addClass('button--loading');
     $('.fn-lk-sc').remove();
     disableBtn();
-    callback();
-};
-
-export const showTransactionHash = (hash, callback) => {
-    $('#flint-swap').html('Swap');
-    $('#flint-swap').removeClass('button--loading');
-    enableButton();
-    parent.parent()
-        .append(`<a class="fn-lk-sc" target="_blank" href="https://polygonscan.com/tx/${hash}"><p style="margin: 0 5px 0 0; color: rgb(130, 71, 229);">Check transaction status on Polygon Scan</p>
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24px" height="24px" fill="rgb(130, 71, 229)">
-  <path d="M 5 3 C 3.9069372 3 3 3.9069372 3 5 L 3 19 C 3 20.093063 3.9069372 21 5 21 L 19 21 C 20.093063 21 21 20.093063 21 19 L 21 12 L 19 12 L 19 19 L 5 19 L 5 5 L 12 5 L 12 3 L 5 3 z M 14 3 L 14 5 L 17.585938 5 L 8.2929688 14.292969 L 9.7070312 15.707031 L 19 6.4140625 L 19 10 L 21 10 L 21 3 L 14 3 z"/>
-  </svg></a>`);
     callback();
 };
 

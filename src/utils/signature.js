@@ -4,7 +4,10 @@ import * as ERC20Utils from './ERC20Utils';
 import * as FlintGasless from './FlintGasless';
 import Web3 from 'web3';
 import axios from 'axios';
-import { getGaslessContractAddress } from '../injected/store/store';
+import {
+    getCurrenyNetwork,
+    getGaslessContractAddress,
+} from '../injected/store/store';
 import { getToCurrency } from '../injected/jqueryUITransformer';
 
 let NONCE;
@@ -30,7 +33,7 @@ const swapWithoutFees = [
     { type: 'address[]', name: 'path' },
     { type: 'uint24[]', name: 'fees' },
     { type: 'uint', name: 'nonce' },
-    { type: 'bool', name: 'isTokenOutMatic' },
+    { type: 'bool', name: 'isTokenOutNative' },
 ];
 
 export const signTokenApproval = async ({ walletAddress, fromToken }) => {
@@ -92,13 +95,114 @@ export const signTokenApproval = async ({ walletAddress, fromToken }) => {
     }
 };
 
+BigInt.prototype.toJSON = function () {
+    return this.toString();
+};
+
+export const signTokenPermit = async ({ walletAddress, fromToken }) => {
+    try {
+        console.log('GETTING SIGN FOR PERMIT ', walletAddress, fromToken);
+        const nonce = await ERC20Utils.getNonce(fromToken, walletAddress);
+        // const nonce = 0;
+        console.log('THIS IS NONCE - ', nonce);
+        // let functionSignature = await generateFunctionSignature(ERC20Abi);
+
+        const date = new Date();
+        // keeping a deadline of 1 year
+        const deadline = date.setFullYear(date.getFullYear() + 1);
+        const value = ethers.parseEther('1000000');
+        const cAddress = await getGaslessContractAddress();
+        const message = {
+            owner: walletAddress,
+            spender: cAddress,
+            value,
+            nonce,
+            deadline,
+        };
+
+        const Permit = [
+            { name: 'owner', type: 'address' },
+            { name: 'spender', type: 'address' },
+            { name: 'value', type: 'uint256' },
+            { name: 'nonce', type: 'uint256' },
+            { name: 'deadline', type: 'uint256' },
+        ];
+
+        const domainName = await ERC20Utils.getName(fromToken);
+        const domainVersion = await ERC20Utils.getVersion(fromToken);
+        const chainId = getCurrenyNetwork();
+        // const contractAddress = '0x912CE59144191C1204E64559FE8253a0e49E6548'; // Arbitrum main contract address
+        const domain = {
+            name: domainName,
+            version: domainVersion,
+            verifyingContract: fromToken,
+            chainId: chainId,
+        };
+
+        const dataToSign = {
+            types: {
+                EIP712Domain: [
+                    { name: 'name', type: 'string' },
+                    { name: 'version', type: 'string' },
+                    { name: 'chainId', type: 'uint256' },
+                    { name: 'verifyingContract', type: 'address' },
+                ],
+                Permit: Permit,
+            },
+            domain: domain,
+            primaryType: 'Permit',
+            message: message,
+        };
+        console.log(
+            'THIS IS DATA TO SIGN FOR PERMIT - ',
+            JSON.stringify(dataToSign)
+        );
+
+        const sign = await ethereum.request({
+            method: 'eth_signTypedData_v4',
+            params: [walletAddress, JSON.stringify(dataToSign)],
+        });
+
+        let { r, s, v } = getSignatureParameters(sign);
+
+        const approvalData = {
+            contractAddress: fromToken,
+            owner: walletAddress,
+            spender: cAddress,
+            value,
+            deadline,
+            v,
+            r,
+            s,
+            chainId,
+        };
+
+        console.log('approvalData', approvalData);
+
+        let txResp = await axios.post(
+            `${process.env.REACT_APP_BASE_URL}/mtx/permit`,
+            approvalData
+        );
+        if (txResp.data.message != 'success') {
+            throw 'Invalid approval status';
+        }
+        return txResp.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const signGaslessSwap = async ({ walletAddress, swapState }) => {
     try {
         console.log('Executing sign gasless swaps...', swapState);
 
-        let isTokenOutMatic = false;
-        if (getToCurrency() == 'MATIC') {
-            isTokenOutMatic = true;
+        let isTokenOutNative = false;
+        const chainId = getCurrenyNetwork();
+        if (
+            (getToCurrency() == 'MATIC' && chainId == 137) ||
+            (getToCurrency() == 'ETH' && chainId == 42161)
+        ) {
+            isTokenOutNative = true;
         }
         if (!NONCE) {
             NONCE = await FlintGasless.getNonce(walletAddress);
@@ -111,10 +215,11 @@ export const signGaslessSwap = async ({ walletAddress, swapState }) => {
             path: swapState.tokenArray,
             fees: swapState.feeArr,
             nonce: NONCE,
-            isTokenOutMatic,
+            isTokenOutNative,
         };
 
         console.log('THIS IS THE MESSAGE - ', message);
+        const salt = Web3.utils.padLeft(`0x${chainId.toString(16)}`, 64);
 
         const dataToSign = {
             types: {
@@ -125,7 +230,7 @@ export const signGaslessSwap = async ({ walletAddress, swapState }) => {
                 name: await FlintGasless.getName(),
                 version: '1',
                 verifyingContract: await getGaslessContractAddress(),
-                salt: '0x0000000000000000000000000000000000000000000000000000000000000089',
+                salt,
             },
             primaryType: 'SwapWithoutFees',
             message: message,
@@ -148,8 +253,10 @@ export const signGaslessSwap = async ({ walletAddress, swapState }) => {
                 r,
                 s,
                 v,
+                chainId,
             }
         );
+        console.log('txResp', txResp);
         if (txResp.data.message != 'success') {
             throw 'INVALID STATUS FOR RESPONSE';
         } else {
@@ -157,6 +264,7 @@ export const signGaslessSwap = async ({ walletAddress, swapState }) => {
         }
         return txResp.data;
     } catch (error) {
+        console.log('ERROR HERE', error);
         throw error;
     }
 };

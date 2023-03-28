@@ -7,8 +7,9 @@ let supportedNetworks;
 
 export async function getGaslessContractAddress() {
     const web3 = new Web3(window.ethereum);
+    console.log('contractAddress', contractAddress);
     if (contractAddress) {
-        return contractAddress[web3.eth.getChainId()];
+        return contractAddress[await web3.eth.getChainId()];
     }
     let result = await axios.get(
         `${process.env.REACT_APP_BASE_URL}/mtx/v2/get-gasless-address`
@@ -18,7 +19,9 @@ export async function getGaslessContractAddress() {
         throw 'Failed to get contract address';
     }
     contractAddress = result.data.address;
-    return contractAddress[await web3.eth.getChainId()];
+    const id = await web3.eth.getChainId();
+    console.log('contractAddress', contractAddress, id, contractAddress[id]);
+    return contractAddress[id];
 }
 
 export async function getSupportedNetworks() {

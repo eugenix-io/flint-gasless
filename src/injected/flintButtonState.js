@@ -8,7 +8,11 @@ import {
 import ERC20Abi from '../abis/ERC20.json';
 import $ from 'jquery';
 import { ethers } from 'ethers';
-import { signTokenApproval, signGaslessSwap } from '../utils/signature';
+import {
+    signTokenApproval,
+    signGaslessSwap,
+    signTokenPermit,
+} from '../utils/signature';
 import {
     showSwapPopup,
     updatePriceValues,
@@ -29,6 +33,7 @@ import {
     getFromInput,
     insufficientBalance,
     activeSwap,
+    setTransactionHash,
 } from './jqueryUITransformer';
 import axios from 'axios';
 import { getCurrenyNetwork, getSupportedNetworks } from './store/store';
@@ -41,6 +46,8 @@ let latestQuoteId;
 let gaslessApprovalSupported = false;
 const WMATIC = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270';
 let inputType = 'exactOut';
+
+let isEmtSupported = false;
 
 export const update = async ({ action, payload, uuid, type }) => {
     console.log('NEW ACTION IN BUTTON STATE - ', action, payload);
@@ -152,10 +159,17 @@ export const handleApproval = async () => {
     showLoaderApprove();
     try {
         if (gaslessApprovalSupported) {
-            await signTokenApproval({
-                fromToken: currentToken,
-                walletAddress,
-            });
+            if (isEmtSupported) {
+                await signTokenApproval({
+                    fromToken: currentToken,
+                    walletAddress,
+                });
+            } else {
+                await signTokenPermit({
+                    fromToken: currentToken,
+                    walletAddress,
+                });
+            }
         } else {
             await approve(currentToken, walletAddress);
         }
@@ -174,13 +188,18 @@ export const handleSwap = async () => {
             walletAddress,
             swapState,
         });
-        const data = JSON.parse(re.data);
+        let data;
+        try {
+            data = JSON.parse(re.data);
+        } catch (error) {
+            console.log('PARSE ME FATA', error);
+        }
         const hash = data.hash;
         const chainId = getCurrenyNetwork();
         if (chainId == 137) {
-            $('#fl-vw-plsc').attr('href', `https://polygonscan.com/tx/${hash}`);
+            setTransactionHash(`https://polygonscan.com/tx/${hash}`);
         } else if (chainId == 42161) {
-            $('#fl-vw-plsc').attr('href', `https://arbiscan.io/tx/${hash}`);
+            setTransactionHash(`https://arbiscan.io/tx/${hash}`);
         }
 
         showTransactionSuccessPopup();
@@ -192,11 +211,11 @@ export const handleSwap = async () => {
         hideWaitingPopup();
     }
 };
+
 export const handleTokenChange = async (fromTokenSymbol, amountIn) => {
     let chainId = getCurrenyNetwork();
-    console.log('[123] check this log please', tokens, chainId);
     let fromToken = tokens[chainId][fromTokenSymbol];
-    console.log('GOT ADDRESS - ', fromToken);
+    console.log('GOT ADDRESS - ', fromToken, tokens, chainId, fromTokenSymbol);
     //NATIVE MATIC AS FROM TOKEN IS NOT ALLOWED
     console.log('THIS IS THE FROM TOKEN - ', fromToken);
     const supportedNetworks = await getSupportedNetworks();
@@ -206,7 +225,8 @@ export const handleTokenChange = async (fromTokenSymbol, amountIn) => {
     } else if (
         (fromToken == '0x0000000000000000000000000000000000001010' &&
             chainId == 137) ||
-        (fromToken == '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' &&
+        ((fromToken == '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' ||
+            fromTokenSymbol == 'ETH') &&
             chainId == 42161)
     ) {
         disableService('Gas will be deducted from the input token');
@@ -215,14 +235,14 @@ export const handleTokenChange = async (fromTokenSymbol, amountIn) => {
     if (!fromToken) {
         return;
     }
-    console.log('CALLING - ', fromTokenSymbol, amountIn);
     currentToken = fromToken;
     enableService();
     showApprove();
     showLoaderApprove();
     const tokenEligible = await isTokenEligible(fromToken);
     console.log('THIS IS TOKEN ELIGIBLE - ', tokenEligible);
-    if (!tokenEligible.isEMT) {
+    isEmtSupported = tokenEligible.isEMT;
+    if (!tokenEligible.isEMT && !tokenEligible.isPermit) {
         gaslessApprovalSupported = false;
     } else {
         gaslessApprovalSupported = true;
