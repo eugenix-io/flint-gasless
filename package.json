@@ -23,7 +23,7 @@
         "react-lottie-player": "^1.5.4",
         "styled-components": "^5.3.9",
         "use-debounce": "^9.0.3",
-        "web3": "^1.8.2",
+        "web3": "^1.9.0",
         "webextension-polyfill": "^0.10.0"
     },
     "devDependencies": {

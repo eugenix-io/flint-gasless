@@ -12,6 +12,7 @@ import {
     removePendingTransaction,
 } from './utils/StorageUtils';
 import PendingTransaction from './components/PendingTransaction.jsx';
+import axios from 'axios';
 
 const PopupContainer = styled.div`
     background: black;
@@ -131,30 +132,44 @@ const ScreenContainer = ({
     setNavbarSelected,
     historyPage,
 }) => {
+    const [showNavbar, setShowNavbar] = useState(false);
+    useEffect(() => {
+        (async () => {
+            const result = await axios.get(
+                `${process.env.REACT_APP_BASE_URL}/faucet/v1/config/config`
+            );
+            console.log('this is the query result!! - ', result);
+            if (result.data.faucetActive) {
+                setShowNavbar(true);
+            }
+        })();
+    }, []);
     return (
         <>
             {historyPage ? (
                 <TransactionHistory></TransactionHistory>
             ) : (
                 <>
-                    <BoxContainer
-                        style={{
-                            flexDirection: 'row',
-                            borderRadius: '50px',
-                            padding: '5px',
-                            margin: '4% 5% 0 5%',
-                        }}
-                    >
-                        {navbarItems.map((item, index) => (
-                            <NavbarItem
-                                key={index}
-                                selected={index == navbarSelected}
-                                onClick={() => setNavbarSelected(index)}
-                            >
-                                {item.title}
-                            </NavbarItem>
-                        ))}
-                    </BoxContainer>
+                    {showNavbar && (
+                        <BoxContainer
+                            style={{
+                                flexDirection: 'row',
+                                borderRadius: '50px',
+                                padding: '5px',
+                                margin: '4% 5% 0 5%',
+                            }}
+                        >
+                            {navbarItems.map((item, index) => (
+                                <NavbarItem
+                                    key={index}
+                                    selected={index == navbarSelected}
+                                    onClick={() => setNavbarSelected(index)}
+                                >
+                                    {item.title}
+                                </NavbarItem>
+                            ))}
+                        </BoxContainer>
+                    )}
                     <BodyContainer>
                         {navbarItems.length > navbarSelected &&
                             navbarItems[navbarSelected].component}
@@ -166,7 +181,7 @@ const ScreenContainer = ({
 };
 
 const App = () => {
-    const [navbarSelected, setNavbarSelected] = useState(1);
+    const [navbarSelected, setNavbarSelected] = useState(0);
     const [historyPage, setHistoryPage] = useState(false);
     const [walletAddress, setWalletAddress] = useState('');
     const [newTrasaction, setNewTransaction] = useState(false);
