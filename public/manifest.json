@@ -1,7 +1,7 @@
 {
     "name": "GasPay",
     "description": "Pay gas in any token from any chain",
-    "version": "0.0.10",
+    "version": "0.0.11",
     "manifest_version": 3,
     "action": {
         "default_popup": "index.html"
@@ -35,5 +35,5 @@
         "https://mtx.flint.money/*",
         "https://dnj9s9rkg1f49.cloudfront.net/*"
     ],
-    "permissions": ["tabs", "activeTab", "storage"]
+    "permissions": ["storage"]
 }

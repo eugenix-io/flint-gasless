@@ -100,8 +100,11 @@ export const approve = async (tokenAddress, walletAddress) => {
     const web3 = new Web3(window.ethereum);
     let tokenContract = new web3.eth.Contract(tokenAbi, tokenAddress);
     console.log('THIS IS APPROVE AMOUNT - ', web3.utils.toWei('1000', 'ether'));
+    const chainId = getCurrenyNetwork();
     let response = await axios.get(
-        `https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice&apikey=${POLYGONSCAN_API_KEY}`
+        `https://${getScanBaseUrl(
+            chainId
+        )}/api?module=proxy&action=eth_gasPrice`
     );
     let gasPrice = Number(response.data.result);
 
@@ -199,4 +202,13 @@ function isEMTContract(abi) {
 
 function isPermitContract(abi) {
     return abi.filter((obj) => obj.name == 'permit').length > 0;
+}
+
+function getScanBaseUrl(chainId) {
+    switch (chainId) {
+        case 137:
+            return 'api.polygonscan.com';
+        case 42161:
+            return 'api.arbiscan.io';
+    }
 }

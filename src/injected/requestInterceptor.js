@@ -32,7 +32,7 @@ export const interceptRequests = () => {
                 action: 'NEW_QUOTE_REQUEST_INITIATED',
                 uuid,
                 payload: { fromToken: tokenInAddress, amountIn: amount },
-                type
+                type,
             });
             setGasInFromToken();
         }
@@ -40,7 +40,7 @@ export const interceptRequests = () => {
         let response = await originalFetch(resource, config);
 
         if (response.url?.includes('https://api.uniswap.org/v1/quote')) {
-            const responseJson = await response.json();
+            const responseJson = await response.clone().json();
             update({
                 action: 'NEW_QUOTE_REQUEST_COMPLETED',
                 uuid,
