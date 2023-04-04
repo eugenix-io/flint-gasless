@@ -1,10 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import GasInProgress from './GasInProgress.jsx';
-import TransactionStatus from './TransactionStatus.jsx';
 import DownArrow from '../assets/img/down_arrow.svg';
 import TokenSelector from './TokenSelector.jsx';
-import { ethers } from 'ethers';
 import axios from 'axios';
 import { useDebounce } from 'use-debounce';
 
@@ -13,19 +11,6 @@ const BridgeContainer = styled.div`
     flex-direction: column;
     flex: 1;
     width: 100%;
-`;
-
-const WalletAddress = styled.div`
-    background-color: #121212;
-    color: white;
-    border-radius: 50px;
-    padding-top: 3%;
-    padding-bottom: 3%;
-    text-align: center;
-
-    font-size: 0.9rem;
-    border: 1px solid rgb(54 53 53);
-    margin-bottom: 5%;
 `;
 
 const CoinSelectorContainer = styled.div`
@@ -80,9 +65,9 @@ const CoinSelectorInputContainerCoin = styled.div`
 `;
 
 const CoinName = styled.div`
-    color: white;
+    color: ${(props) => (props.small ? 'rgb(101,101,101)' : 'white')};
     margin-right: 10px;
-    font-size: 1.2rem;
+    font-size: ${(props) => (props.small ? '0.9rem' : '1.2rem')};
 `;
 
 const CoinAndChainImageContainer = styled.div`
@@ -137,6 +122,17 @@ const ErrorMessage = styled.div`
     text-align: center;
 `;
 
+const Col = styled.div`
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    margin-right: 10px;
+`;
+
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 const CoinSelector = ({
     heading,
     coinLogo,
@@ -146,6 +142,7 @@ const CoinSelector = ({
     onAmountChange,
     amount,
     inputDisabled,
+    chain,
 }) => {
     return (
         <CoinSelectorContainer>
@@ -159,7 +156,12 @@ const CoinSelector = ({
                     disabled={inputDisabled ? true : false}
                 ></CoinSelectorInputContainerAmount>
                 <CoinSelectorInputContainerCoin onClick={onTokenClick}>
-                    <CoinName>{symbol}</CoinName>
+                    <Col>
+                        <CoinName>{symbol}</CoinName>
+                        <CoinName small>
+                            {capitalizeFirstLetter(chain)}
+                        </CoinName>
+                    </Col>
                     <CoinAndChainImageContainer>
                         <CoinImage src={coinLogo}></CoinImage>
                         <ChainImage src={chainLogo}></ChainImage>
@@ -170,92 +172,14 @@ const CoinSelector = ({
     );
 };
 
-const Bridge = ({ wallet }) => {
+const Bridge = () => {
     const [loadingGasScreen, setLoadingGasScreen] = useState(true);
-    const [transactionProgressScreen, setTransactionProgressScreen] =
-        useState(false);
-    const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState(false);
-    const [lastTokenSelector, setLastTokenSelector] = useState('');
-    const [fromState, setFromState] = useState({
-        token: 'ethereum',
-        chain: 'ethereum',
-    });
-    const [toState, setToState] = useState({
-        token: 'ethereum',
-        chain: 'arbitrum',
-    });
-    const [errorMessage, setErrorMessage] = useState(false);
-    const [amount, setAmount] = useState();
-    const [debouncedAmount] = useDebounce(amount, 200);
-    const [outputAmount, setOutputAmount] = useState();
     const [faucetTokens, setFaucetTokens] = useState({});
-
-    const fromTokenClick = () => {
-        setIsTokenSelectorOpen(true);
-        setLastTokenSelector('from');
-    };
-
-    const toTokenClick = () => {
-        setLastTokenSelector('to');
-        setIsTokenSelectorOpen(true);
-    };
-
-    const closeTokenSelector = () => {
-        setIsTokenSelectorOpen(false);
-    };
-
-    const onTokenSelect = (state) => {
-        switch (lastTokenSelector) {
-            case 'from':
-                setFromState(state);
-                break;
-            case 'to':
-                setToState(state);
-                break;
-        }
-        closeTokenSelector();
-    };
+    const [chain, setChain] = useState();
 
     const handleSubmit = () => {
-        if (fromState.chain == toState.chain) {
-            setErrorMessage('The from and to chain need to be different');
-            return;
-        } else if (!amount) {
-            setErrorMessage('Input amount cannot be 0');
-            return;
-        }
-        setErrorMessage('');
-
-        let params = {
-            inputChain: faucetTokens.chains[fromState.chain],
-            outputChain: faucetTokens.chains[toState.chain],
-            inputToken: faucetTokens.tokens[fromState.token],
-            outputToken: faucetTokens.tokens[toState.token],
-            inputAmount: amount,
-            outputAmount: outputAmount,
-        };
-        window.open(
-            `https://faucet.flint.money/?data=${encodeURI(
-                JSON.stringify(params)
-            )}`,
-            '_blank'
-        );
+        window.open(`https://faucet.flint.money/?chain=${chain}`, '_blank');
     };
-
-    useEffect(() => {
-        (async () => {
-            let result = await axios.get(
-                `${
-                    process.env.REACT_APP_BASE_URL
-                }/faucet/v1/bridge/output?inputChainId=${
-                    faucetTokens.chains[fromState.chain].chainId
-                }&outputChainId=${
-                    faucetTokens.chains[toState.chain].chainId
-                }&amount=${ethers.parseEther(amount)}`
-            );
-            setOutputAmount(result.data / 10 ** 18);
-        })();
-    }, [debouncedAmount, fromState, toState]);
 
     useEffect(() => {
         (async () => {
@@ -272,66 +196,16 @@ const Bridge = ({ wallet }) => {
 
     return (
         <BridgeContainer>
-            {loadingGasScreen ? (
+            {loadingGasScreen || faucetTokens?.chain?.length == 0 ? (
                 <GasInProgress></GasInProgress>
-            ) : transactionProgressScreen ? (
-                <TransactionStatus></TransactionStatus>
             ) : (
                 <>
-                    {isTokenSelectorOpen ? (
-                        <TokenSelector
-                            onTokenSelect={onTokenSelect}
-                            close={closeTokenSelector}
-                            chain={
-                                lastTokenSelector == 'from'
-                                    ? fromState.chain
-                                    : toState.chain
-                            }
-                            faucetTokens={faucetTokens}
-                        ></TokenSelector>
-                    ) : (
-                        <>
-                            <CoinSelector
-                                heading="From:"
-                                coinLogo={
-                                    faucetTokens.tokens[fromState.token].image
-                                }
-                                chainLogo={
-                                    faucetTokens.chains[fromState.chain].image
-                                }
-                                symbol={
-                                    faucetTokens.tokens[fromState.token].symbol
-                                }
-                                onTokenClick={fromTokenClick}
-                                onAmountChange={(value) => {
-                                    setAmount(value);
-                                }}
-                                amount={amount}
-                            ></CoinSelector>
-                            <SwapArrow src={DownArrow}></SwapArrow>
-                            <CoinSelector
-                                heading="To:"
-                                coinLogo={
-                                    faucetTokens.tokens[toState.token].image
-                                }
-                                chainLogo={
-                                    faucetTokens.chains[toState.chain].image
-                                }
-                                symbol={
-                                    faucetTokens.tokens[toState.token].symbol
-                                }
-                                onTokenClick={toTokenClick}
-                                amount={outputAmount}
-                                inputDisabled={true}
-                            ></CoinSelector>
-                            <SubmitButton onClick={handleSubmit}>
-                                Get Gas
-                            </SubmitButton>
-                            {errorMessage && (
-                                <ErrorMessage>{errorMessage}</ErrorMessage>
-                            )}
-                        </>
-                    )}
+                    <TokenSelector
+                        onChainSelect={setChain}
+                        faucetTokens={faucetTokens}
+                    ></TokenSelector>
+
+                    <SubmitButton onClick={handleSubmit}>Get Gas</SubmitButton>
                 </>
             )}
         </BridgeContainer>

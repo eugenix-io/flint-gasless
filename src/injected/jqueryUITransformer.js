@@ -17,6 +17,7 @@ import chainIdLogo from '../injected/configs/chainIdLogo.json';
 import { getCurrenyNetwork } from './store/store';
 import { getSignificantDigits } from '../utils/commonFunctions';
 import axios from 'axios';
+import { identifyUser, trackEvent } from '../utils/SegmentUtils';
 
 let parent;
 let parentFlint;
@@ -39,13 +40,28 @@ let theme = 'light';
 
 let currentTransactionHash = '-';
 
+let isCurrentTokenApproved = false;
+
 export const setTransactionHash = (hash) => {
+    trackEvent('TRANSACTION_SUCCESS', {
+        chainId: getCurrenyNetwork(),
+        hash,
+    });
     currentTransactionHash = hash;
     $('#gp-tohid').fadeIn();
     $('#gaspay-success-popup-copy')
         .html(`To view your transaction, <a id="fl-vw-plsc" target="_blank" style="text-decoration: none; font-weight: 600" href="${hash}">
     click here.</a><br>Something exciting is brewing just for you,<br>
     share your email to unlock it`);
+    $('fl-vw-plsc')
+        .off()
+        .on({
+            click: () => {
+                trackEvent('TWITTER_SHARE_CLICK', {
+                    chainId: getCurrenyNetwork(),
+                });
+            },
+        });
 };
 
 const swapButtons = ['flint-swap-conf', 'flint-swap'];
@@ -67,11 +83,11 @@ export const setGasInFromToken = (gas, fromPrice) => {
     if (gas) {
         gas = getSignificantDigits(gas);
         fromPrice = getSignificantDigits(fromPrice);
+        const gasHTML = isCurrentTokenApproved
+            ? `Fees: <b>${gas} ${fromCurrency}</b> ($${fromPrice})`
+            : '<b>Approval is gasless</b>';
         $('#fl-gs-cnt-bx').show(100);
-        $('#fl-gs-cnt-bx')
-            .children('div')
-            .children('p')
-            .html(`Fees: <b>${gas} ${fromCurrency}</b> ($${fromPrice})`);
+        $('#fl-gs-cnt-bx').children('div').children('p').html(gasHTML);
     } else {
         $('#fl-gs-cnt-bx').hide(100);
     }
@@ -224,11 +240,13 @@ export const enableSwapButton = () => {
 export const showApprove = () => {
     $('#flint-approve').show();
     $('#flint-swap').hide();
+    isCurrentTokenApproved = false;
 };
 
 export const hideApprove = () => {
     $('#flint-approve').hide();
     $('#flint-swap').show();
+    isCurrentTokenApproved = true;
 };
 
 export const showLoaderApprove = () => {
@@ -392,7 +410,7 @@ const insertGasTokenBlock = () => {
             ?.children('div:first-child')
             ?.children('button');
         fromInput = currencySelector1.parent().children('input');
-        fromInput.on({
+        fromInput.off().on({
             keyup: () => {
                 if (!fromInput.val()) {
                     disableSwapButton();
@@ -421,7 +439,7 @@ const insertGasTokenBlock = () => {
             $('#fl-from-im').attr('src', fromImgSrc);
             $('#fl-from-crr').html(fromCurrency);
         }, 200);
-        currencySelector1?.on({
+        currencySelector1?.off().on({
             DOMSubtreeModified: (e) => {
                 fromCurrency = currencySelector1
                     .children('span')
@@ -429,6 +447,10 @@ const insertGasTokenBlock = () => {
                     ?.children('span')
                     ?.html();
                 console.log('THIS IS THE FROM CURRENCY - ', fromCurrency);
+                trackEvent('FROM_TOKEN_SELECT', {
+                    chainId: getCurrenyNetwork(),
+                    token: fromCurrency,
+                });
                 fromImgSrc = currencySelector1.find('img').attr('src');
                 setTimeout(() => {
                     fromImgSrc = currencySelector1.find('img').attr('src');
@@ -451,16 +473,16 @@ const insertGasTokenBlock = () => {
             ?.children('div:first-child')
             ?.children('button');
         toInput = currencySelector2.parent().children('input');
-        toInput.on('input', function () {
+        toInput.off().on('input', function () {
             setToTokenFinalPrice();
             // alert($(this).val());
         });
-        toInput.on({
+        toInput.off().on({
             change: () => {
                 setToTokenFinalPrice();
             },
         });
-        currencySelector2?.on({
+        currencySelector2?.off()?.on({
             DOMSubtreeModified: (e) => {
                 toCurrency = currencySelector2
                     .children('span')
@@ -472,10 +494,15 @@ const insertGasTokenBlock = () => {
                     $('#fl-to-im').attr('src', toImgSrc);
                     $('#fl-to-crr').html(toCurrency);
                 }, 200);
+                trackEvent('TO_TOKEN_SELECT', {
+                    chainId: getCurrenyNetwork(),
+                    token: toCurrency,
+                });
             },
         });
         main.children('div:nth-child(3)')
             ?.children('div:first-child')
+            ?.off()
             ?.on({
                 DOMSubtreeModified: (e) => {
                     setTimeout(() => {
@@ -513,65 +540,87 @@ const insertGasTokenBlock = () => {
             // }
         }
 
-        $('#gas-pay-email-collect').on({
-            change: () => {
-                const email = $('#gas-pay-email-collect').val();
-                if (validateEmail(email)) {
-                    $('#emsubmit').css('background-color', 'rgb(76, 130, 251)');
-                } else {
-                    $('#emsubmit').css('background-color', 'rgb(41, 50, 73)');
-                }
-            },
-            keyup: () => {
-                const email = $('#gas-pay-email-collect').val();
-                if (validateEmail(email)) {
-                    $('#emsubmit').css('background-color', 'rgb(76, 130, 251)');
-                } else {
-                    $('#emsubmit').css('background-color', 'rgb(41, 50, 73)');
-                }
-            },
-        });
+        $('#gas-pay-email-collect')
+            ?.off()
+            ?.on({
+                change: () => {
+                    const email = $('#gas-pay-email-collect').val();
+                    if (validateEmail(email)) {
+                        $('#emsubmit').css(
+                            'background-color',
+                            'rgb(76, 130, 251)'
+                        );
+                    } else {
+                        $('#emsubmit').css(
+                            'background-color',
+                            'rgb(41, 50, 73)'
+                        );
+                    }
+                },
+                keyup: () => {
+                    const email = $('#gas-pay-email-collect').val();
+                    if (validateEmail(email)) {
+                        $('#emsubmit').css(
+                            'background-color',
+                            'rgb(76, 130, 251)'
+                        );
+                    } else {
+                        $('#emsubmit').css(
+                            'background-color',
+                            'rgb(41, 50, 73)'
+                        );
+                    }
+                },
+            });
 
-        $('#gaspay-email-submit').on({
-            submit: async (e) => {
-                e.preventDefault();
-                const email = $('#gas-pay-email-collect').val();
-                if (validateEmail(email)) {
-                    $('#emsubmit').html('');
-                    $('#emsubmit').addClass('button--loading');
-                    axios
-                        .post(
-                            'https://api.airtable.com/v0/appvxjSOULMpTiniW/Table%201',
-                            {
-                                records: [
-                                    {
-                                        fields: {
-                                            email: email,
-                                            wallet: await getWalletAddress(),
-                                            hash: currentTransactionHash,
-                                        },
-                                    },
-                                ],
-                            },
-                            {
-                                headers: {
-                                    Authorization: 'Bearer keyJnhiCWmdKSZWOE',
-                                },
-                            }
-                        )
-                        .then((res) => {
-                            $('#emsubmit').html('Submit');
-                            $('#emsubmit').removeClass('button--loading');
-                            $('#gaspay-tweet').fadeIn(200);
-                            $('#gaspay-email-submit').fadeOut(200);
-                            $('#gaspay-success-popup-copy').html(
-                                'Did you enjoy what you just experienced?<br><br>Help us spread the word by sharing it with your friends and community who might also love it'
-                            );
-                            $('#gp-tohid').fadeOut(100);
+        $('#gaspay-email-submit')
+            .off()
+            .on({
+                submit: async (e) => {
+                    e.preventDefault();
+                    const email = $('#gas-pay-email-collect').val();
+                    if (validateEmail(email)) {
+                        trackEvent('EMAIL_SUBMIT', {
+                            chainId: getCurrenyNetwork(),
+                            email,
                         });
-                }
-            },
-        });
+                        identifyUser(email, getWalletAddress());
+                        $('#emsubmit').html('');
+                        $('#emsubmit').addClass('button--loading');
+                        axios
+                            .post(
+                                'https://api.airtable.com/v0/appvxjSOULMpTiniW/Table%201',
+                                {
+                                    records: [
+                                        {
+                                            fields: {
+                                                email: email,
+                                                wallet: await getWalletAddress(),
+                                                hash: currentTransactionHash,
+                                            },
+                                        },
+                                    ],
+                                },
+                                {
+                                    headers: {
+                                        Authorization:
+                                            'Bearer keyJnhiCWmdKSZWOE',
+                                    },
+                                }
+                            )
+                            .then((res) => {
+                                $('#emsubmit').html('Submit');
+                                $('#emsubmit').removeClass('button--loading');
+                                $('#gaspay-tweet').fadeIn(200);
+                                $('#gaspay-email-submit').fadeOut(200);
+                                $('#gaspay-success-popup-copy').html(
+                                    'Did you enjoy what you just experienced?<br><br>Help us spread the word by sharing it with your friends and community who might also love it'
+                                );
+                                $('#gp-tohid').fadeOut(100);
+                            });
+                    }
+                },
+            });
     }
 };
 

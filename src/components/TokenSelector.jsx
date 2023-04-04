@@ -88,7 +88,6 @@ const TokenImage = styled.img`
 const TokenName = styled.div`
     font-size: 1.1rem;
     margin-left: 4%;
-
 `;
 
 const TokenComingSoon = styled.div`
@@ -107,16 +106,30 @@ const CloseButton = styled.img`
     cursor: pointer;
 `;
 
-const TokenSelector = ({ close, onTokenSelect, chain, faucetTokens }) => {
-    const [selectedChain, setSelectedChain] = useState(chain);
+const TokenSelector = ({ onChainSelect, faucetTokens }) => {
+    const [selectedChain, setSelectedChain] = useState(
+        Object.keys(faucetTokens.chains)[0]
+    );
+    // useEffect(() => {
+    //     const allChains = Object.keys(faucetTokens.chains);
+    //     console.log(allChains, 'absolute');
+    //     if (allChains.length > 0) {
+    //         setSelectedChain[allChains[0]];
+    //         console.log(allChains[0]);
+    //     }
+    // }, []);
+    useEffect(() => {
+        onChainSelect(selectedChain);
+    }, [selectedChain]);
     return (
         <TokenSelectorContainer>
-            <CloseButton onClick={close} src={crossLogo}></CloseButton>
+            {/* <CloseButton onClick={close} src={crossLogo}></CloseButton> */}
             <Heading>Select chain</Heading>
             <ChainSelectorContainer>
                 {Object.entries(faucetTokens.chains).map(
                     ([key, chain], index) => (
                         <Chain
+                            key={index}
                             onClick={() => setSelectedChain(key)}
                             selected={selectedChain == key}
                         >
@@ -126,7 +139,7 @@ const TokenSelector = ({ close, onTokenSelect, chain, faucetTokens }) => {
                     )
                 )}
             </ChainSelectorContainer>
-            <Heading style={{ marginTop: '4%' }}>Select token</Heading>
+            {/* <Heading style={{ marginTop: '4%' }}>Select token</Heading>
             {Object.entries(faucetTokens.tokens)
                 .filter(([key, token]) =>
                     token.chainIds.includes(
@@ -146,7 +159,7 @@ const TokenSelector = ({ close, onTokenSelect, chain, faucetTokens }) => {
                             <TokenComingSoon>Coming soon</TokenComingSoon>
                         )}
                     </TokeRow>
-                ))}
+                ))} */}
         </TokenSelectorContainer>
     );
 };

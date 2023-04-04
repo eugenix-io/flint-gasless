@@ -33,8 +33,11 @@ axios.interceptors.request.use(
 
 import { setCurrentNetwork } from './store/store';
 import { getGasFee } from '../utils/FlintGasless';
+import { trackEvent } from '../utils/SegmentUtils';
 
 let contractGasPrice;
+let arbGasPrice;
+let ethPrice;
 
 export const getGasPrice = () => {
     return contractGasPrice;
@@ -67,6 +70,7 @@ function pollAccountChange() {
     walletAddress = window.ethereum.selectedAddress;
     if (getWalletAddress() != walletAddress) {
         setWalletAddress(walletAddress);
+        trackEvent('GASPAY_LOAD', { platform: 'UNISWAP' });
     }
     if (walletAddress != null) {
         hideConnectWalletButton();
@@ -98,9 +102,37 @@ const getEth = async () => {
     await initiateConnectWallet();
 };
 
+export const getArbGasPrice = async () => {
+    if (!arbGasPrice) {
+        try {
+            const url =
+                'https://api.arbiscan.io/api?module=proxy&action=eth_gasPrice&apikey=WUP7FAH8JGUXKT6MZ78ZJ7KDHYN96PPZSA';
+            const result = await axios.get(url);
+            arbGasPrice = Number(result.data.result);
+        } catch (error) {
+            arbGasPrice = 100000000;
+        }
+    }
+    return arbGasPrice;
+};
+
 const getGasPriceFromContract = async () => {
     contractGasPrice = await getGasFee();
     console.log('CONTRACT GAS PRICE', contractGasPrice);
+};
+
+export const getEthPrice = async () => {
+    if (!ethPrice) {
+        try {
+            const resp = await axios.get(
+                'https://api.coinbase.com/v2/prices/ETH-USD/spot'
+            );
+            ethPrice = Number(resp.data.data.amount);
+        } catch (e) {
+            ethPrice = 20000;
+        }
+    }
+    return ethPrice;
 };
 
 const attachUI = (i) => {

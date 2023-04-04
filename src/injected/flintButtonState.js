@@ -5,8 +5,6 @@ import {
     approve,
     getTokenBalance,
 } from '../utils/ERC20Utils';
-import ERC20Abi from '../abis/ERC20.json';
-import $ from 'jquery';
 import { ethers } from 'ethers';
 import {
     signTokenApproval,
@@ -37,6 +35,7 @@ import {
 } from './jqueryUITransformer';
 import axios from 'axios';
 import { getCurrenyNetwork, getSupportedNetworks } from './store/store';
+import { getArbGasPrice, getEthPrice, getGasPrice } from './injected';
 
 let walletAddress;
 let currentToken;
@@ -48,6 +47,8 @@ const WMATIC = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270';
 let inputType = 'exactOut';
 
 let isEmtSupported = false;
+
+const coinContractPriceMap = {};
 
 export const update = async ({ action, payload, uuid, type }) => {
     console.log('NEW ACTION IN BUTTON STATE - ', action, payload);
@@ -91,12 +92,14 @@ export const update = async ({ action, payload, uuid, type }) => {
                 feeArr: feeArr,
             };
             console.log('UPDATING SWAP STATE - ', swapState);
-            const gasINUSD = Number(payload.gasUseEstimateUSD);
+            // const gasINUSD = Number(payload.gasUseEstimateUSD);
             let amountInToken1 = Number(payload.amountDecimals);
             let amountInToken2 = Number(payload.quoteDecimals);
 
-            let gasInToToken = Number(payload.gasUseEstimateQuoteDecimals);
+            let gasINUSD = Number(payload.gasUseEstimateUSD);
+            getCurrenyNetwork() != 137;
 
+            let gasInToToken = Number(payload.gasUseEstimateQuoteDecimals);
             let gasInFromToken =
                 gasInToToken * (amountInToken1 / amountInToken2);
 
@@ -108,6 +111,40 @@ export const update = async ({ action, payload, uuid, type }) => {
 
                 gasInToToken =
                     gasInFromToken * (amountInToken2 / amountInToken1);
+            }
+            const fromContractAddr = tokenArray[0].toLowerCase();
+            const toContractAddr =
+                tokenArray[tokenArray.length - 1].toLowerCase();
+
+            // Calculation of gas fee for the case of ARBITRUM chain
+            if (getCurrenyNetwork() != 137) {
+                const gasPriceContract = Number(getGasPrice());
+                const gasArb = await getArbGasPrice();
+                const ethPrice = await getEthPrice();
+                gasINUSD = (gasArb * gasPriceContract * ethPrice) / 10 ** 18;
+                let fromUSDPrice;
+                let toUSDPrice;
+
+                if (
+                    coinContractPriceMap[fromContractAddr] &&
+                    coinContractPriceMap[toContractAddr]
+                ) {
+                    fromUSDPrice = coinContractPriceMap[fromContractAddr];
+                    toUSDPrice = coinContractPriceMap[toContractAddr];
+                } else {
+                    const coinGeckoURL = `https://api.coingecko.com/api/v3/simple/token_price/arbitrum-one?contract_addresses=${fromContractAddr},${toContractAddr}&vs_currencies=usd`;
+                    const pricesData = await (
+                        await axios.get(coinGeckoURL)
+                    ).data;
+                    console.log('pricesData', pricesData);
+                    fromUSDPrice = pricesData[fromContractAddr]['usd'];
+                    toUSDPrice = pricesData[toContractAddr]['usd'];
+                    coinContractPriceMap[fromContractAddr] = fromUSDPrice;
+                    coinContractPriceMap[toContractAddr] = toUSDPrice;
+                }
+
+                gasInToToken = gasINUSD / toUSDPrice;
+                gasInFromToken = gasINUSD / fromUSDPrice;
             }
 
             setGasInToToken(gasInToToken);
@@ -191,9 +228,7 @@ export const handleSwap = async () => {
         let data;
         try {
             data = JSON.parse(re.data);
-        } catch (error) {
-            console.log('PARSE ME FATA', error);
-        }
+        } catch (error) {}
         const hash = data.hash;
         const chainId = getCurrenyNetwork();
         if (chainId == 137) {
@@ -201,7 +236,6 @@ export const handleSwap = async () => {
         } else if (chainId == 42161) {
             setTransactionHash(`https://arbiscan.io/tx/${hash}`);
         }
-
         showTransactionSuccessPopup();
         hideWaitingPopup();
         hideRejectPopup();

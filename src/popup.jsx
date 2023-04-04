@@ -138,7 +138,6 @@ const ScreenContainer = ({
             const result = await axios.get(
                 `${process.env.REACT_APP_BASE_URL}/faucet/v1/config/config`
             );
-            console.log('this is the query result!! - ', result);
             if (result.data.faucetActive) {
                 setShowNavbar(true);
             }
