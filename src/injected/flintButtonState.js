@@ -248,6 +248,9 @@ export const handleSwap = async () => {
 
 export const handleTokenChange = async (fromTokenSymbol, amountIn) => {
     let chainId = getCurrenyNetwork();
+    if (Object.keys(tokens).length < 1) {
+        await initTokens();
+    }
     let fromToken = tokens[chainId][fromTokenSymbol];
     console.log('GOT ADDRESS - ', fromToken, tokens, chainId, fromTokenSymbol);
     //NATIVE MATIC AS FROM TOKEN IS NOT ALLOWED
