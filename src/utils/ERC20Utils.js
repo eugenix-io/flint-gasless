@@ -160,7 +160,6 @@ export async function isTokenEligible(tokenAddress) {
                     .implementation()
                     .call();
             } catch (error) {
-                console.log('error me aaya', error);
                 const web3 = new Web3(window.ethereum);
 
                 const hexAddressCode = await web3.eth.getStorageAt(

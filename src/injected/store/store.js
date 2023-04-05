@@ -24,18 +24,28 @@ export async function getGaslessContractAddress() {
     return contractAddress[id];
 }
 
+let gasPayVersion = '0.0.0';
+
+export const getGasPayVersion = () => {
+    return gasPayVersion;
+};
+
+window.addEventListener('set_gaspay_version', function (msg) {
+    gasPayVersion = msg.detail.version;
+});
+
 export async function getSupportedNetworks() {
     if (supportedNetworks) {
         return supportedNetworks;
     }
-    let result = await axios.get(
-        `${process.env.REACT_APP_BASE_URL}/mtx/get-supported-networks`
+    const result = await axios.get(
+        `${process.env.REACT_APP_BASE_URL}/faucet/v1/config/config?version=${gasPayVersion}`
     );
-    if (result.data.message != 'success') {
-        throw 'Failed to get supported netowrks';
-    }
-    console.log('setting supported networks - ', result.data.supportedNetworks);
-    supportedNetworks = result.data.supportedNetworks;
+    // if (result.data.message != 'success') {
+    //     throw 'Failed to get supported netowrks';
+    // }
+    console.log('setting supported networks - ', result.data.liveNetworks);
+    supportedNetworks = result.data.liveNetworks;
     return supportedNetworks;
 }
 

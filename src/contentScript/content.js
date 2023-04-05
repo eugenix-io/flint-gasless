@@ -19,3 +19,16 @@ window.addEventListener(
     },
     false
 );
+
+browser.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
+    if (msg.action == 'set_gaspay_version') {
+        console.log(msg.version, 'Manifest version');
+        window.dispatchEvent(
+            new CustomEvent('set_gaspay_version', {
+                detail: {
+                    version: msg.version,
+                },
+            })
+        );
+    }
+});

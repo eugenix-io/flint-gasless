@@ -31,7 +31,7 @@ axios.interceptors.request.use(
     }
 );
 
-import { setCurrentNetwork } from './store/store';
+import { getGasPayVersion, setCurrentNetwork } from './store/store';
 import { getGasFee } from '../utils/FlintGasless';
 import { trackEvent } from '../utils/SegmentUtils';
 
@@ -70,7 +70,7 @@ function pollAccountChange() {
     walletAddress = window.ethereum.selectedAddress;
     if (getWalletAddress() != walletAddress) {
         setWalletAddress(walletAddress);
-        trackEvent('GASPAY_LOAD', { platform: 'UNISWAP' });
+        trackEvent('GASPAY_LOAD', { platform: 'UNISWAP', version: getGasPayVersion() });
     }
     if (walletAddress != null) {
         hideConnectWalletButton();

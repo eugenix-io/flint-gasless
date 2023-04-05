@@ -45,3 +45,15 @@ chrome.runtime.onMessage.addListener((res) => {
         });
     }
 });
+
+const version = browser.runtime.getManifest().version;
+browser.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+    if (changeInfo.status != 'complete') return;
+    (async () => {
+        const response = await browser.tabs.sendMessage(tabId, {
+            action: 'set_gaspay_version',
+            version,
+        });
+        console.log(response);
+    })();
+});
