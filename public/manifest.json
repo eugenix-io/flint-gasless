@@ -1,12 +1,39 @@
 {
-    "name": "Flint | Gasless",
+    "name": "GasPay",
     "description": "Pay gas in any token from any chain",
-    "version": "0.0.0.1",
+    "version": "0.0.12",
     "manifest_version": 3,
     "action": {
-        "default_popup": "popup.html"
+        "default_popup": "index.html"
     },
     "icons": {
-      "128": "flint.png"
-    }
+        "128": "gasly.png"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://app.uniswap.org/*",
+                "https://payment-link-gaspay.vercel.app/*",
+                "https://faucet.flint.money/*"
+            ],
+            "js": ["content.js"],
+            "css": ["style.css"],
+            "run_at": "document_start"
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": ["injected.js"],
+            "matches": ["<all_urls>"]
+        }
+    ],
+
+    "background": {
+        "service_worker": "background.js"
+    },
+    "host_permissions": [
+        "https://mtx.flint.money/*",
+        "https://dnj9s9rkg1f49.cloudfront.net/*"
+    ],
+    "permissions": ["storage"]
 }
