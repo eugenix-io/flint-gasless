@@ -153,19 +153,20 @@ export const update = async ({ action, payload, uuid, type }) => {
                 swapState.fromToken,
                 walletAddress
             );
-            // const fromAmount = getFromInput()?.val();
+            const fromInputAmount = getFromInput()?.val();
             const fromAmount = ethers.toBigInt(inputAmount);
             console.log(
                 'MINIMUM AMOUNT CHECK',
                 currentTokenBalance,
                 fromAmount,
                 Number(fromAmount),
-                gasInFromToken
+                gasInFromToken,
+                fromInputAmount
             );
             // checking if the requested amount is more than available balance and gas required
             if (
                 currentTokenBalance >= fromAmount &&
-                fromAmount > gasInFromToken * 1.5
+                Number(fromInputAmount) > gasInFromToken * 1.5
             ) {
                 activeSwap();
                 enableSwapButton();
@@ -248,11 +249,15 @@ export const handleSwap = async () => {
 
 export const handleTokenChange = async (fromTokenSymbol, amountIn) => {
     let chainId = getCurrenyNetwork();
+    if (Object.keys(tokens).length < 1) {
+        await initTokens();
+    }
     let fromToken = tokens[chainId][fromTokenSymbol];
     console.log('GOT ADDRESS - ', fromToken, tokens, chainId, fromTokenSymbol);
     //NATIVE MATIC AS FROM TOKEN IS NOT ALLOWED
     console.log('THIS IS THE FROM TOKEN - ', fromToken);
     const supportedNetworks = await getSupportedNetworks();
+    console.log(supportedNetworks, 'supportedNetworks');
     if (!supportedNetworks.includes(chainId)) {
         disableService('Gaspay is not supported on this network.');
         return;
