@@ -20,6 +20,16 @@ export const getNonce = async (walletAddress) => {
     return await contract.methods.nonces(walletAddress).call();
 };
 
+export const getApprovalNonce = async (walletAddress) => {
+    let contract = await getContract();
+    return await contract.methods.approvalNonces(walletAddress).call();
+};
+
+export const getGasForApproval = async () => {
+    let contract = await getContract();
+    return await contract.methods.gasForApproval().call();
+};
+
 export const getGasFee = async () => {
     let contract = await getContract();
     return await contract?.methods?.gasForSwap().call();
