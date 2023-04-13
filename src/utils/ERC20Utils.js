@@ -10,8 +10,6 @@ import {
     getGaslessContractAddress,
 } from '../injected/store/store';
 
-const POLYGONSCAN_API_KEY = 'DDZ33H8RZYENMTDX5KCM67FW1HBJD5CRUC';
-
 export const getTokenBalance = async (
     tokenAddress,
     walletAddress,
@@ -22,11 +20,6 @@ export const getTokenBalance = async (
         const tokenContract = new web3.eth.Contract(tokenAbi, tokenAddress);
         let bal = await tokenContract.methods.balanceOf(walletAddress).call();
         const bigNumber = ethers.toBigInt(bal);
-        // const decimals = await tokenContract.methods.decimals().call();
-        // console.log('BEFORE DIVIDE', bal, bigNumber / 10 ** decimals);
-        // if (!returnInLeastUnit) {
-        //     bal = bal / 10 ** decimals;
-        // }
         return bigNumber;
     } catch (err) {
         console.error('FAILED TO GET BALANCE - ', err);
@@ -117,20 +110,6 @@ export const approve = async (tokenAddress, walletAddress) => {
             from: walletAddress,
             gasPrice: gasPrice,
         });
-
-    // try {
-    //     await tokenContract.methods
-    //         .approve(
-    //             await getGaslessContractAddress(),
-    //             web3.utils.toWei('100000000000000', 'ether')
-    //         )
-    //         .send({
-    //             from: walletAddress,
-    //             gasPrice: gasPrice,
-    //         });
-    // } catch (error) {
-    //     console.log('APPROVE ERROR', error);
-    // }
     return;
 };
 
@@ -138,55 +117,35 @@ export async function isTokenEligible(tokenAddress) {
     try {
         console.log('CHECKING IF TOKEN IS ELIGIBLE - ', tokenAddress);
         const chainId = getCurrenyNetwork();
-        let tokenResult = await axios.get(
-            chainId == 137
-                ? `https://api.polygonscan.com/api?module=contract&action=getabi&address=${tokenAddress}&apikey=${POLYGONSCAN_API_KEY}`
-                : `https://api.arbiscan.io/api?module=contract&action=getabi&address=${tokenAddress}&apikey=9Y8HRFVU5396NM63YQ8P2Y1K49DTC9H1MW`
+
+        const sourceCodeResponse = await axios.get(
+            `${process.env.REACT_APP_BACKEND_BASE_URL}/v1/scan/source-code?address=${tokenAddress}&chainId=${chainId}`
         );
-        let tokenAbi = JSON.parse(tokenResult.data.result);
-        let implementationExists =
-            tokenAbi.filter((obj) => obj.name == 'implementation').length > 0;
+        const sourceCode = sourceCodeResponse.data.result[0];
 
-        const web3 = new Web3(window.ethereum);
-        console.log(implementationExists, 'implementationExists');
+        console.log('got the source code', sourceCode);
+        let implementationAddress = tokenAddress;
 
-        //if not an implem
-        if (implementationExists) {
-            console.log(chainId);
-            let proxyContract = new web3.eth.Contract(tokenAbi, tokenAddress);
-            let implementationAddress;
-            try {
-                implementationAddress = await proxyContract.methods
-                    .implementation()
-                    .call();
-            } catch (error) {
-                const web3 = new Web3(window.ethereum);
-
-                const hexAddressCode = await web3.eth.getStorageAt(
-                    tokenAddress,
-                    '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc'
-                );
-
-                console.log(hexAddressCode, 'hexAddressCode');
-
-                implementationAddress =
-                    '0x' + hexAddressCode.substring(26, hexAddressCode.length);
-            }
-            console.log(implementationAddress, 'implementationAddress');
-            let implementationResult = await axios.get(
-                chainId == 137
-                    ? `https://api.polygonscan.com/api?module=contract&action=getabi&address=${implementationAddress}&apikey=${POLYGONSCAN_API_KEY}`
-                    : `https://api.arbiscan.io/api?module=contract&action=getabi&address=${implementationAddress}&apikey=9Y8HRFVU5396NM63YQ8P2Y1K49DTC9H1MW`
+        if (sourceCode.Proxy == '1') {
+            console.log(
+                "it's an implementation with address",
+                implementationAddress
             );
-            console.log(implementationResult, 'implementationResult');
-            tokenAbi = JSON.parse(implementationResult.data.result);
+            implementationAddress = sourceCode.Implementation;
         }
-        //passing tokenAddress instead of implementationAddress as they can have different names
-        let name = await getName(tokenAddress);
-        console.log('THIS IS TOKEN ABI - ', tokenAbi);
+
+        let promises = [
+            getName(implementationAddress),
+            axios.get(
+                `${process.env.REACT_APP_BACKEND_BASE_URL}/v1/scan/abi?address=${implementationAddress}&chainId=${chainId}`
+            ),
+        ];
+        const [name, tokenAbiResponse] = await Promise.all(promises);
+        const abi = tokenAbiResponse.data.result;
+        console.log('This is tokenAbi - ', abi);
         return {
-            isEMT: isEMTContract(tokenAbi),
-            isPermit: isPermitContract(tokenAbi),
+            isEMT: isEMTContract(abi),
+            isPermit: isPermitContract(abi),
             name: name,
         };
     } catch (err) {

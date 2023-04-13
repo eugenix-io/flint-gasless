@@ -184,7 +184,7 @@ const Bridge = () => {
     useEffect(() => {
         (async () => {
             let result = await axios.get(
-                `${process.env.REACT_APP_BASE_URL}/faucet/v1/bridge/config`
+                `${process.env.REACT_APP_BACKEND_BASE_URL}/v1/bridge/config`
             );
             setFaucetTokens(result.data);
             console.log('this is config - ', result.data);

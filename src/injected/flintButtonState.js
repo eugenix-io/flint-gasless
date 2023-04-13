@@ -92,12 +92,17 @@ export const update = async ({ action, payload, uuid, type }) => {
                 feeArr: feeArr,
             };
             console.log('UPDATING SWAP STATE - ', swapState);
-            // const gasINUSD = Number(payload.gasUseEstimateUSD);
+
             let amountInToken1 = Number(payload.amountDecimals);
             let amountInToken2 = Number(payload.quoteDecimals);
 
-            let gasINUSD = Number(payload.gasUseEstimateUSD);
-            getCurrenyNetwork() != 137;
+            let gasInUSD = Number(payload.gasUseEstimateUSD);
+
+            if (getCurrenyNetwork() == 42161) {
+                //uniswap quote API returns gas estimate in USD as 10x and the gas use as 1/10x
+                //don't know the exact reason for this but dividing gasInUsd by 10 seems to work
+                gasInUSD /= 10;
+            }
 
             let gasInToToken = Number(payload.gasUseEstimateQuoteDecimals);
             let gasInFromToken =
@@ -112,43 +117,9 @@ export const update = async ({ action, payload, uuid, type }) => {
                 gasInToToken =
                     gasInFromToken * (amountInToken2 / amountInToken1);
             }
-            const fromContractAddr = tokenArray[0].toLowerCase();
-            const toContractAddr =
-                tokenArray[tokenArray.length - 1].toLowerCase();
-
-            // Calculation of gas fee for the case of ARBITRUM chain
-            if (getCurrenyNetwork() != 137) {
-                const gasPriceContract = Number(getGasPrice());
-                const gasArb = await getArbGasPrice();
-                const ethPrice = await getEthPrice();
-                gasINUSD = (gasArb * gasPriceContract * ethPrice) / 10 ** 18;
-                let fromUSDPrice;
-                let toUSDPrice;
-
-                if (
-                    coinContractPriceMap[fromContractAddr] &&
-                    coinContractPriceMap[toContractAddr]
-                ) {
-                    fromUSDPrice = coinContractPriceMap[fromContractAddr];
-                    toUSDPrice = coinContractPriceMap[toContractAddr];
-                } else {
-                    const coinGeckoURL = `https://api.coingecko.com/api/v3/simple/token_price/arbitrum-one?contract_addresses=${fromContractAddr},${toContractAddr}&vs_currencies=usd`;
-                    const pricesData = await (
-                        await axios.get(coinGeckoURL)
-                    ).data;
-                    console.log('pricesData', pricesData);
-                    fromUSDPrice = pricesData[fromContractAddr]['usd'];
-                    toUSDPrice = pricesData[toContractAddr]['usd'];
-                    coinContractPriceMap[fromContractAddr] = fromUSDPrice;
-                    coinContractPriceMap[toContractAddr] = toUSDPrice;
-                }
-
-                gasInToToken = gasINUSD / toUSDPrice;
-                gasInFromToken = gasINUSD / fromUSDPrice;
-            }
 
             setGasInToToken(gasInToToken);
-            setGasInFromToken(gasInFromToken, gasINUSD);
+            setGasInFromToken(gasInFromToken, gasInUSD);
             const currentTokenBalance = await getTokenBalance(
                 swapState.fromToken,
                 walletAddress
@@ -222,14 +193,10 @@ export const handleApproval = async () => {
 
 export const handleSwap = async () => {
     try {
-        const re = await signGaslessSwap({
+        const data = await signGaslessSwap({
             walletAddress,
             swapState,
         });
-        let data;
-        try {
-            data = JSON.parse(re.data);
-        } catch (error) {}
         const hash = data.hash;
         const chainId = getCurrenyNetwork();
         if (chainId == 137) {

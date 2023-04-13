@@ -246,8 +246,8 @@ const TransactionHistory = () => {
         const getTransaction = async () => {
             const result = await axios.get(
                 `${
-                    process.env.REACT_APP_BASE_URL
-                }/faucet/v1/bridge/transactions?address=${await getWalletAddress()}&offset=50&page=0`
+                    process.env.REACT_APP_BACKEND_BASE_URL
+                }/v1/bridge/transactions?address=${await getWalletAddress()}&offset=50&page=0`
             );
             setTransactions(result.data);
         };

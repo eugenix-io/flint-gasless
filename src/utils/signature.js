@@ -7,8 +7,13 @@ import axios from 'axios';
 import {
     getCurrenyNetwork,
     getGaslessContractAddress,
+    getGasPayVersion,
 } from '../injected/store/store';
 import { getToCurrency } from '../injected/jqueryUITransformer';
+
+BigInt.prototype.toJSON = function () {
+    return this.toString();
+};
 
 let NONCE;
 
@@ -58,29 +63,26 @@ export const signTokenApproval = async ({ walletAddress, fromToken }) => {
         });
 
         const approvalData = {
-            r,
-            s,
-            v,
-            functionSignature,
-            userAddress: walletAddress,
+            params: {
+                r,
+                s,
+                v,
+                functionSignature,
+                userAddress: walletAddress,
+            },
             approvalContractAddress: fromToken,
+            chainId: getCurrenyNetwork(),
+            type: 'EMT',
         };
 
         let txResp = await axios.post(
-            `${process.env.REACT_APP_BASE_URL}/mtx/approve`,
+            `${process.env.REACT_APP_BACKEND_BASE_URL}/v1/swap/approve`,
             approvalData
         );
-        if (txResp.data.message != 'success') {
-            throw 'Invalid approval status';
-        }
         return txResp.data;
     } catch (error) {
         throw error;
     }
-};
-
-BigInt.prototype.toJSON = function () {
-    return this.toString();
 };
 
 export const signTokenPermit = async ({ walletAddress, fromToken }) => {
@@ -212,17 +214,16 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
             sigR: gaslessSignature.r,
             sigS: gaslessSignature.s,
             sigV: gaslessSignature.v,
-            chainId: chainId,
         };
 
         let txResp = await axios.post(
-            `${process.env.REACT_APP_BASE_URL}/mtx/approve-without-fees`,
-            params
+            `${process.env.REACT_APP_BACKEND_BASE_URL}/v1/swap/gasless-approval`,
+            {
+                params,
+                chainId,
+                version: getGasPayVersion(),
+            }
         );
-
-        if (txResp.data.message != 'success') {
-            throw 'Invalid approval without fees status';
-        }
     } catch (error) {
         throw error;
     }
@@ -275,20 +276,19 @@ export const signGaslessSwap = async ({ walletAddress, swapState }) => {
         });
 
         let txResp = await axios.post(
-            `${process.env.REACT_APP_BASE_URL}/mtx/send`,
+            `${process.env.REACT_APP_BACKEND_BASE_URL}/v1/swap/gasless-swap`,
             {
-                ...message,
-                r,
-                s,
-                v,
+                params: {
+                    ...message,
+                    sigR: r,
+                    sigS: s,
+                    sigV: v,
+                },
+                version: getGasPayVersion(),
                 chainId,
             }
         );
-        if (txResp.data.message != 'success') {
-            throw 'INVALID STATUS FOR RESPONSE';
-        } else {
-            NONCE++;
-        }
+        NONCE++;
         return txResp.data;
     } catch (error) {
         console.log('ERROR HERE', error);
@@ -317,7 +317,7 @@ const getWrappedToken = (chainId) => {
 
 const getRoute = async (tokenIn, tokenOut, amount, chainId) => {
     return await axios.get(
-        `${process.env.REACT_APP_BASE_URL}/mtx/route/uniswap?tokenIn=${tokenIn}&tokenOut=${tokenOut}&amount=${amount}&chainId=${chainId}`
+        `${process.env.REACT_APP_BACKEND_BASE_URL}/v1/swap/route?tokenIn=${tokenIn}&tokenOut=${tokenOut}&amount=${amount}&chainId=${chainId}&source=UNISWAP&type=exactOut`
     );
 };
 

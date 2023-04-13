@@ -13,6 +13,8 @@ import {
 } from './utils/StorageUtils';
 import PendingTransaction from './components/PendingTransaction.jsx';
 import axios from 'axios';
+import './config/axios';
+import browser from 'webextension-polyfill';
 
 const PopupContainer = styled.div`
     background: black;
@@ -136,7 +138,11 @@ const ScreenContainer = ({
     useEffect(() => {
         (async () => {
             const result = await axios.get(
-                `${process.env.REACT_APP_BASE_URL}/faucet/v1/config/config`
+                `${
+                    process.env.REACT_APP_BACKEND_BASE_URL
+                }/v1/config/config?version=${
+                    browser.runtime.getManifest().version
+                }`
             );
             if (result.data.faucetActive) {
                 setShowNavbar(true);
