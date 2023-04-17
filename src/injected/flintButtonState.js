@@ -206,19 +206,23 @@ export const buttonClick = async () => {
 export const handleApproval = async () => {
     showLoaderApprove();
     try {
-        if (gaslessApprovalSupported) {
-            if (isEmtSupported) {
-                await signTokenApproval({
-                    fromToken: currentToken,
-                    walletAddress,
-                });
+        try {
+            if (gaslessApprovalSupported) {
+                if (isEmtSupported) {
+                    await signTokenApproval({
+                        fromToken: currentToken,
+                        walletAddress,
+                    });
+                } else {
+                    await signTokenPermit({
+                        fromToken: currentToken,
+                        walletAddress,
+                    });
+                }
             } else {
-                await signTokenPermit({
-                    fromToken: currentToken,
-                    walletAddress,
-                });
+                throw 'Gasless not supported!';
             }
-        } else {
+        } catch (err) {
             await approve(currentToken, walletAddress);
         }
 
