@@ -36,6 +36,8 @@ import {
 import axios from 'axios';
 import { getCurrenyNetwork, getSupportedNetworks } from './store/store';
 import { getArbGasPrice, getEthPrice, getGasPrice } from './injected';
+import { getGasForApproval } from '../utils/FlintGasless';
+import { getScanBaseUrl } from '../utils/scan';
 
 let walletAddress;
 let currentToken;
@@ -97,14 +99,11 @@ export const update = async ({ action, payload, uuid, type }) => {
             let amountInToken2 = Number(payload.quoteDecimals);
 
             let gasInUSD = Number(payload.gasUseEstimateUSD);
+            let gasUseEstimateQuoteDecimals =
+                payload.gasUseEstimateQuoteDecimals;
+            const gasPrice = Number(payload.gasPriceWei);
 
-            if (getCurrenyNetwork() == 42161) {
-                //uniswap quote API returns gas estimate in USD as 10x and the gas use as 1/10x
-                //don't know the exact reason for this but dividing gasInUsd by 10 seems to work
-                gasInUSD /= 10;
-            }
-
-            let gasInToToken = Number(payload.gasUseEstimateQuoteDecimals);
+            let gasInToToken = Number(gasUseEstimateQuoteDecimals);
             let gasInFromToken =
                 gasInToToken * (amountInToken1 / amountInToken2);
 
@@ -112,14 +111,54 @@ export const update = async ({ action, payload, uuid, type }) => {
                 amountInToken1 = Number(payload.quoteDecimals);
                 amountInToken2 = Number(payload.amountDecimals);
 
-                gasInFromToken = Number(payload.gasUseEstimateQuoteDecimals);
+                gasInFromToken = Number(gasUseEstimateQuoteDecimals);
 
                 gasInToToken =
                     gasInFromToken * (amountInToken2 / amountInToken1);
             }
 
+            let approvalFeesToken = 0;
+            let approvalFeesUsd = 0;
+
+            const chainId = getCurrenyNetwork();
+            if (chainId == 42161) {
+                //uniswap quote API returns gas estimate in USD as 10x and the gas use as 1/10x
+                //don't know the exact reason for this but dividing gasInUsd by 10 seems to work
+                gasInUSD /= 10;
+                gasInFromToken /= 10;
+                gasInToToken /= 10;
+
+                let promises = [
+                    getGasForApproval(),
+                    axios.get(
+                        `https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd`
+                    ),
+                    axios.get(
+                        `https://${getScanBaseUrl(
+                            chainId
+                        )}/api?module=proxy&action=eth_gasPrice`
+                    ),
+                ];
+                const [gasForApproval, ethPriceResponse, ethGasPriceResponse] =
+                    await Promise.all(promises);
+
+                approvalFeesUsd =
+                    (gasForApproval *
+                        Number(ethGasPriceResponse.data.result) *
+                        ethPriceResponse.data.ethereum.usd) /
+                    10 ** 18;
+
+                let fromTokenUsdValue = gasInUSD / gasInFromToken;
+                approvalFeesToken = approvalFeesUsd / fromTokenUsdValue;
+            }
+
             setGasInToToken(gasInToToken);
-            setGasInFromToken(gasInFromToken, gasInUSD);
+            setGasInFromToken(
+                gasInFromToken,
+                gasInUSD,
+                approvalFeesUsd,
+                approvalFeesToken
+            );
             const currentTokenBalance = await getTokenBalance(
                 swapState.fromToken,
                 walletAddress

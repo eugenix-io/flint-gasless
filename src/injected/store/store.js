@@ -1,5 +1,9 @@
 import axios from 'axios';
 import Web3 from 'web3';
+import {
+    hideMaxAmountErrorMessage,
+    showMaxAmountErrorMessage,
+} from '../jqueryUITransformer';
 
 let currentNetwork;
 let gasPayVersion = '0.0.0';
@@ -41,6 +45,12 @@ export function getCurrenyNetwork() {
 
 export function setCurrentNetwork(network) {
     currentNetwork = network;
+
+    if (network == 42161) {
+        showMaxAmountErrorMessage();
+    } else {
+        hideMaxAmountErrorMessage();
+    }
 }
 
 const loadConfig = async () => {

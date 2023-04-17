@@ -79,13 +79,27 @@ export const setGasInToToken = (gas) => {
     setToTokenFinalPrice();
 };
 
-export const setGasInFromToken = (gas, fromPrice) => {
+export const setGasInFromToken = (
+    gas,
+    fromPrice,
+    approvalFeesUsd,
+    approvalFeesToken
+) => {
     if (gas) {
         gas = getSignificantDigits(gas);
         fromPrice = getSignificantDigits(fromPrice);
-        const gasHTML = isCurrentTokenApproved
-            ? `Fees: <b>${gas} ${fromCurrency}</b> ($${fromPrice})`
-            : '<b>Approval is gasless</b>';
+        let gasHTML = '<div></div>';
+
+        if (isCurrentTokenApproved) {
+            gasHTML = `Fees: <b>${gas} ${fromCurrency}</b> ($${fromPrice})`;
+        } else if (getCurrenyNetwork() == 137) {
+            gasHTML = '<b>Approval is gasless</b>';
+        } else if (getCurrenyNetwork() == 42161) {
+            //Approval fees in $ARB is
+            gasHTML = `Fees: <b>${getSignificantDigits(
+                approvalFeesToken
+            )} ${fromCurrency}</b> ($${getSignificantDigits(approvalFeesUsd)})`;
+        }
         $('#fl-gs-cnt-bx').show(100);
         $('#fl-gs-cnt-bx').children('div').children('p').html(gasHTML);
     } else {
@@ -701,6 +715,14 @@ export const updatePriceValues = () => {
             $('#fl-from-amt').html(from);
         }
     }, 200);
+};
+
+export const showMaxAmountErrorMessage = () => {
+    $('#maxAmountErrorMessage').fadeIn(0);
+};
+
+export const hideMaxAmountErrorMessage = () => {
+    $('#maxAmountErrorMessage').fadeOut(0);
 };
 
 export const getFromCurrency = () => {

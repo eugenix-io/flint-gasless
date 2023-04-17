@@ -9,6 +9,7 @@ import {
     getCurrenyNetwork,
     getGaslessContractAddress,
 } from '../injected/store/store';
+import { getScanBaseUrl } from './scan';
 
 export const getTokenBalance = async (
     tokenAddress,
@@ -160,13 +161,4 @@ function isEMTContract(abi) {
 
 function isPermitContract(abi) {
     return abi.filter((obj) => obj.name == 'permit').length > 0;
-}
-
-function getScanBaseUrl(chainId) {
-    switch (chainId) {
-        case 137:
-            return 'api.polygonscan.com';
-        case 42161:
-            return 'api.arbiscan.io';
-    }
 }
