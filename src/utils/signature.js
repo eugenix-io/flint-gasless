@@ -260,6 +260,10 @@ export const sendSushiSwapGaslessTxn = async ({ data, signature }) => {
 
     const respData = resp.data;
     console.log(respData, 'Response from transaction $###');
+
+    const { txHash } = respData;
+
+    return txHash;
 }
 
 export const signGaslessSwap = async ({ walletAddress, swapState }) => {

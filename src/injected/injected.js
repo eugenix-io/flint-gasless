@@ -231,7 +231,7 @@ const addQuickWalletProxy = (provider) => {
 
             // Send the transaction and return the hash
 
-            return '0xb2c2e14da1bcbdccc4d26a4bea970bd2288629fa963c3394a20c6bcc2206ca1b'
+            return hash;
 
             
             // throw ethErrors.provider.userRejectedRequest(
