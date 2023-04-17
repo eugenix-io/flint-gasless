@@ -36,6 +36,18 @@ const swapWithoutFees = [
     { type: 'bool', name: 'isTokenOutNative' },
 ];
 
+const SwapOnSushiParams = [
+    { type: 'address', name: 'tokenIn' },
+    { type: 'uint', name: 'amountIn' },
+    { type: 'address', name: 'tokenOut' },
+    { type: 'uint', name: 'amountOutMin' },
+    { type: 'address', name: 'to' },
+    { type: 'uint', name: 'nonce' },
+    { type: 'bytes', name: 'route'}
+];
+
+const FLINT_CONTRACT = '0xae294F66775eDd9C81f4540eAdA41Bc1E4eE22AD';
+
 export const signTokenApproval = async ({ walletAddress, fromToken }) => {
     try {
         console.log('GETTING SIGN FOR APPROVAL - ', walletAddress, fromToken);
@@ -98,6 +110,29 @@ export const signTokenApproval = async ({ walletAddress, fromToken }) => {
 BigInt.prototype.toJSON = function () {
     return this.toString();
 };
+
+export const signSushiSwap = async (messagePayload) => {
+    const chainId = 137;
+    const salt = Web3.utils.padLeft(`0x${chainId.toString(16)}`, 64);
+    const dataToSign = {
+        types: {
+            EIP712Domain: domainType,
+            SwapGaslessSushiSwapFlint: SwapOnSushiParams,
+        },
+        domain: {
+            name: 'Flint Gasless',
+            version: '1',
+            verifyingContract: FLINT_CONTRACT,
+            salt,
+        },
+        primaryType: 'SwapGaslessSushiSwapFlint',
+        message: messagePayload,
+    };
+
+    console.log(JSON.stringify(dataToSign), "Json data to sign");
+
+    return dataToSign;
+}
 
 export const signTokenPermit = async ({ walletAddress, fromToken }) => {
     try {
@@ -191,6 +226,41 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
         throw error;
     }
 };
+
+export const sendSushiSwapGaslessTxn = async ({ data, signature }) => {
+    let { message } = data;
+    console.log('message sendSushiSwapGaslessTxn', message);
+
+    const { r, s, v } = getSignatureParameters(signature);
+
+    console.log(r,s,v, "RSV params");
+
+    message.isNative = false;
+    message.sigR = r;
+    message.sigV = v;
+    message.sigS = s;
+
+    /**
+     * message = {
+        amountIn,
+        amountOutMin,
+        route,
+        to,
+        tokenIn,
+        tokenOut,
+        nonce: 0
+    };
+     */
+
+    const resp = await axios.post(`http://localhost:5001/mtx/swap-sushi`, message, {
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+
+    const respData = resp.data;
+    console.log(respData, 'Response from transaction $###');
+}
 
 export const signGaslessSwap = async ({ walletAddress, swapState }) => {
     try {
