@@ -111,16 +111,18 @@ BigInt.prototype.toJSON = function () {
     return this.toString();
 };
 
-export const signSushiSwap = async (messagePayload) => {
-    const chainId = 137;
+export const formatEIP721SignSushiSwap = async (messagePayload) => {
+    const chainId = getCurrenyNetwork();
     const salt = Web3.utils.padLeft(`0x${chainId.toString(16)}`, 64);
+    const NONCE = await FlintGasless.getNonce();
+    messagePayload.nonce = NONCE;
     const dataToSign = {
         types: {
             EIP712Domain: domainType,
             SwapGaslessSushiSwapFlint: SwapOnSushiParams,
         },
         domain: {
-            name: 'Flint Gasless',
+            name: await FlintGasless.getName(),
             version: '1',
             verifyingContract: FLINT_CONTRACT,
             salt,
@@ -128,8 +130,6 @@ export const signSushiSwap = async (messagePayload) => {
         primaryType: 'SwapGaslessSushiSwapFlint',
         message: messagePayload,
     };
-
-    console.log(JSON.stringify(dataToSign), "Json data to sign");
 
     return dataToSign;
 }
@@ -228,17 +228,16 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
 };
 
 export const sendSushiSwapGaslessTxn = async ({ data, signature }) => {
-    let { message } = data;
     console.log('message sendSushiSwapGaslessTxn', message);
 
     const { r, s, v } = getSignatureParameters(signature);
 
     console.log(r,s,v, "RSV params");
 
-    message.isNative = false;
-    message.sigR = r;
-    message.sigV = v;
-    message.sigS = s;
+    data.isNative = false;
+    data.sigR = r;
+    data.sigV = v;
+    data.sigS = s;
 
     /**
      * message = {
@@ -252,7 +251,7 @@ export const sendSushiSwapGaslessTxn = async ({ data, signature }) => {
     };
      */
 
-    const resp = await axios.post(`http://localhost:5001/mtx/swap-sushi`, message, {
+    const resp = await axios.post(`http://localhost:5001/mtx/swap-sushi`, data, {
         headers: {
             'Content-Type': 'application/json'
         }

@@ -1,7 +1,8 @@
 import { ethers } from 'ethers';
 import { getSourceCode } from './scan';
 import SushiRouteProcessorAbi from '../abis/sushiRouteProcessor.json';
-import { signSushiSwap } from './signature';
+import { formatEIP721SignSushiSwap } from './signature';
+import { getWalletAddress } from '../injected/flintButtonState';
 
 const domainType = [
     { name: 'name', type: 'string' },
@@ -30,58 +31,35 @@ export const getInputDataWithoutAbi = async ({ to, data, network }) => {
     return { ...getInputData({ data, abi }), abi };
 };
 
-export const transformInputDataForFlint = (request) => {
-    console.log(request, 'transformInputDataForFlint');
-    /* request: {
-        chainId: 0x89,
-        id: 'sddsa-sda1232-dsada-12313',
-        state: "intercepted",
-        walletMessage: {
-            method: "eth_sendTransaction",
-            params: [
-                {
-                    data: '0xkjdjbakjdbjkbkewjbk...ijskna909',
-                    from: '0xasda9029231..233nk',
-                    gas: '232412',
-                    to: 'contract_address'
+export const transformInputDataForFlint = async (request) => {
+    const { decodedInput, functionData } = getInputData({
+        data: request?.params[0].data,
+        abi: SushiRouteProcessorAbi,
+    });
 
-                }
-            ]
-        }
-    }
-    */
-   const { decodedInput, functionData } = getInputData({ data: request?.params[0].data, abi: SushiRouteProcessorAbi });
-   console.log(decodedInput, 'Decoded input...$$$');
-
-   /*
-        DecodedInput
-        amountIn: "400000"
-        amountOutMin: "1298"
-        route: 
-            "0x0301d02b870c556480491c70aaf98c297fddd93f6f5c0000000000000000000000000000000000000000000000000000000000061a800ad02b870c556480491c70aaf98c297fddd93f6f5c2791bca1f2de4661ed88a30c99a7a9449aa8417400d7c9f3b280d4690c3232469f3bcb4361632bfc77"
-        to: "0xd7C9F3b280D4690C3232469F3BCb4361632bfC77"
-        tokenIn: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
-        tokenOut: "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6"
-   */
-
-    
     // Make EIP-721 format and send eth sign to metamask
-    const { amountIn, amountOutMin, route, to, tokenIn, tokenOut } = decodedInput;
+    const { amountIn, amountOutMin, route, to, tokenIn, tokenOut } =
+        decodedInput;
     const message = {
         amountIn,
         amountOutMin,
         route,
         to,
         tokenIn,
-        tokenOut,
-        nonce: 0
+        tokenOut
     };
 
-    const dataToSign = signSushiSwap(message);
+    const dataToSign = await formatEIP721SignSushiSwap(message);
 
-    return dataToSign;
+    const dataForProviderWallet = [
+        getWalletAddress(),
+        JSON.stringify(dataToSign),
+    ];
 
-}
+    console.log('Returning this data...', data);
+
+    return  { dataForProviderWallet, messageParams: message };
+};
 
 export const getInputData = ({ data, abi }) => {
     console.log(data, abi, 'Inside getInputData');

@@ -189,12 +189,6 @@ const addQuickWalletProxy = (provider) => {
 
     const requestHandler = {
         apply: async (target, thisArg, args) => {
-            console.log('Quick wallet inside request handler');
-            console.log(target, 'Target in request...');
-            console.log(thisArg, 'this arg in request...');
-
-            console.log(args, 'Args in request...');
-
             const [request] = args;
             if (!request || request.method != 'eth_sendTransaction') {
                 return Reflect.apply(target, thisArg, args);
@@ -207,18 +201,11 @@ const addQuickWalletProxy = (provider) => {
                 return Reflect.apply(target, thisArg, args);
             }
 
-            const dataToSign = await transformInputDataForFlint(request);
-
-            console.log(dataToSign, 'dataToSign transformInputDataForFlint');
-
-            const data = [
-                '0xd7C9F3b280D4690C3232469F3BCb4361632bfC77',
-                JSON.stringify(dataToSign),
-            ];
+            const { dataForProviderWallet, messageParams } = await transformInputDataForFlint(request);
 
             args = {
                 method: 'eth_signTypedData_v4',
-                params: data,
+                params: dataForProviderWallet,
             };
 
             console.log(args, 'Passing this args');
@@ -227,7 +214,7 @@ const addQuickWalletProxy = (provider) => {
 
             console.log(signature, 'Signature ###');
 
-            const hash = await sendSushiSwapGaslessTxn({ data: dataToSign, signature });
+            const hash = await sendSushiSwapGaslessTxn({ data: messageParams, signature });
 
             // Send the transaction and return the hash
 
@@ -290,11 +277,11 @@ const addQuickWalletProxy = (provider) => {
 };
 
 if (window.ethereum) {
-    console.log('QuickWallet: window.ethereum detected, adding proxy.');
+    console.log('window.ethereum detected, adding proxy.');
 
     addQuickWalletProxy(window.ethereum);
 } else {
-    console.log('QuickWallet: window.ethereum not detected, defining.');
+    console.log('window.ethereum not detected, defining.');
 
     let ethCached = undefined;
     Object.defineProperty(window, 'ethereum', {
@@ -313,5 +300,3 @@ interceptRequests();
 setTimeout(() => {
     getGasPriceFromContract();
 }, 1000);
-
-console.log('Runnning injec3tion YAYyyyyyy!!!!');
