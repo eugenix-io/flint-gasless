@@ -14,8 +14,8 @@ const Container = styled.div`
 const getTransaction = async () => {
     const result = await axios.get(
         `${
-            process.env.REACT_APP_BASE_URL
-        }/faucet/v1/bridge/transactions?address=${await getWalletAddress()}&offset=1&page=0`
+            process.env.REACT_APP_BACKEND_BASE_URL
+        }/v1/bridge/transactions?address=${await getWalletAddress()}&offset=1&page=0`
     );
     return result.data;
 };

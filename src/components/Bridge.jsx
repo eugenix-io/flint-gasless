@@ -172,19 +172,19 @@ const CoinSelector = ({
     );
 };
 
-const Bridge = () => {
+const Bridge = ({ faucetDomain }) => {
     const [loadingGasScreen, setLoadingGasScreen] = useState(true);
     const [faucetTokens, setFaucetTokens] = useState({});
     const [chain, setChain] = useState();
 
     const handleSubmit = () => {
-        window.open(`https://faucet.flint.money/?chain=${chain}`, '_blank');
+        window.open(`${faucetDomain}?chain=${chain}`, '_blank');
     };
 
     useEffect(() => {
         (async () => {
             let result = await axios.get(
-                `${process.env.REACT_APP_BASE_URL}/faucet/v1/bridge/config`
+                `${process.env.REACT_APP_BACKEND_BASE_URL}/v1/bridge/config`
             );
             setFaucetTokens(result.data);
             console.log('this is config - ', result.data);

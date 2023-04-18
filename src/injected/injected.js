@@ -16,20 +16,7 @@ import {
 } from './flintButtonState';
 import axios from 'axios';
 import Web3 from 'web3';
-
-axios.interceptors.request.use(
-    function (config) {
-        // check if the URL contains a specific string
-        if (config.url.includes('ngrok')) {
-            // add default header to the request
-            config.headers['ngrok-skip-browser-warning'] = '1';
-        }
-        return config;
-    },
-    function (error) {
-        return Promise.reject(error);
-    }
-);
+import '../config/axios';
 
 import { getGasPayVersion, setCurrentNetwork } from './store/store';
 import { getGasFee } from '../utils/FlintGasless';
@@ -70,7 +57,10 @@ function pollAccountChange() {
     walletAddress = window.ethereum.selectedAddress;
     if (getWalletAddress() != walletAddress) {
         setWalletAddress(walletAddress);
-        trackEvent('GASPAY_LOAD', { platform: 'UNISWAP', version: getGasPayVersion() });
+        trackEvent('GASPAY_LOAD', {
+            platform: 'UNISWAP',
+            version: getGasPayVersion(),
+        });
     }
     if (walletAddress != null) {
         hideConnectWalletButton();

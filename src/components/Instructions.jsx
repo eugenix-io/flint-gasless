@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import LeftArow from '../assets/img/left_arrow.png';
 import RightArrow from '../assets/img/right_arrow.png';
 import styled from 'styled-components';
+import browser from 'webextension-polyfill';
+import axios from 'axios';
 
 const Instructions = () => {
     const [instructions, setInstructions] = useState([
@@ -39,14 +41,16 @@ const Instructions = () => {
     const [currentStep, setCurrentStep] = useState(0);
 
     useEffect(() => {
-        fetch(`${process.env.REACT_APP_BASE_URL}/mtx/v2/instructions`)
-            .then((res) => res.json())
-            .then((data) => {
-                setInstructions(data);
-            })
-            .catch((e) => {
-                // setdata(`err - $${e}`)
-            });
+        (async () => {
+            const result = await axios.get(
+                `${
+                    process.env.REACT_APP_BACKEND_BASE_URL
+                }/v1/config/config?version=${
+                    browser.runtime.getManifest().version
+                }`
+            );
+            setInstructions(result.data.instructions);
+        })();
     }, []);
 
     let isLastStep = currentStep == instructions.length - 1;
@@ -87,7 +91,6 @@ const Instructions = () => {
                 </video>
                 <div
                     style={{
-
                         fontSize: '1.2rem',
                         marginTop: '20px',
                         height: '30px',
@@ -97,7 +100,6 @@ const Instructions = () => {
                 </div>
                 <div
                     style={{
-
                         fontSize: '0.9rem',
                         marginTop: '10px',
                     }}
