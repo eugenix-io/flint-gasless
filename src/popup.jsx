@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+
 import ReactDOM from 'react-dom/client';
 import Logo from './assets/gasly.svg';
 import styled from 'styled-components';
@@ -15,6 +16,7 @@ import PendingTransaction from './components/PendingTransaction.jsx';
 import axios from 'axios';
 import './config/axios';
 import browser from 'webextension-polyfill';
+import Bridge from './components/Bridge.jsx';
 
 const PopupContainer = styled.div`
     background: black;
@@ -79,11 +81,11 @@ const AppLogo = styled.img`
 const navbarItems = [
     {
         title: 'Uniswap',
-        component: <Instructions></Instructions>,
+        component: () => <Instructions></Instructions>,
     },
     {
         title: 'Faucet',
-        component: <Faucet></Faucet>,
+        component: (props) => <Bridge {...props}></Bridge>,
     },
 ];
 
@@ -134,7 +136,7 @@ const ScreenContainer = ({
     setNavbarSelected,
     historyPage,
 }) => {
-    const [showNavbar, setShowNavbar] = useState(false);
+    const [appConfig, setAppConfig] = useState({});
     useEffect(() => {
         (async () => {
             const result = await axios.get(
@@ -144,9 +146,7 @@ const ScreenContainer = ({
                     browser.runtime.getManifest().version
                 }`
             );
-            if (result.data.faucetActive) {
-                setShowNavbar(true);
-            }
+            setAppConfig(result.data);
         })();
     }, []);
     return (
@@ -155,7 +155,7 @@ const ScreenContainer = ({
                 <TransactionHistory></TransactionHistory>
             ) : (
                 <>
-                    {showNavbar && (
+                    {appConfig?.faucetActive && (
                         <BoxContainer
                             style={{
                                 flexDirection: 'row',
@@ -177,7 +177,7 @@ const ScreenContainer = ({
                     )}
                     <BodyContainer>
                         {navbarItems.length > navbarSelected &&
-                            navbarItems[navbarSelected].component}
+                            navbarItems[navbarSelected].component(appConfig)}
                     </BodyContainer>
                 </>
             )}

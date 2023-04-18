@@ -172,13 +172,13 @@ const CoinSelector = ({
     );
 };
 
-const Bridge = () => {
+const Bridge = ({ faucetDomain }) => {
     const [loadingGasScreen, setLoadingGasScreen] = useState(true);
     const [faucetTokens, setFaucetTokens] = useState({});
     const [chain, setChain] = useState();
 
     const handleSubmit = () => {
-        window.open(`https://faucet.flint.money/?chain=${chain}`, '_blank');
+        window.open(`${faucetDomain}?chain=${chain}`, '_blank');
     };
 
     useEffect(() => {
