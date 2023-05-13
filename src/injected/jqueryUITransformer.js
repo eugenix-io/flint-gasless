@@ -12,12 +12,14 @@ import {
     handleTokenChange,
     getGaslessApprovalSupported,
     getWalletAddress,
+    getTokenAddressFromSymbol,
 } from './flintButtonState';
 import chainIdLogo from '../injected/configs/chainIdLogo.json';
 import { getCurrenyNetwork } from './store/store';
 import { getSignificantDigits } from '../utils/commonFunctions';
 import axios from 'axios';
 import { identifyUser, trackEvent } from '../utils/SegmentUtils';
+import { getQuoteValues } from './requestInterceptor';
 
 let parent;
 let parentFlint;
@@ -210,6 +212,16 @@ export const disableSwapButton = () => {
         $(`#${btn}`).css('cursor', 'default');
         $(`#${btn}`).css('pointer-events', 'none');
     });
+};
+
+export const addLoaderButton = () => {
+    $(`#flint-swap`).html('');
+    $(`#flint-swap`).addClass('button--loading');
+};
+
+export const hideLoaderButton = () => {
+    $(`#flint-swap`).html('Swap');
+    $(`#flint-swap`).removeClass('button--loading');
 };
 
 export const enableSwapButton = () => {
@@ -431,6 +443,7 @@ const insertGasTokenBlock = () => {
                 } else {
                     $('#fl-from-amt').html(fromInput.val());
                 }
+                triggerQuote();
             },
             change: () => {
                 if (!fromInput.val()) {
@@ -438,6 +451,7 @@ const insertGasTokenBlock = () => {
                 } else {
                     $('#fl-from-amt').html(fromInput.val());
                 }
+                triggerQuote();
             },
         });
         fromCurrency = currencySelector1
@@ -474,6 +488,7 @@ const insertGasTokenBlock = () => {
                     $('#fl-from-crr').html(fromCurrency);
                     handleTokenChange(fromCurrency, fromInput.val());
                     activeSwap();
+                    triggerQuote();
                 }, 200);
             },
         });
@@ -489,11 +504,16 @@ const insertGasTokenBlock = () => {
         toInput = currencySelector2.parent().children('input');
         toInput.off().on('input', function () {
             setToTokenFinalPrice();
+            triggerQuote(false);
             // alert($(this).val());
         });
         toInput.off().on({
             change: () => {
                 setToTokenFinalPrice();
+                triggerQuote(false);
+            },
+            keyup: () => {
+                triggerQuote(false);
             },
         });
         currencySelector2?.off()?.on({
@@ -507,6 +527,7 @@ const insertGasTokenBlock = () => {
                     toImgSrc = currencySelector2.find('img').attr('src');
                     $('#fl-to-im').attr('src', toImgSrc);
                     $('#fl-to-crr').html(toCurrency);
+                    triggerQuote();
                 }, 200);
                 trackEvent('TO_TOKEN_SELECT', {
                     chainId: getCurrenyNetwork(),
@@ -739,4 +760,22 @@ export const getFromInput = () => {
 
 export const getToInput = () => {
     return toInput;
+};
+
+const triggerQuote = (exactIn = true) => {
+    let amount;
+    const fromTokenObject = getTokenAddressFromSymbol(fromCurrency);
+    const toTokenObject = getTokenAddressFromSymbol(toCurrency);
+    if (exactIn) {
+        amount = Number(fromInput.val()) * 10 ** fromTokenObject.decimals;
+    } else {
+        amount = Number(toInput.val()) * 10 ** fromTokenObject.decimals;
+    }
+    getQuoteValues(
+        fromTokenObject.address,
+        toTokenObject.address,
+        getCurrenyNetwork(),
+        amount,
+        exactIn
+    );
 };

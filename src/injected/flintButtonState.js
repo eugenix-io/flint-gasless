@@ -32,6 +32,8 @@ import {
     insufficientBalance,
     activeSwap,
     setTransactionHash,
+    addLoaderButton,
+    hideLoaderButton,
 } from './jqueryUITransformer';
 import axios from 'axios';
 import { getCurrenyNetwork, getSupportedNetworks } from './store/store';
@@ -60,6 +62,7 @@ export const update = async ({ action, payload, uuid, type }) => {
             latestQuoteId = uuid;
             //only if the user changes the token, check if we need an approval
             disableSwapButton();
+            addLoaderButton();
             swapState = {};
             inputType = type;
             break;
@@ -67,6 +70,7 @@ export const update = async ({ action, payload, uuid, type }) => {
             if (latestQuoteId !== uuid) {
                 return;
             }
+            hideLoaderButton();
             console.log('STARTING NEW QUOTE REQ', payload);
             const route = payload?.route[0];
             const tokenArray = [
@@ -262,7 +266,7 @@ export const handleTokenChange = async (fromTokenSymbol, amountIn) => {
     if (Object.keys(tokens).length < 1) {
         await initTokens();
     }
-    let fromToken = tokens[chainId][fromTokenSymbol];
+    const fromToken = tokens[chainId][fromTokenSymbol].address;
     console.log('GOT ADDRESS - ', fromToken, tokens, chainId, fromTokenSymbol);
     //NATIVE MATIC AS FROM TOKEN IS NOT ALLOWED
     console.log('THIS IS THE FROM TOKEN - ', fromToken);
@@ -339,19 +343,35 @@ async function initTokens() {
             if (!tokens[token.chainId]) {
                 tokens[token.chainId] = {};
             }
-            tokens[token.chainId][token.symbol] = token.address;
+            tokens[token.chainId][token.symbol] = {
+                address: token.address,
+                decimals: token.decimals,
+            };
         } else if (token.extensions && token.extensions.bridgeInfo) {
             Object.entries(token.extensions.bridgeInfo).map(([key, value]) => {
                 //key if chainId
                 if (!tokens[key]) {
                     tokens[key] = {};
                 }
-                tokens[key][token.symbol] =
-                    token.extensions.bridgeInfo[key].tokenAddress;
+                tokens[key][token.symbol] = {
+                    address: token.extensions.bridgeInfo[key].tokenAddress,
+                    decimals: token.decimals,
+                };
             });
         }
     });
 }
+
+export const getTokenAddressFromSymbol = (symbol) => {
+    const chainId = getCurrenyNetwork();
+    let address;
+    if (Object.keys(tokens).length > 1) {
+        try {
+            address = tokens[chainId][symbol];
+        } catch (e) {}
+    }
+    return address;
+};
 
 updateConsoleLog();
 initTokens();

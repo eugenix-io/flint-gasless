@@ -12,6 +12,22 @@ const getTokenInAddress = (str) => {
     };
 };
 
+export const getQuoteValues = async (
+    tokenIn,
+    tokenOut,
+    chain,
+    amount,
+    exactIn = true
+) => {
+    if (tokenIn && tokenOut && chain && amount > 0) {
+        await fetch(
+            `https://api.uniswap.org/v1/quote?protocols=v2%2Cv3%2Cmixed&tokenInAddress=${tokenIn}&tokenInChainId=${chain}&tokenOutAddress=${tokenOut}&tokenOutChainId=${chain}&amount=${amount}&type=${
+                exactIn ? 'exactIn' : 'exactOut'
+            }`
+        );
+    }
+};
+
 export const interceptRequests = () => {
     const { fetch: originalFetch } = window;
     window.fetch = async (...args) => {
@@ -23,8 +39,9 @@ export const interceptRequests = () => {
             (typeof resource === 'string' &&
                 resource.includes('https://api.uniswap.org/v1/quote'))
         ) {
+            console.log('OUTPUT NIKAL BC RESOURCE', resource);
             const { tokenInAddress, amount, type } = getTokenInAddress(
-                resource.url
+                resource.url || resource
             );
             console.log('GOING TO UPDATE STATE NOW!');
 
