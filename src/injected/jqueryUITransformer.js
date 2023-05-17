@@ -762,7 +762,7 @@ export const getToInput = () => {
     return toInput;
 };
 
-const triggerQuote = (exactIn = true) => {
+export const triggerQuote = (exactIn = true) => {
     let amount;
     const fromTokenObject = getTokenAddressFromSymbol(fromCurrency);
     const toTokenObject = getTokenAddressFromSymbol(toCurrency);

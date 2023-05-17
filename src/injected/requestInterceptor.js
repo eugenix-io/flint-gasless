@@ -39,7 +39,6 @@ export const interceptRequests = () => {
             (typeof resource === 'string' &&
                 resource.includes('https://api.uniswap.org/v1/quote'))
         ) {
-            console.log('OUTPUT NIKAL BC RESOURCE', resource);
             const { tokenInAddress, amount, type } = getTokenInAddress(
                 resource.url || resource
             );

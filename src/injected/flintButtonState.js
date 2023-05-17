@@ -34,6 +34,7 @@ import {
     setTransactionHash,
     addLoaderButton,
     hideLoaderButton,
+    triggerQuote,
 } from './jqueryUITransformer';
 import axios from 'axios';
 import { getCurrenyNetwork, getSupportedNetworks } from './store/store';
@@ -229,6 +230,7 @@ export const handleApproval = async () => {
         } catch (err) {
             await approve(currentToken, walletAddress);
         }
+        triggerQuote();
 
         hideLoaderApprove();
         hideApprove();
