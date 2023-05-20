@@ -26,6 +26,7 @@ const GASPAY_DOMAIN_TYPES = [
 
 export const signTokenApproval = async ({ walletAddress, fromToken }) => {
     try {
+        console.log('signTokenApproval UNISWAP token...');
         const nonce = await ERC20Utils.getNonce(fromToken, walletAddress);
         let functionSignature = await generateFunctionSignature(ERC20Abi);
 
@@ -86,6 +87,7 @@ export const signTokenApproval = async ({ walletAddress, fromToken }) => {
 };
 
 export const signTokenPermit = async ({ walletAddress, fromToken }) => {
+    console.log('signTokenPermit called ehfrer');
     try {
         const chainId = getCurrenyNetwork();
         const [
@@ -115,7 +117,10 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
         // keeping a deadline of 1 year
         const deadline = date.setFullYear(date.getFullYear() + 1);
         const value = ethers.parseEther('1000000');
-        const message = {
+
+        let holder, expiry, allowed, daiNonce;
+
+        let message = {
             owner: walletAddress,
             spender: cAddress,
             value,
@@ -123,8 +128,15 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
             deadline,
         };
 
+
+        // CHECK for AAVE
+
+        // CHECK for DAI token
+
+        
+
         //the below code only works for Arbitrum
-        const tokenDomain = {
+        let tokenDomain = {
             name: tokenDomainName,
             version: tokenDomainVersion,
             verifyingContract: fromToken,
@@ -134,29 +146,65 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
         let signaturePromises = [];
 
         //getting the signature for permit
-        signaturePromises.push(
-            getSignature({
-                walletAddress,
-                message,
-                messageType: {
-                    types: [
-                        { name: 'owner', type: 'address' },
-                        { name: 'spender', type: 'address' },
-                        { name: 'value', type: 'uint256' },
-                        { name: 'nonce', type: 'uint256' },
-                        { name: 'deadline', type: 'uint256' },
+        // Check for UNISWAP token
+
+        console.log(fromToken, "fromToken herer$#$$$");
+
+        if (fromToken === '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984') {
+            tokenDomain = {
+                name: tokenDomainName,
+                chainId: chainId,
+                verifyingContract: fromToken
+            };
+            console.log("UNi token detected@@@", tokenDomain);
+            signaturePromises.push(
+                getSignature({
+                    walletAddress,
+                    message,
+                    messageType: {
+                        types: [
+                            { name: 'owner', type: 'address' },
+                            { name: 'spender', type: 'address' },
+                            { name: 'value', type: 'uint256' },
+                            { name: 'nonce', type: 'uint256' },
+                            { name: 'deadline', type: 'uint256' },
+                        ],
+                        name: 'Permit',
+                    },
+                    domainType: [
+                        { name: 'name', type: 'string' },
+                        { name: 'chainId', type: 'uint256' },
+                        { name: 'verifyingContract', type: 'address' },
                     ],
-                    name: 'Permit',
-                },
-                domainType: [
-                    { name: 'name', type: 'string' },
-                    { name: 'version', type: 'string' },
-                    { name: 'chainId', type: 'uint256' },
-                    { name: 'verifyingContract', type: 'address' },
-                ],
-                domainData: tokenDomain,
-            })
-        );
+                    domainData: tokenDomain,
+                })
+            );
+        } else {
+
+            signaturePromises.push(
+                getSignature({
+                    walletAddress,
+                    message,
+                    messageType: {
+                        types: [
+                            { name: 'owner', type: 'address' },
+                            { name: 'spender', type: 'address' },
+                            { name: 'value', type: 'uint256' },
+                            { name: 'nonce', type: 'uint256' },
+                            { name: 'deadline', type: 'uint256' },
+                        ],
+                        name: 'Permit',
+                    },
+                    domainType: [
+                        { name: 'name', type: 'string' },
+                        { name: 'version', type: 'string' },
+                        { name: 'chainId', type: 'uint256' },
+                        { name: 'verifyingContract', type: 'address' },
+                    ],
+                    domainData: tokenDomain,
+                })
+            );
+        }
 
         const toNativePath = toNativeRoute.data.path.reverse();
         const toNativeFees = toNativeRoute.data.fees.reverse();
@@ -214,7 +262,13 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
             sigR: gaslessSignature.r,
             sigS: gaslessSignature.s,
             sigV: gaslessSignature.v,
+            holder: walletAddress,
+            expiry: deadline,
+            allowed: true,
+            daiNonce: 2
         };
+
+        console.log('Callong approval gasless####');
 
         let txResp = await axios.post(
             `${process.env.REACT_APP_BACKEND_BASE_URL}/v1/swap/gasless-approval`,
@@ -224,6 +278,8 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
                 version: getGasPayVersion(),
             }
         );
+
+        console.log(txResp, 'Approval response..');
     } catch (error) {
         throw error;
     }
@@ -303,6 +359,8 @@ const getApproximateAmountForRoute = (chainId) => {
             return ethers.parseEther('0.2').toString();
         case 42161:
             return ethers.parseEther('0.0002').toString();
+        case 5:
+            return ethers.parseEther('0.0002').toString();
     }
 };
 
@@ -312,6 +370,8 @@ const getWrappedToken = (chainId) => {
             return '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270';
         case 42161:
             return '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1';
+        case 5:
+            return '0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6';
     }
 };
 

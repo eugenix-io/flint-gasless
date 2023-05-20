@@ -209,6 +209,7 @@ export const buttonClick = async () => {
 };
 
 export const handleApproval = async () => {
+    console.log('Reached handleApproval %%%&&');
     showLoaderApprove();
     try {
         try {
