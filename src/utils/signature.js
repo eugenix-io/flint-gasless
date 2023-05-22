@@ -4,6 +4,7 @@ import * as ERC20Utils from './ERC20Utils';
 import * as FlintGasless from './FlintGasless';
 import Web3 from 'web3';
 import axios from 'axios';
+const aaveABi = require('src/abis/AaveABI.json');
 import {
     getCurrenyNetwork,
     getGaslessContractAddress,
@@ -127,6 +128,21 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
             nonce: tokenNonce,
             deadline,
         };
+        let messageForAaveonETH = {
+            owner: walletAddress,
+            spender: cAddress,
+            value,
+            nonce: ERC20Utils.getNonceforAaveonETH(fromToken, walletAddress),
+            deadline,
+        };
+        let messageForDAIonETH = {
+            owner: walletAddress,
+            spender: cAddress,
+            value,
+            nonce: tokenNonce,
+            deadline,
+            allowed: true,
+        };
 
 
         // CHECK for AAVE
@@ -179,7 +195,64 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
                     domainData: tokenDomain,
                 })
             );
-        } else {
+        } else if (fromToken === '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9') {
+            console.log("AAVE token detected@@@", tokenDomain);
+            signaturePromises.push(
+                getSignature({
+                    walletAddress,
+                    messageForAaveonETH,
+                    messageType: {
+                        types: [
+                            { name: 'owner', type: 'address' },
+                            { name: 'spender', type: 'address' },
+                            { name: 'value', type: 'uint256' },
+                            { name: 'nonce', type: 'uint256' },
+                            { name: 'deadline', type: 'uint256' },
+                        ],
+                        name: 'Permit',
+                    },
+                    domainType: [
+                        { name: 'name', type: 'string' },
+                        { name: 'version', type: 'string' },
+                        { name: 'chainId', type: 'uint256' },
+                        { name: 'verifyingContract', type: 'address' },
+                    ],
+                    domainData: tokenDomain,
+                })
+            );
+        } 
+        else if (fromToken === '0x6B175474E89094C44Da98b954EedeAC495271d0F') {
+            tokenDomain = {
+                name: tokenDomainName,
+                chainId: chainId,
+                verifyingContract: fromToken
+            };
+            console.log("DAI token detected@@@", tokenDomain);
+            signaturePromises.push(
+                getSignature({
+                    walletAddress,
+                    messageForDAIonETH,
+                    messageType: {
+                        types: [
+                            { name: 'holder', type: 'address' },
+                            { name: 'spender', type: 'address' },
+                            { name: 'nonce', type: 'uint256' },
+                            { name: 'expiry', type: 'uint256' },
+                            { name: 'allowed', type: 'bool' },
+                        ],
+                        name: 'Permit',
+                    },
+                    domainType: [
+                        { name: 'name', type: 'string' },
+                        { name: 'version', type: 'string' },
+                        { name: 'chainId', type: 'uint256' },
+                        { name: 'verifyingContract', type: 'address' },
+                    ],
+                    domainData: tokenDomain,
+                })
+            );
+        } 
+        else {
 
             signaturePromises.push(
                 getSignature({
@@ -372,6 +445,8 @@ const getWrappedToken = (chainId) => {
             return '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1';
         case 5:
             return '0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6';
+            case 1:
+            return '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
     }
 };
 
