@@ -222,11 +222,6 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
             );
         } 
         else if (fromToken === '0x6B175474E89094C44Da98b954EedeAC495271d0F') {
-            tokenDomain = {
-                name: tokenDomainName,
-                chainId: chainId,
-                verifyingContract: fromToken
-            };
             console.log("DAI token detected@@@", tokenDomain);
             signaturePromises.push(
                 getSignature({
