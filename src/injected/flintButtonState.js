@@ -106,6 +106,7 @@ export const update = async ({ action, payload, uuid, type }) => {
             let amountInToken1 = Number(payload.amountDecimals);
             let amountInToken2 = Number(payload.quoteDecimals);
 
+
             let gasInUSD = Number(payload.gasUseEstimateUSD);
             let gasUseEstimateQuoteDecimals =
                 payload.gasUseEstimateQuoteDecimals;
@@ -127,6 +128,7 @@ export const update = async ({ action, payload, uuid, type }) => {
 
             let approvalFeesToken = 0;
             let approvalFeesUsd = 0;
+            
 
             const chainId = getCurrenyNetwork();
             if (chainId == 42161 || chainId == 1) {
@@ -149,6 +151,8 @@ export const update = async ({ action, payload, uuid, type }) => {
                 ];
                 const [gasForApproval, ethPriceResponse, ethGasPriceResponse] =
                     await Promise.all(promises);
+
+                // Calculating gas fees in USD for approval
 
                 approvalFeesUsd =
                     (gasForApproval *
@@ -256,6 +260,8 @@ export const handleSwap = async () => {
             setTransactionHash(`https://polygonscan.com/tx/${hash}`);
         } else if (chainId == 42161) {
             setTransactionHash(`https://arbiscan.io/tx/${hash}`);
+        } else if (chainId == 1) {
+            setTransactionHash(`https://etherscan.io/tx/${hash}`);
         }
         showTransactionSuccessPopup();
         hideWaitingPopup();

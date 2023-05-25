@@ -326,13 +326,10 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
             sigR: gaslessSignature.r,
             sigS: gaslessSignature.s,
             sigV: gaslessSignature.v,
-            holder: walletAddress,
-            expiry: deadline,
-            allowed: true,
-            daiNonce: 2
+            tokenNonce,
         };
 
-        console.log('Callong approval gasless####');
+        console.log('Callong approval gasless####', params);
 
         let txResp = await axios.post(
             `${process.env.REACT_APP_BACKEND_BASE_URL}/v1/swap/gasless-approval`,
