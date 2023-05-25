@@ -4,13 +4,13 @@ import * as ERC20Utils from './ERC20Utils';
 import * as FlintGasless from './FlintGasless';
 import Web3 from 'web3';
 import axios from 'axios';
-const aaveABi = require('src/abis/AaveABI.json');
 import {
     getCurrenyNetwork,
     getGaslessContractAddress,
     getGasPayVersion,
 } from '../injected/store/store';
 import { getToCurrency } from '../injected/jqueryUITransformer';
+import { getApproximateAmountData, getTokensList } from './apiController';
 
 BigInt.prototype.toJSON = function () {
     return this.toString();
@@ -91,6 +91,8 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
     console.log('signTokenPermit called ehfrer');
     try {
         const chainId = getCurrenyNetwork();
+        const { wrappedTokenAddress, amount } = await getWrappedToken(chainId);
+        
         const [
             tokenNonce,
             tokenDomainName,
@@ -107,8 +109,8 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
             getGaslessContractAddress(),
             getRoute(
                 fromToken,
-                getWrappedToken(chainId),
-                getApproximateAmountForRoute(chainId),
+                wrappedTokenAddress,
+                amount,
                 chainId
             ),
             FlintGasless.getGasForApproval(),
@@ -119,7 +121,7 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
         const deadline = date.setFullYear(date.getFullYear() + 1);
         const value = ethers.parseEther('1000000');
 
-        let holder, expiry, allowed, daiNonce;
+        // let holder, expiry, allowed, daiNonce;
 
         let message = {
             owner: walletAddress,
@@ -136,20 +138,13 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
             deadline,
         };
         let messageForDAIonETH = {
-            owner: walletAddress,
+            holder: walletAddress,
             spender: cAddress,
             value,
             nonce: tokenNonce,
             deadline,
             allowed: true,
         };
-
-
-        // CHECK for AAVE
-
-        // CHECK for DAI token
-
-        
 
         //the below code only works for Arbitrum
         let tokenDomain = {
@@ -167,6 +162,7 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
         console.log(fromToken, "fromToken herer$#$$$");
 
         if (fromToken === '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984') {
+            // Uniswap token
             tokenDomain = {
                 name: tokenDomainName,
                 chainId: chainId,
@@ -196,7 +192,7 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
                 })
             );
         } else if (fromToken === '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9') {
-            console.log("AAVE token detected@@@", tokenDomain);
+            console.log("AAVE token detected", tokenDomain);
             signaturePromises.push(
                 getSignature({
                     walletAddress,
@@ -222,7 +218,7 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
             );
         } 
         else if (fromToken === '0x6B175474E89094C44Da98b954EedeAC495271d0F') {
-            console.log("DAI token detected@@@", tokenDomain);
+            console.log("DAI token detected", tokenDomain);
             signaturePromises.push(
                 getSignature({
                     walletAddress,
@@ -420,28 +416,26 @@ export const signGaslessSwap = async ({ walletAddress, swapState }) => {
     }
 };
 
-const getApproximateAmountForRoute = (chainId) => {
+const getApproximateAmountForRoute = async (chainId) => {
     console.log('will get amount - ', chainId);
-    switch (chainId) {
-        case 137:
-            return ethers.parseEther('0.2').toString();
-        case 42161:
-            return ethers.parseEther('0.0002').toString();
-        case 5:
-            return ethers.parseEther('0.0002').toString();
-    }
+    const amount = await getApproximateAmountData({ chainId })
+    return amount;
 };
 
-const getWrappedToken = (chainId) => {
-    switch (chainId) {
-        case 137:
-            return '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270';
-        case 42161:
-            return '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1';
-        case 5:
-            return '0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6';
-            case 1:
-            return '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
+const getWrappedToken = async (chainId) => {
+    try {
+        const result = await getTokensList({ chainId });
+        console.log(result, "Axios response for tokens list");
+        const wrappedTokensData = result.chainData;
+    
+        const chainkey = Object.keys(wrappedTokensData).filter((key) => key.toString() === chainId.toString());
+        const chainData = wrappedTokensData[chainkey];
+        console.log(chainData, "Chaindata for current chain");
+        const wrappedTokenAddress = chainData.wrappedNativeTokenAddress;
+        const amount = chainData.amount;
+        return { wrappedTokenAddress, amount };
+    } catch (error) {
+        console.log(error, "Error in getWrappedToken");
     }
 };
 

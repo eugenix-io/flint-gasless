@@ -41,11 +41,13 @@ import { getCurrenyNetwork, getSupportedNetworks } from './store/store';
 import { getArbGasPrice, getEthPrice, getGasPrice } from './injected';
 import { getGasForApproval } from '../utils/FlintGasless';
 import { getScanBaseUrl } from '../utils/scan';
+import { getTokensList } from '../utils/apiController';
 
 let walletAddress;
 let currentToken;
 let swapState = {};
 let tokens = {};
+let wrappedTokensData = {};
 let latestQuoteId;
 let gaslessApprovalSupported = false;
 const WMATIC = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270';
@@ -68,6 +70,7 @@ export const update = async ({ action, payload, uuid, type }) => {
             inputType = type;
             break;
         case 'NEW_QUOTE_REQUEST_COMPLETED':
+            console.log(payload, "NEW_QUOTE_REQUEST_COMPLETED payload $$$");
             if (latestQuoteId !== uuid) {
                 return;
             }
@@ -126,7 +129,7 @@ export const update = async ({ action, payload, uuid, type }) => {
             let approvalFeesUsd = 0;
 
             const chainId = getCurrenyNetwork();
-            if (chainId == 42161) {
+            if (chainId == 42161 || chainId == 1) {
                 //uniswap quote API returns gas estimate in USD as 10x and the gas use as 1/10x
                 //don't know the exact reason for this but dividing gasInUsd by 10 seems to work
                 gasInUSD /= 10;
@@ -180,7 +183,7 @@ export const update = async ({ action, payload, uuid, type }) => {
             );
             // checking if the requested amount is more than available balance and gas required
             if (
-                currentTokenBalance >= fromAmount &&
+                parseInt(currentTokenBalance) >= parseInt(fromAmount) &&
                 Number(fromInputAmount) > gasInFromToken * 1.5
             ) {
                 activeSwap();
@@ -265,10 +268,12 @@ export const handleSwap = async () => {
 };
 
 export const handleTokenChange = async (fromTokenSymbol, amountIn) => {
+    console.log(fromTokenSymbol, "fromTokenSymbol herer@@@");
     let chainId = getCurrenyNetwork();
     if (Object.keys(tokens).length < 1) {
         await initTokens();
     }
+    console.log(tokens[chainId][fromTokenSymbol], "token RRRR");
     const fromToken = tokens[chainId][fromTokenSymbol].address;
     console.log('GOT ADDRESS - ', fromToken, tokens, chainId, fromTokenSymbol);
     //NATIVE MATIC AS FROM TOKEN IS NOT ALLOWED
@@ -283,7 +288,8 @@ export const handleTokenChange = async (fromTokenSymbol, amountIn) => {
             chainId == 137) ||
         ((fromToken == '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' ||
             fromTokenSymbol == 'ETH') &&
-            chainId == 42161)
+            chainId == 42161) ||
+        ((chainId === 1 && fromTokenSymbol === 'ETH'))
     ) {
         disableService('Gas will be deducted from the input token');
         return;
@@ -340,34 +346,18 @@ function updateConsoleLog() {
 }
 
 async function initTokens() {
-    let result = await axios.get('https://tokens.uniswap.org');
-    result.data.tokens.forEach((token) => {
-        if (token.chainId) {
-            if (!tokens[token.chainId]) {
-                tokens[token.chainId] = {};
-            }
-            tokens[token.chainId][token.symbol] = {
-                address: token.address,
-                decimals: token.decimals,
-            };
-        } else if (token.extensions && token.extensions.bridgeInfo) {
-            Object.entries(token.extensions.bridgeInfo).map(([key, value]) => {
-                //key if chainId
-                if (!tokens[key]) {
-                    tokens[key] = {};
-                }
-                tokens[key][token.symbol] = {
-                    address: token.extensions.bridgeInfo[key].tokenAddress,
-                    decimals: token.decimals,
-                };
-            });
-        }
-    });
+    const chainId = getCurrenyNetwork();
+    let result = await getTokensList({ chainId });
+    console.log(result, 'INIT TOKENS $$');
+    tokens = result.tokens;
 }
 
 export const getTokenAddressFromSymbol = (symbol) => {
     const chainId = getCurrenyNetwork();
     let address;
+    console.log(tokens, 'TOkenss');
+    
+    console.log(tokens, "tokens &&&&");
     if (Object.keys(tokens).length > 1) {
         try {
             address = tokens[chainId][symbol];

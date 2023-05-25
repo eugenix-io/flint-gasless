@@ -87,6 +87,10 @@ export const setGasInFromToken = (
     approvalFeesUsd,
     approvalFeesToken
 ) => {
+    console.log('setGasInFromToken $$$', gas,
+    fromPrice,
+    approvalFeesUsd,
+    approvalFeesToken);
     if (gas) {
         gas = getSignificantDigits(gas);
         fromPrice = getSignificantDigits(fromPrice);
@@ -96,7 +100,7 @@ export const setGasInFromToken = (
             gasHTML = `Fees: <b>${gas} ${fromCurrency}</b> ($${fromPrice})`;
         } else if (getCurrenyNetwork() == 137) {
             gasHTML = '<b>Approval is gasless</b>';
-        } else if (getCurrenyNetwork() == 42161) {
+        } else if (getCurrenyNetwork() == 42161 || getCurrenyNetwork() == 1) {
             //Approval fees in $ARB is
             gasHTML = `Fees: <b>${getSignificantDigits(
                 approvalFeesToken
@@ -423,11 +427,14 @@ const insertPopupHtml = () => {
         });
 };
 
+// insertGasTokenBlock is initialized when injecting
+
 const insertGasTokenBlock = () => {
     const main = $('#swap-page');
     if (main && main.length > 0) {
         fromInput = main.children('input:first-child');
         toInput = main.children('input:nth-child(2)');
+        // currencySelector1 is from token div
         currencySelector1 = main
             .children('div:nth-child(2)')
             ?.children('div:first-child')
@@ -436,15 +443,20 @@ const insertGasTokenBlock = () => {
             ?.children('div:first-child')
             ?.children('button');
         fromInput = currencySelector1.parent().children('input');
+        // on() -> onChange value of element
+        // off() -> clear all listeners assigned before on the element
         fromInput.off().on({
             keyup: () => {
                 if (!fromInput.val()) {
                     disableSwapButton();
                 } else {
+                    // Insert this value to popup that comes after we press swap button
                     $('#fl-from-amt').html(fromInput.val());
                 }
                 triggerQuote();
             },
+            // in some cases keyup or change doesn't trigger
+            // so putting this to handle all cases
             change: () => {
                 if (!fromInput.val()) {
                     disableSwapButton();
@@ -454,11 +466,15 @@ const insertGasTokenBlock = () => {
                 triggerQuote();
             },
         });
+
+        // Setting the from currency symbol here...
         fromCurrency = currencySelector1
             .children('span')
             ?.children('div')
             ?.children('span')
             ?.html();
+        
+        // Setting the from currency image for popup here...
         fromImgSrc = currencySelector1.find('img').attr('src');
         setTimeout(() => {
             fromImgSrc = currencySelector1.find('img').attr('src');
@@ -467,6 +483,10 @@ const insertGasTokenBlock = () => {
             $('#fl-from-im').attr('src', fromImgSrc);
             $('#fl-from-crr').html(fromCurrency);
         }, 200);
+
+        // Attatching listeners when from token is changed
+        // DOMSubtreeModified helps to check whether HTML has been changed or not
+
         currencySelector1?.off().on({
             DOMSubtreeModified: (e) => {
                 fromCurrency = currencySelector1
@@ -492,6 +512,8 @@ const insertGasTokenBlock = () => {
                 }, 200);
             },
         });
+
+        // To token operations...
 
         currencySelector2 = main
             .children('div:nth-child(3)')
@@ -535,6 +557,10 @@ const insertGasTokenBlock = () => {
                 });
             },
         });
+
+        // swap arrow between from & to token
+        // set listeners for popup from token change
+
         main.children('div:nth-child(3)')
             ?.children('div:first-child')
             ?.off()

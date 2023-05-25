@@ -36,6 +36,7 @@ export async function getGaslessContractAddress() {
 
 export async function getSupportedNetworks() {
     await loadConfig();
+    console.log(config, "Config here####");
     return config.liveNetworks;
 }
 

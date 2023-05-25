@@ -1,3 +1,9 @@
+/**
+ * Backround scripts is used for Chrome Tab related functionalities
+ * for e.g accesssing current tab, TabId etc
+ * Background can dynamically create windows like metamask creates for transaction
+ * Background can communicate with contentScript but not with injected script.
+ */
 import browser from 'webextension-polyfill';
 
 const createOrUpdateWindow = async () => {
@@ -45,6 +51,10 @@ chrome.runtime.onMessage.addListener((res) => {
         });
     }
 });
+
+// Fetch the version
+// And send to the content script
+// which will relay it further to injected script
 
 const version = browser.runtime.getManifest().version;
 browser.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {

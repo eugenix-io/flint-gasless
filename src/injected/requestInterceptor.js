@@ -29,6 +29,7 @@ export const getQuoteValues = async (
 };
 
 export const interceptRequests = () => {
+    console.log('INTERCEPTING $$');
     const { fetch: originalFetch } = window;
     window.fetch = async (...args) => {
         let [resource, config] = args;
@@ -42,7 +43,7 @@ export const interceptRequests = () => {
             const { tokenInAddress, amount, type } = getTokenInAddress(
                 resource.url || resource
             );
-            console.log('GOING TO UPDATE STATE NOW!');
+            console.log('GOING TO UPDATE STATE NOW! reached $$');
 
             update({
                 action: 'NEW_QUOTE_REQUEST_INITIATED',

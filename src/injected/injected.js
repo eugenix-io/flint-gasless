@@ -21,6 +21,7 @@ import '../config/axios';
 import { getGasPayVersion, setCurrentNetwork } from './store/store';
 import { getGasFee } from '../utils/FlintGasless';
 import { trackEvent } from '../utils/SegmentUtils';
+import { getLatestArbGasPrice } from '../utils/apiController';
 
 let contractGasPrice;
 let arbGasPrice;
@@ -47,6 +48,7 @@ const initiateConnectWallet = async () => {
         console.log('MetaMask not installed; using read-only defaults');
         // provider = ethers.getDefaultProvider();
     } else {
+        // chainChanged event fires up on chain is changed by user
         window.ethereum.on('chainChanged', handleChainChange);
         handleChainChange(); //first time
         pollAccountChange();
@@ -67,7 +69,7 @@ function pollAccountChange() {
     } else {
         showConnectWalletButton();
     }
-    setTimeout(pollAccountChange, 100);
+    setTimeout(pollAccountChange, 1000);
 }
 
 async function getChainId() {
@@ -94,14 +96,7 @@ const getEth = async () => {
 
 export const getArbGasPrice = async () => {
     if (!arbGasPrice) {
-        try {
-            const url =
-                'https://api.arbiscan.io/api?module=proxy&action=eth_gasPrice&apikey=WUP7FAH8JGUXKT6MZ78ZJ7KDHYN96PPZSA';
-            const result = await axios.get(url);
-            arbGasPrice = Number(result.data.result);
-        } catch (error) {
-            arbGasPrice = 100000000;
-        }
+        arbGasPrice = await getLatestArbGasPrice();
     }
     return arbGasPrice;
 };
@@ -125,8 +120,13 @@ export const getEthPrice = async () => {
     return ethPrice;
 };
 
+// For attaching UI try looking for a particular div(e.g #swap) until it loads
+// if it takes 500ms to load then it retries upto 500ms
+
 const attachUI = (i) => {
     setTimeout(() => {
+        // If element found then len !== 0
+        // else retry attaching
         const len = addFlintUILayer(buttonClick);
         if (len === 0) {
             attachUI(i + 1);
