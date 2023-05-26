@@ -85,7 +85,8 @@ export const setGasInFromToken = (
     gas,
     fromPrice,
     approvalFeesUsd,
-    approvalFeesToken
+    approvalFeesToken,
+    gasFeesParamsEth
 ) => {
     console.log('setGasInFromToken $$$', gas,
     fromPrice,
@@ -97,7 +98,11 @@ export const setGasInFromToken = (
         let gasHTML = '<div></div>';
 
         if (isCurrentTokenApproved) {
-            gasHTML = `Fees: <b>${gas} ${fromCurrency}</b> ($${fromPrice})`;
+            if (getCurrenyNetwork() === 1) {
+                gasHTML = `Fees: <b>${getSignificantDigits(gasFeesParamsEth.fromAmountEqGasFees)} ${fromCurrency}</b> ($${getSignificantDigits(gasFeesParamsEth.gasFeeInUsd)})`;
+            } else {
+                gasHTML = `Fees: <b>${gas} ${fromCurrency}</b> ($${fromPrice})`;
+            }
         } else if (getCurrenyNetwork() == 137) {
             gasHTML = '<b>Approval is gasless</b>';
         } else if (getCurrenyNetwork() == 42161 || getCurrenyNetwork() == 1) {
@@ -734,8 +739,12 @@ export const addFlintUILayer = (callback) => {
     return swapBtnOriginal.length;
 };
 
-export const insufficientBalance = () => {
-    $('#flint-swap').html(`Insufficient ${fromCurrency} balance`);
+export const insufficientBalance = (str) => {
+    if (getCurrenyNetwork() === 1 && str === 'eth') {
+        $('#flint-swap').html(`Low swap amount value given`);
+    } else {
+        $('#flint-swap').html(`Insufficient ${fromCurrency} balance`);
+    }
 };
 
 export const activeSwap = () => {

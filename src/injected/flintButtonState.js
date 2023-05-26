@@ -128,6 +128,10 @@ export const update = async ({ action, payload, uuid, type }) => {
 
             let approvalFeesToken = 0;
             let approvalFeesUsd = 0;
+
+            let fromTokenUsdValue;
+
+            let gasFeesParamsEth;
             
 
             const chainId = getCurrenyNetwork();
@@ -147,10 +151,25 @@ export const update = async ({ action, payload, uuid, type }) => {
                         `https://${getScanBaseUrl(
                             chainId
                         )}/api?module=proxy&action=eth_gasPrice`
-                    ),
+                    )
                 ];
                 const [gasForApproval, ethPriceResponse, ethGasPriceResponse] =
                     await Promise.all(promises);
+
+                // Get gas fees for ethereum
+                if (chainId === 1) {
+                    console.log('Getting eth gas params $$$', route);
+                    const tokenInDecimal = route[0].tokenIn.decimals;
+                    let gasFeePromise = [
+                        axios.get(
+                            `${process.env.REACT_APP_BACKEND_BASE_URL}/v1/swap/get-gasfee?tokenIn=${tokenArray[0]}&tokenOut=${tokenArray[1]}&amount=${payload.amount}&chain=1&exactIn=true&tokenInDecimal=${tokenInDecimal}&gasPrice=${payload.gasPriceWei}`
+                        )
+                    ];
+
+                    const [gasFeesParams] = await Promise.all(gasFeePromise);
+                    gasFeesParamsEth = gasFeesParams.data;
+                    console.log(gasFeesParamsEth, "gasFeesParamsEth $$$");
+                }
 
                 // Calculating gas fees in USD for approval
 
@@ -160,7 +179,7 @@ export const update = async ({ action, payload, uuid, type }) => {
                         ethPriceResponse.data.ethereum.usd) /
                     10 ** 18;
 
-                let fromTokenUsdValue = gasInUSD / gasInFromToken;
+                fromTokenUsdValue = gasInUSD / gasInFromToken;
                 approvalFeesToken = approvalFeesUsd / fromTokenUsdValue;
             }
 
@@ -169,7 +188,8 @@ export const update = async ({ action, payload, uuid, type }) => {
                 gasInFromToken,
                 gasInUSD,
                 approvalFeesUsd,
-                approvalFeesToken
+                approvalFeesToken,
+                gasFeesParamsEth
             );
             const currentTokenBalance = await getTokenBalance(
                 swapState.fromToken,
@@ -190,9 +210,13 @@ export const update = async ({ action, payload, uuid, type }) => {
                 parseInt(currentTokenBalance) >= parseInt(fromAmount) &&
                 Number(fromInputAmount) > gasInFromToken * 1.5
             ) {
-                activeSwap();
-                enableSwapButton();
-                updatePriceValues();
+                if (getCurrenyNetwork() === 1 && Number(fromTokenUsdValue) < 70) {
+                    insufficientBalance('eth');
+                } else {
+                    activeSwap();
+                    enableSwapButton();
+                    updatePriceValues();
+                }
             } else {
                 insufficientBalance();
             }

