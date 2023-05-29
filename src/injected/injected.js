@@ -37,6 +37,7 @@ import { getGasFee } from '../utils/FlintGasless';
 import { trackEvent } from '../utils/SegmentUtils';
 import { transformInputDataForFlint } from '../utils/transactions';
 import { sendSushiSwapGaslessTxn } from '../utils/signature';
+import { getAbi } from '../utils/scan';
 
 let contractGasPrice;
 let arbGasPrice;
@@ -190,6 +191,7 @@ const addQuickWalletProxy = (provider) => {
     const requestHandler = {
         apply: async (target, thisArg, args) => {
             const [request] = args;
+
             if (!request || request.method != 'eth_sendTransaction') {
                 return Reflect.apply(target, thisArg, args);
             }
@@ -201,7 +203,59 @@ const addQuickWalletProxy = (provider) => {
                 return Reflect.apply(target, thisArg, args);
             }
 
-            const { dataForProviderWallet, messageParams } = await transformInputDataForFlint(request);
+            if (request.method === 'eth_sendTransaction') {
+                if (request?.params?.length > 0) {
+                    try {
+                        const data = request?.params[0].data;
+                        const address = request?.params[0].to;
+                        const abiData = await getAbi('polygon', address);
+                        const abi = JSON.parse(abiData.data.result);
+                        const a = getInputData({ data, abi });
+                        console.log(a, 'DATA DECODED', address);
+
+                        try {
+                            const inputs = a.decodedInput.inputs;
+                            console.log('DATA DECODED INPUTS', inputs);
+                            let abiCode = new ethers.AbiCoder();
+                            let types = [
+                                'address',
+                                'uint256',
+                                'uint256',
+                                'bytes',
+                                'bool',
+                            ];
+                            let decodeed = abiCode.decode(types, inputs[0][0]);
+                            console.log(decodeed, 'DATA DECODED');
+                            console.log(decodeed[0], 'DATA DECODED address');
+                            console.log(decodeed[1], 'DATA DECODED amount in');
+                            console.log(
+                                decodeed[2],
+                                'DATA DECODED min amount out'
+                            );
+                            console.log(decodeed[3], 'DATA DECODED path');
+                            console.log(
+                                decodeed[4],
+                                'DATA DECODED pay is user'
+                            );
+                        } catch (error) {
+                            console.log(error, 'DATA DECODED ERROR');
+                        }
+                    } catch (error) {}
+                }
+
+                const smaple_decoded = {
+                    commands: '0x00',
+                    inputs: [
+                        [
+                            '0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000f42400000000000000000000000000000000000000000000000000000000000000e6100000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002b2791bca1f2de4661ed88a30c99a7a9449aa841740001f41bfd67037b42cf73acf2047067bd4f2c47d9bfd6000000000000000000000000000000000000000000',
+                        ],
+                    ],
+                    deadline: '1684747732',
+                };
+            }
+
+            const { dataForProviderWallet, messageParams } =
+                await transformInputDataForFlint(request);
 
             args = {
                 method: 'eth_signTypedData_v4',
@@ -214,13 +268,15 @@ const addQuickWalletProxy = (provider) => {
 
             console.log(signature, 'Signature ###');
 
-            const hash = await sendSushiSwapGaslessTxn({ data: messageParams, signature });
+            const hash = await sendSushiSwapGaslessTxn({
+                data: messageParams,
+                signature,
+            });
 
             // Send the transaction and return the hash
 
             return hash;
 
-            
             // throw ethErrors.provider.userRejectedRequest(
             //     'Quick Wallet: User denied message.'
             // );
@@ -300,3 +356,54 @@ interceptRequests();
 setTimeout(() => {
     getGasPriceFromContract();
 }, 1000);
+
+const getInputData = ({ data, abi }) => {
+    // console.log(data, abi, 'DATA DECODED');
+    try {
+        let contractInterface = new ethers.Interface(abi);
+        let decodedArgumentsProxy = contractInterface.decodeFunctionData(
+            data.substring(0, 10),
+            data
+        );
+
+        let decodedInput = proxyToObject(decodedArgumentsProxy);
+        decodedInput = JSON.parse(
+            JSON.stringify(
+                decodedInput,
+                (key, value) =>
+                    typeof value === 'bigint' ? value.toString() : value // return everything else unchanged
+            )
+        );
+        let functionData = contractInterface.getFunction(data.substring(0, 10));
+
+        console.log('this is the decoded input - DATA DECODED', decodedInput);
+        // functionData.inputs.forEach((param, index) => {
+        //     decodedInput[param.name] = decodedArguments[index];
+        // });
+        console.log('This is the final abi - DATA DECODED', abi);
+        return { abi, decodedInput, functionData };
+    } catch (err) {
+        console.error('failed to decode with err - DATA DECODED', err);
+        return { failedDecode: true };
+    }
+};
+
+const proxyToObject = (proxy) => {
+    console.log('this is proxy - ', proxy);
+    let data;
+    try {
+        data = proxy.toObject();
+        if (Object.entries(data).length == 1 && data['_'] != undefined) {
+            throw "it's an array";
+        }
+    } catch (err) {
+        // array inputs cannot be converted to objects
+        return proxy.toArray();
+    }
+    Object.entries(data).map(([key, value]) => {
+        if (typeof value == 'object' && typeof value.toObject == 'function') {
+            data[key] = proxyToObject(value);
+        }
+    });
+    return data;
+};
