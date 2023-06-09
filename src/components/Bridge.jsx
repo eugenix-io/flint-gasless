@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import GasInProgress from './GasInProgress.jsx';
-import DownArrow from '../assets/img/down_arrow.svg';
+// import DownArrow from '../assets/img/down_arrow.svg';
 import TokenSelector from './TokenSelector.jsx';
 import axios from 'axios';
 import { useDebounce } from 'use-debounce';

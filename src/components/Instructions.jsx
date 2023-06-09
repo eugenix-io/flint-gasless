@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import LeftArow from '../assets/img/left_arrow.png';
-import RightArrow from '../assets/img/right_arrow.png';
+// import LeftArow from '../assets/img/left_arrow.png';
+// import RightArrow from '../assets/img/right_arrow.png';
 import styled from 'styled-components';
 
 const Instructions = () => {
@@ -145,7 +145,7 @@ const Instructions = () => {
                             }}
                             onClick={() => setCurrentStep(currentStep - 1)}
                         >
-                            <img style={{ width: '30%' }} src={LeftArow}></img>
+                            {/* <img style={{ width: '30%' }} src={LeftArow}></img> */}
                         </div>
                         <div
                             style={{
@@ -167,7 +167,7 @@ const Instructions = () => {
                         >
                             <img
                                 style={{ width: '30%' }}
-                                src={RightArrow}
+                                // src={RightArrow}
                             ></img>
                         </div>
                     </div>

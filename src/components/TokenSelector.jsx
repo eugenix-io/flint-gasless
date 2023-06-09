@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styled, { css } from 'styled-components';
-import crossLogo from '../assets/img/cross.png';
+// import crossLogo from '../assets/img/cross.png';
 
 const TokenSelectorContainer = styled.div`
     background-color: #121212;

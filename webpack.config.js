@@ -38,17 +38,6 @@ module.exports = {
                 ],
             },
             {
-                test: /\.(jpe?g|png|gif)$/i,
-                use: [
-                    {
-                        loader: 'file-loader',
-                    },
-                    {
-                        loader: 'image-webpack-loader',
-                    },
-                ],
-            },
-            {
                 test: /\.html$/,
                 exclude: /node_modules/,
                 use: { loader: 'html-loader' },

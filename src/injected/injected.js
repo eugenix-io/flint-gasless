@@ -1,166 +1,10 @@
 import { ethers } from 'ethers';
-import {
-    addFlintUILayer,
-    getFromCurrency,
-    getFromInput,
-    hideConnectWalletButton,
-    setNativeTokenNameAndLogo,
-    showConnectWalletButton,
-} from './jqueryUITransformer';
-import { interceptRequests } from './requestInterceptor';
-import {
-    setWalletAddress,
-    buttonClick,
-    handleTokenChange,
-    getWalletAddress,
-} from './flintButtonState';
 import axios from 'axios';
-import Web3 from 'web3';
-import { v4 as uuidv4 } from 'uuid';
-
-axios.interceptors.request.use(
-    function (config) {
-        // check if the URL contains a specific string
-        if (config.url.includes('ngrok')) {
-            // add default header to the request
-            config.headers['ngrok-skip-browser-warning'] = '1';
-        }
-        return config;
-    },
-    function (error) {
-        return Promise.reject(error);
-    }
-);
-
-import { getGasPayVersion, setCurrentNetwork } from './store/store';
-import { getGasFee } from '../utils/FlintGasless';
-import { trackEvent } from '../utils/SegmentUtils';
-import { transformInputDataForFlint } from '../utils/transactions';
-import { sendSushiSwapGaslessTxn } from '../utils/signature';
-import { getAbi } from '../utils/scan';
-
-let contractGasPrice;
-let arbGasPrice;
-let ethPrice;
-
-export const getGasPrice = () => {
-    return contractGasPrice;
-};
-
-export const setResponseJson = (newJson) => {
-    responseJson = newJson;
-};
-
-let signer = null,
-    walletAddress;
-
-const initiateConnectWallet = async () => {
-    console.log('ETH', window.ethereum);
-    if (window.ethereum === null) {
-        // If MetaMask is not installed, we use the default provider,
-        // which is backed by a variety of third-party services (such
-        // as INFURA). They do not have private keys installed so are
-        // only have read-only access
-        console.log('MetaMask not installed; using read-only defaults');
-        // provider = ethers.getDefaultProvider();
-    } else {
-        window.ethereum.on('chainChanged', handleChainChange);
-        handleChainChange(); //first time
-        pollAccountChange();
-    }
-};
-
-function pollAccountChange() {
-    walletAddress = window.ethereum.selectedAddress;
-    if (getWalletAddress() != walletAddress) {
-        setWalletAddress(walletAddress);
-        trackEvent('GASPAY_LOAD', {
-            platform: 'UNISWAP',
-            version: getGasPayVersion(),
-        });
-    }
-    if (walletAddress != null) {
-        hideConnectWalletButton();
-    } else {
-        showConnectWalletButton();
-    }
-    setTimeout(pollAccountChange, 100);
-}
-
-async function getChainId() {
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    let network = await provider.getNetwork();
-    return parseInt(network.chainId);
-}
-
-const handleChainChange = async () => {
-    let chainId = await getChainId();
-    setCurrentNetwork(chainId);
-    setNativeTokenNameAndLogo();
-    handleTokenChange(
-        getFromCurrency(),
-        getFromInput() ? getFromInput().val() : 0
-    );
-};
-
-const getEth = async () => {
-    console.log('called');
-    // Initiate wallet connect
-    await initiateConnectWallet();
-};
-
-export const getArbGasPrice = async () => {
-    if (!arbGasPrice) {
-        try {
-            const url =
-                'https://api.arbiscan.io/api?module=proxy&action=eth_gasPrice&apikey=WUP7FAH8JGUXKT6MZ78ZJ7KDHYN96PPZSA';
-            const result = await axios.get(url);
-            arbGasPrice = Number(result.data.result);
-        } catch (error) {
-            arbGasPrice = 100000000;
-        }
-    }
-    return arbGasPrice;
-};
-
-const getGasPriceFromContract = async () => {
-    contractGasPrice = await getGasFee();
-    console.log('CONTRACT GAS PRICE', contractGasPrice);
-};
-
-export const getEthPrice = async () => {
-    if (!ethPrice) {
-        try {
-            const resp = await axios.get(
-                'https://api.coinbase.com/v2/prices/ETH-USD/spot'
-            );
-            ethPrice = Number(resp.data.data.amount);
-        } catch (e) {
-            ethPrice = 20000;
-        }
-    }
-    return ethPrice;
-};
-
-const attachUI = (i) => {
-    setTimeout(() => {
-        const len = addFlintUILayer(buttonClick);
-        if (len === 0) {
-            attachUI(i + 1);
-        } else {
-            getEth();
-        }
-    }, 100);
-};
 
 const addQuickWalletProxy = (provider) => {
     if (!provider || provider.isQuickWallet) {
         return;
     }
-
-    // Heavily taken from RevokeCash to ensure consistency. Thanks Rosco :)!
-    //
-    // https://github.com/RevokeCash/browser-extension
     const sendHandler = {
         apply: (target, thisArg, args) => {
             const [payloadOrMethod, callbackOrParams] = args;
@@ -192,6 +36,8 @@ const addQuickWalletProxy = (provider) => {
         apply: async (target, thisArg, args) => {
             const [request] = args;
 
+            console.log('INTERCEPTED', request);
+
             if (!request || request.method != 'eth_sendTransaction') {
                 return Reflect.apply(target, thisArg, args);
             }
@@ -199,16 +45,17 @@ const addQuickWalletProxy = (provider) => {
             let response;
             if (request.params.length !== 1) {
                 // Forward the request anyway.
-
                 return Reflect.apply(target, thisArg, args);
             }
 
             if (request.method === 'eth_sendTransaction') {
+                console.log('DECODING TRANSACTION', request?.params?.length);
                 if (request?.params?.length > 0) {
                     try {
                         const data = request?.params[0].data;
                         const address = request?.params[0].to;
-                        const abiData = await getAbi('polygon', address);
+                        console.log(data, address);
+                        const abiData = await getAbi(address);
                         const abi = JSON.parse(abiData.data.result);
                         const a = getInputData({ data, abi });
                         console.log(a, 'DATA DECODED', address);
@@ -224,7 +71,7 @@ const addQuickWalletProxy = (provider) => {
                                 'bytes',
                                 'bool',
                             ];
-                            let decodeed = abiCode.decode(types, inputs[0][0]);
+                            let decodeed = abiCode.decode(types, inputs[0][1]);
                             console.log(decodeed, 'DATA DECODED');
                             console.log(decodeed[0], 'DATA DECODED address');
                             console.log(decodeed[1], 'DATA DECODED amount in');
@@ -240,7 +87,9 @@ const addQuickWalletProxy = (provider) => {
                         } catch (error) {
                             console.log(error, 'DATA DECODED ERROR');
                         }
-                    } catch (error) {}
+                    } catch (error) {
+                        console.log('ERROR', error);
+                    }
                 }
 
                 const smaple_decoded = {
@@ -254,28 +103,28 @@ const addQuickWalletProxy = (provider) => {
                 };
             }
 
-            const { dataForProviderWallet, messageParams } =
-                await transformInputDataForFlint(request);
+            // const { dataForProviderWallet, messageParams } =
+            //     await transformInputDataForFlint(request);
 
-            args = {
-                method: 'eth_signTypedData_v4',
-                params: dataForProviderWallet,
-            };
+            // args = {
+            //     method: 'eth_signTypedData_v4',
+            //     params: dataForProviderWallet,
+            // };
 
-            console.log(args, 'Passing this args');
+            // console.log(args, 'Passing this args');
 
             const signature = await Reflect.apply(target, thisArg, [args]);
 
             console.log(signature, 'Signature ###');
 
-            const hash = await sendSushiSwapGaslessTxn({
-                data: messageParams,
-                signature,
-            });
+            // const hash = await sendSushiSwapGaslessTxn({
+            //     data: messageParams,
+            //     signature,
+            // });
 
             // Send the transaction and return the hash
 
-            return hash;
+            return 'hash';
 
             // throw ethErrors.provider.userRejectedRequest(
             //     'Quick Wallet: User denied message.'
@@ -351,12 +200,6 @@ if (window.ethereum) {
     });
 }
 
-attachUI(0);
-interceptRequests();
-setTimeout(() => {
-    getGasPriceFromContract();
-}, 1000);
-
 const getInputData = ({ data, abi }) => {
     // console.log(data, abi, 'DATA DECODED');
     try {
@@ -376,11 +219,11 @@ const getInputData = ({ data, abi }) => {
         );
         let functionData = contractInterface.getFunction(data.substring(0, 10));
 
-        console.log('this is the decoded input - DATA DECODED', decodedInput);
+        // console.log('this is the decoded input - DATA DECODED', decodedInput);
         // functionData.inputs.forEach((param, index) => {
         //     decodedInput[param.name] = decodedArguments[index];
         // });
-        console.log('This is the final abi - DATA DECODED', abi);
+        // console.log('This is the final abi - DATA DECODED', abi);
         return { abi, decodedInput, functionData };
     } catch (err) {
         console.error('failed to decode with err - DATA DECODED', err);
@@ -389,7 +232,7 @@ const getInputData = ({ data, abi }) => {
 };
 
 const proxyToObject = (proxy) => {
-    console.log('this is proxy - ', proxy);
+    // console.log('this is proxy - ', proxy);
     let data;
     try {
         data = proxy.toObject();
@@ -406,4 +249,11 @@ const proxyToObject = (proxy) => {
         }
     });
     return data;
+};
+
+const getAbi = async (address) => {
+    const REACT_APP_POLYGON_SCAN_API_KEY = 'AHTISJJW688SHR3HYJQ3AF61B3DUY5NEQK';
+    return await axios.get(
+        `https://api.polygonscan.com/api?module=contract&action=getabi&address=${address}&apikey=${REACT_APP_POLYGON_SCAN_API_KEY}`
+    );
 };

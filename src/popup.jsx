@@ -6,11 +6,11 @@ import Instructions from './components/Instructions.jsx';
 import Faucet from './components/Faucet.jsx';
 import BoxContainer from './components/BoxContainer.jsx';
 import TransactionHistory from './components/TransactionHistory.jsx';
-import {
-    getnewPendingTransaction,
-    getWalletAddress,
-    removePendingTransaction,
-} from './utils/StorageUtils';
+// import {
+//     getnewPendingTransaction,
+//     getWalletAddress,
+//     removePendingTransaction,
+// } from './utils/StorageUtils';
 import PendingTransaction from './components/PendingTransaction.jsx';
 import axios from 'axios';
 
