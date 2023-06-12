@@ -98,11 +98,14 @@ export const setGasInFromToken = (
         let gasHTML = '<div></div>';
 
         if (isCurrentTokenApproved) {
+            // For SWAP gas fees for Gaspay 
             if (getCurrenyNetwork() === 1) {
                 gasHTML = `Fees: <b>${getSignificantDigits(gasFeesParamsEth.fromAmountEqGasFees)} ${fromCurrency}</b> ($${getSignificantDigits(gasFeesParamsEth.gasFeeInUsd)})`;
             } else {
+                // TODO Put 0 fees check for arb
                 gasHTML = `Fees: <b>${gas} ${fromCurrency}</b> ($${fromPrice})`;
             }
+        // TODO Put arb check for 0 gas fee
         } else if (getCurrenyNetwork() == 137) {
             gasHTML = '<b>Approval is gasless</b>';
         } else if (getCurrenyNetwork() == 42161 || getCurrenyNetwork() == 1) {

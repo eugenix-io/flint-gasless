@@ -339,6 +339,8 @@ export const signTokenPermit = async ({ walletAddress, fromToken }) => {
             }
         );
 
+        // TODO check for approval: If Approved show swap else show approved
+
         console.log(txResp, 'Approval response..');
     } catch (error) {
         throw error;
