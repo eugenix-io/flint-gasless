@@ -4,5 +4,7 @@ export function getScanBaseUrl(chainId) {
             return 'api.polygonscan.com';
         case 42161:
             return 'api.arbiscan.io';
+        case 1:
+            return 'api.etherscan.io';
     }
 }
