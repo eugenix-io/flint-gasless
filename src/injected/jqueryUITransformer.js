@@ -88,28 +88,36 @@ export const setGasInFromToken = (
     approvalFeesToken,
     gasFeesParamsEth
 ) => {
-    console.log('setGasInFromToken $$$', gas,
-    fromPrice,
-    approvalFeesUsd,
-    approvalFeesToken);
-    if (gas) {
+    console.log(
+        'setGasInFromToken $$$',
+        gas,
+        fromPrice,
+        approvalFeesUsd,
+        approvalFeesToken
+    );
+    if (gas || gas === 0) {
+        // gas passed as 0 when overwriting in the previous function call
         gas = getSignificantDigits(gas);
         fromPrice = getSignificantDigits(fromPrice);
         let gasHTML = '<div></div>';
 
         if (isCurrentTokenApproved) {
-            // For SWAP gas fees for Gaspay 
+            // once token is approved
             if (getCurrenyNetwork() === 1) {
-                gasHTML = `Fees: <b>${getSignificantDigits(gasFeesParamsEth.fromAmountEqGasFees)} ${fromCurrency}</b> ($${getSignificantDigits(gasFeesParamsEth.gasFeeInUsd)})`;
+                gasHTML = `Fees: <b>${getSignificantDigits(
+                    gasFeesParamsEth.fromAmountEqGasFees
+                )} ${fromCurrency}</b> ($${getSignificantDigits(
+                    gasFeesParamsEth.gasFeeInUsd
+                )})`;
+            } else if (gas == 0) {
+                gasHTML = '<b>This Swap is gasless 🎉</b>';
             } else {
-                // TODO Put 0 fees check for arb
                 gasHTML = `Fees: <b>${gas} ${fromCurrency}</b> ($${fromPrice})`;
             }
-        // TODO Put arb check for 0 gas fee
-        } else if (getCurrenyNetwork() == 137) {
+        } else if (approvalFeesUsd === 0 || getCurrenyNetwork() == 137) {
             gasHTML = '<b>Approval is gasless</b>';
-        } else if (getCurrenyNetwork() == 42161 || getCurrenyNetwork() == 1) {
-            //Approval fees in $ARB is
+        } else if (getCurrenyNetwork() == 1 || getCurrenyNetwork() == 42161) {
+            //Approval fees on ARB/ETH is
             gasHTML = `Fees: <b>${getSignificantDigits(
                 approvalFeesToken
             )} ${fromCurrency}</b> ($${getSignificantDigits(approvalFeesUsd)})`;
@@ -481,7 +489,7 @@ const insertGasTokenBlock = () => {
             ?.children('div')
             ?.children('span')
             ?.html();
-        
+
         // Setting the from currency image for popup here...
         fromImgSrc = currencySelector1.find('img').attr('src');
         setTimeout(() => {
