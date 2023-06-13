@@ -106,7 +106,6 @@ export const update = async ({ action, payload, uuid, type }) => {
             let amountInToken1 = Number(payload.amountDecimals);
             let amountInToken2 = Number(payload.quoteDecimals);
 
-
             let gasInUSD = Number(payload.gasUseEstimateUSD);
             let gasUseEstimateQuoteDecimals =
                 payload.gasUseEstimateQuoteDecimals;
@@ -132,7 +131,6 @@ export const update = async ({ action, payload, uuid, type }) => {
             let fromTokenUsdValue;
 
             let gasFeesParamsEth;
-            
 
             const chainId = getCurrenyNetwork();
             if (chainId == 42161 || chainId == 1) {
@@ -195,13 +193,8 @@ export const update = async ({ action, payload, uuid, type }) => {
                     gasFeesParamsEth = gasFeesParams.data;
                     console.log(gasFeesParamsEth, 'gasFeesParamsEth $$$');
                 }
-
-                // Calculating gas fees in USD for approval
-
-                // < 100
             }
-            // gasForSwap < 100
-            // approval < 100
+
             setGasInToToken(gasInToToken);
             setGasInFromToken(
                 gasInFromToken,

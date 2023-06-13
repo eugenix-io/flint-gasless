@@ -30,7 +30,6 @@ export const getTokenBalance = async (
 };
 
 export const isTokenApproved = async (tokenAddress, walletAddress) => {
-    // TODO Used to check whether user has approved Gaspay contract
     try {
         console.log(tokenAddress, walletAddress, 'LOG+++++');
         const web3 = new Web3(window.ethereum);

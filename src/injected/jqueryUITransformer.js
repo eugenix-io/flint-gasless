@@ -103,14 +103,14 @@ export const setGasInFromToken = (
 
         if (isCurrentTokenApproved) {
             // once token is approved
-            if (getCurrenyNetwork() === 1) {
+            if (gas == 0) {
+                gasHTML = '<b>This Swap is gasless 🎉</b>';
+            } else if (getCurrenyNetwork() === 1) {
                 gasHTML = `Fees: <b>${getSignificantDigits(
                     gasFeesParamsEth.fromAmountEqGasFees
                 )} ${fromCurrency}</b> ($${getSignificantDigits(
                     gasFeesParamsEth.gasFeeInUsd
                 )})`;
-            } else if (gas == 0) {
-                gasHTML = '<b>This Swap is gasless 🎉</b>';
             } else {
                 gasHTML = `Fees: <b>${gas} ${fromCurrency}</b> ($${fromPrice})`;
             }
