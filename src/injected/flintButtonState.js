@@ -39,7 +39,7 @@ import {
 import axios from 'axios';
 import { getCurrenyNetwork, getSupportedNetworks } from './store/store';
 import { getArbGasPrice, getEthPrice, getGasPrice } from './injected';
-import { getGasForApproval } from '../utils/FlintGasless';
+import { getGasForApproval, getGasFee } from '../utils/FlintGasless';
 import { getScanBaseUrl } from '../utils/scan';
 import { getTokensList } from '../utils/apiController';
 
@@ -70,7 +70,7 @@ export const update = async ({ action, payload, uuid, type }) => {
             inputType = type;
             break;
         case 'NEW_QUOTE_REQUEST_COMPLETED':
-            console.log(payload, "NEW_QUOTE_REQUEST_COMPLETED payload $$$");
+            console.log(payload, 'NEW_QUOTE_REQUEST_COMPLETED payload $$$');
             if (latestQuoteId !== uuid) {
                 return;
             }
@@ -106,7 +106,6 @@ export const update = async ({ action, payload, uuid, type }) => {
             let amountInToken1 = Number(payload.amountDecimals);
             let amountInToken2 = Number(payload.quoteDecimals);
 
-
             let gasInUSD = Number(payload.gasUseEstimateUSD);
             let gasUseEstimateQuoteDecimals =
                 payload.gasUseEstimateQuoteDecimals;
@@ -132,7 +131,6 @@ export const update = async ({ action, payload, uuid, type }) => {
             let fromTokenUsdValue;
 
             let gasFeesParamsEth;
-            
 
             const chainId = getCurrenyNetwork();
             if (chainId == 42161 || chainId == 1) {
@@ -142,20 +140,45 @@ export const update = async ({ action, payload, uuid, type }) => {
                 gasInFromToken /= 10;
                 gasInToToken /= 10;
 
-                let promises = [
-                    getGasForApproval(),
-                    axios.get(
-                        `https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd`
-                    ),
-                    axios.get(
-                        `https://${getScanBaseUrl(
-                            chainId
-                        )}/api?module=proxy&action=eth_gasPrice`
-                    )
-                ];
-                const [gasForApproval, ethPriceResponse, ethGasPriceResponse] =
-                    await Promise.all(promises);
+                let promises1 = [getGasFee(), getGasForApproval()];
+                const [gasForSwap, gasForApproval] = await Promise.all(
+                    promises1
+                );
 
+                console.log(
+                    'fetched approval and swap fees from smart contracts',
+                    gasForSwap,
+                    gasForApproval
+                );
+                if (gasForSwap < 100) {
+                    gasInFromToken = 0;
+                    gasInUSD = 0;
+                    gasInToToken = 0; // need to set this to zero to reflect in confirm swap pop up modal
+                }
+                if (gasForApproval < 100) {
+                    // check the swap and approve values fetched from smart contracts, if zero then skip network call
+                    approvalFeesUsd = 0;
+                } else {
+                    let promises2 = [
+                        axios.get(
+                            `https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd`
+                        ),
+                        axios.get(
+                            `https://${getScanBaseUrl(
+                                chainId
+                            )}/api?module=proxy&action=eth_gasPrice`
+                        ),
+                    ];
+                    const [ethPriceResponse, ethGasPriceResponse] =
+                        await Promise.all(promises2);
+                    approvalFeesUsd =
+                        (gasForApproval *
+                            Number(ethGasPriceResponse.data.result) *
+                            ethPriceResponse.data.ethereum.usd) /
+                        10 ** 18;
+                    fromTokenUsdValue = gasInUSD / gasInFromToken;
+                    approvalFeesToken = approvalFeesUsd / fromTokenUsdValue;
+                }
                 // Get gas fees for ethereum
                 if (chainId === 1) {
                     console.log('Getting eth gas params $$$', route);
@@ -163,24 +186,13 @@ export const update = async ({ action, payload, uuid, type }) => {
                     let gasFeePromise = [
                         axios.get(
                             `${process.env.REACT_APP_BACKEND_BASE_URL}/v1/swap/get-gasfee?tokenIn=${tokenArray[0]}&tokenOut=${tokenArray[1]}&amount=${payload.amount}&chain=1&exactIn=true&tokenInDecimal=${tokenInDecimal}&gasPrice=${payload.gasPriceWei}`
-                        )
+                        ),
                     ];
 
                     const [gasFeesParams] = await Promise.all(gasFeePromise);
                     gasFeesParamsEth = gasFeesParams.data;
-                    console.log(gasFeesParamsEth, "gasFeesParamsEth $$$");
+                    console.log(gasFeesParamsEth, 'gasFeesParamsEth $$$');
                 }
-
-                // Calculating gas fees in USD for approval
-
-                approvalFeesUsd =
-                    (gasForApproval *
-                        Number(ethGasPriceResponse.data.result) *
-                        ethPriceResponse.data.ethereum.usd) /
-                    10 ** 18;
-
-                fromTokenUsdValue = gasInUSD / gasInFromToken;
-                approvalFeesToken = approvalFeesUsd / fromTokenUsdValue;
             }
 
             setGasInToToken(gasInToToken);
@@ -210,7 +222,10 @@ export const update = async ({ action, payload, uuid, type }) => {
                 parseInt(currentTokenBalance) >= parseInt(fromAmount) &&
                 Number(fromInputAmount) > gasInFromToken * 1.5
             ) {
-                if (getCurrenyNetwork() === 1 && Number(fromTokenUsdValue) < 70) {
+                if (
+                    getCurrenyNetwork() === 1 &&
+                    Number(fromTokenUsdValue) < 70
+                ) {
                     insufficientBalance('eth');
                 } else {
                     activeSwap();
@@ -298,12 +313,12 @@ export const handleSwap = async () => {
 };
 
 export const handleTokenChange = async (fromTokenSymbol, amountIn) => {
-    console.log(fromTokenSymbol, "fromTokenSymbol herer@@@");
+    console.log(fromTokenSymbol, 'fromTokenSymbol herer@@@');
     let chainId = getCurrenyNetwork();
     if (Object.keys(tokens).length < 1) {
         await initTokens();
     }
-    console.log(tokens[chainId][fromTokenSymbol], "token RRRR");
+    console.log(tokens[chainId][fromTokenSymbol], 'token RRRR');
     const fromToken = tokens[chainId][fromTokenSymbol].address;
     console.log('GOT ADDRESS - ', fromToken, tokens, chainId, fromTokenSymbol);
     //NATIVE MATIC AS FROM TOKEN IS NOT ALLOWED
@@ -319,7 +334,7 @@ export const handleTokenChange = async (fromTokenSymbol, amountIn) => {
         ((fromToken == '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' ||
             fromTokenSymbol == 'ETH') &&
             chainId == 42161) ||
-        ((chainId === 1 && fromTokenSymbol === 'ETH'))
+        (chainId === 1 && fromTokenSymbol === 'ETH')
     ) {
         disableService('Gas will be deducted from the input token');
         return;
@@ -386,8 +401,8 @@ export const getTokenAddressFromSymbol = (symbol) => {
     const chainId = getCurrenyNetwork();
     let address;
     console.log(tokens, 'TOkenss');
-    
-    console.log(tokens, "tokens &&&&");
+
+    console.log(tokens, 'tokens &&&&');
     if (Object.keys(tokens).length > 1) {
         try {
             address = tokens[chainId][symbol];
