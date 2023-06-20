@@ -80,6 +80,7 @@ async function getChainId() {
 
 const handleChainChange = async () => {
     let chainId = await getChainId();
+    console.log('handle chain id', chainId);
     setCurrentNetwork(chainId);
     setNativeTokenNameAndLogo();
     handleTokenChange(
@@ -124,6 +125,7 @@ export const getEthPrice = async () => {
 // if it takes 500ms to load then it retries upto 500ms
 
 const attachUI = (i) => {
+    console.log("attachUI function called")
     setTimeout(() => {
         // If element found then len !== 0
         // else retry attaching

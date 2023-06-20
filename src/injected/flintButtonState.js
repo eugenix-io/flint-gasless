@@ -76,7 +76,7 @@ export const update = async ({ action, payload, uuid, type }) => {
             }
             hideLoaderButton();
             console.log('STARTING NEW QUOTE REQ', payload);
-            const route = payload?.route[0];
+            const route = payload?.route[0] || payload?.quote?.route[0];
             const tokenArray = [
                 route[0].tokenIn.address,
                 route[0].tokenOut.address,
@@ -93,6 +93,7 @@ export const update = async ({ action, payload, uuid, type }) => {
             }
             const inputAmount =
                 inputType === 'exactIn' ? payload.amount : payload.quote;
+
             swapState = {
                 amountIn: inputAmount,
                 routes: payload.route[0],
@@ -111,7 +112,7 @@ export const update = async ({ action, payload, uuid, type }) => {
                 payload.gasUseEstimateQuoteDecimals;
             const gasPrice = Number(payload.gasPriceWei);
 
-            let gasInToToken = Number(gasUseEstimateQuoteDecimals);
+            let gasInToToken = Number(gasUseEstimateQuoteDecimals); // what is this doing?
             let gasInFromToken =
                 gasInToToken * (amountInToken1 / amountInToken2);
 
@@ -220,11 +221,11 @@ export const update = async ({ action, payload, uuid, type }) => {
             // checking if the requested amount is more than available balance and gas required
             if (
                 parseInt(currentTokenBalance) >= parseInt(fromAmount) &&
-                Number(fromInputAmount) > gasInFromToken * 1.5
+                Number(fromInputAmount) > gasInFromToken * 1.5 // why multiplying by 1.5
             ) {
                 if (
                     getCurrenyNetwork() === 1 &&
-                    Number(fromTokenUsdValue) < 70
+                    Number(fromTokenUsdValue) < 70 // why hardcoding to 70
                 ) {
                     insufficientBalance('eth');
                 } else {
@@ -277,7 +278,7 @@ export const handleApproval = async () => {
         } catch (err) {
             await approve(currentToken, walletAddress);
         }
-        triggerQuote();
+        // triggerQuote();
 
         hideLoaderApprove();
         hideApprove();

@@ -469,7 +469,7 @@ const insertGasTokenBlock = () => {
                     // Insert this value to popup that comes after we press swap button
                     $('#fl-from-amt').html(fromInput.val());
                 }
-                triggerQuote();
+                // triggerQuote();
             },
             // in some cases keyup or change doesn't trigger
             // so putting this to handle all cases
@@ -479,7 +479,7 @@ const insertGasTokenBlock = () => {
                 } else {
                     $('#fl-from-amt').html(fromInput.val());
                 }
-                triggerQuote();
+                // triggerQuote();
             },
         });
 
@@ -524,7 +524,7 @@ const insertGasTokenBlock = () => {
                     $('#fl-from-crr').html(fromCurrency);
                     handleTokenChange(fromCurrency, fromInput.val());
                     activeSwap();
-                    triggerQuote();
+                    // triggerQuote();
                 }, 200);
             },
         });
@@ -542,16 +542,16 @@ const insertGasTokenBlock = () => {
         toInput = currencySelector2.parent().children('input');
         toInput.off().on('input', function () {
             setToTokenFinalPrice();
-            triggerQuote(false);
+            // triggerQuote(false);
             // alert($(this).val());
         });
         toInput.off().on({
             change: () => {
                 setToTokenFinalPrice();
-                triggerQuote(false);
+                // triggerQuote(false);
             },
             keyup: () => {
-                triggerQuote(false);
+                // triggerQuote(false);
             },
         });
         currencySelector2?.off()?.on({
@@ -565,7 +565,7 @@ const insertGasTokenBlock = () => {
                     toImgSrc = currencySelector2.find('img').attr('src');
                     $('#fl-to-im').attr('src', toImgSrc);
                     $('#fl-to-crr').html(toCurrency);
-                    triggerQuote();
+                    // triggerQuote();
                 }, 200);
                 trackEvent('TO_TOKEN_SELECT', {
                     chainId: getCurrenyNetwork(),
@@ -710,6 +710,7 @@ setInterval(() => {
 }, 500);
 
 export const addFlintUILayer = (callback) => {
+    console.log('addFlintUILayer called');
     const swapBtnOriginal = $('#swap-button');
     parent = swapBtnOriginal.parent();
 

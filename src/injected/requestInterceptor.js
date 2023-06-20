@@ -19,18 +19,20 @@ export const getQuoteValues = async (
     amount,
     exactIn = true
 ) => {
+    console.log('reached trigger quote');
     if (tokenIn && tokenOut && chain && amount > 0) {
-        await fetch(
-            `https://api.uniswap.org/v1/quote?protocols=v2%2Cv3%2Cmixed&tokenInAddress=${tokenIn}&tokenInChainId=${chain}&tokenOutAddress=${tokenOut}&tokenOutChainId=${chain}&amount=${amount}&type=${
-                exactIn ? 'exactIn' : 'exactOut'
-            }`
-        );
+        // await fetch(
+        //     `https://api.uniswap.org/v1/quote?protocols=v2%2Cv3%2Cmixed&tokenInAddress=${tokenIn}&tokenInChainId=${chain}&tokenOutAddress=${tokenOut}&tokenOutChainId=${chain}&amount=${amount}&type=${
+        //         exactIn ? 'exactIn' : 'exactOut'
+        //     }`
+        // );
     }
 };
 
 export const interceptRequests = () => {
     console.log('INTERCEPTING $$');
     const { fetch: originalFetch } = window;
+    console.log('window object', window);
     window.fetch = async (...args) => {
         let [resource, config] = args;
         const uuid = new Date().getTime();
@@ -40,10 +42,12 @@ export const interceptRequests = () => {
             (typeof resource === 'string' &&
                 resource.includes('https://api.uniswap.org/v1/quote'))
         ) {
+            console.log('within fetch ', resource, config);
+
             const { tokenInAddress, amount, type } = getTokenInAddress(
                 resource.url || resource
             );
-            console.log('GOING TO UPDATE STATE NOW! reached $$');
+            console.log('INITIATE TO UPDATE STATE NOW! reached $$');
 
             update({
                 action: 'NEW_QUOTE_REQUEST_INITIATED',
@@ -58,6 +62,7 @@ export const interceptRequests = () => {
 
         if (response.url?.includes('https://api.uniswap.org/v1/quote')) {
             const responseJson = await response.clone().json();
+            console.log('quote api response', responseJson);
             update({
                 action: 'NEW_QUOTE_REQUEST_COMPLETED',
                 uuid,
