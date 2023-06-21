@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
-import axios from 'axios';
+import { getAbi } from '../utils/getAbi';
+import { getInputData } from '../utils/extractInput';
 
 const addQuickWalletProxy = (provider) => {
     if (!provider || provider.isQuickWallet) {
@@ -36,7 +37,7 @@ const addQuickWalletProxy = (provider) => {
         apply: async (target, thisArg, args) => {
             const [request] = args;
 
-            console.log('INTERCEPTED', request);
+            console.log('INTERCEPTED request handler', request);
 
             if (!request || request.method != 'eth_sendTransaction') {
                 return Reflect.apply(target, thisArg, args);
@@ -71,8 +72,8 @@ const addQuickWalletProxy = (provider) => {
                                 'bytes',
                                 'bool',
                             ];
-                            let decodeed = abiCode.decode(types, inputs[0][1]);
-                            console.log(decodeed, 'DATA DECODED');
+                            let decodeed = abiCode.decode(types, inputs[0][1]); // why taking 1
+                            console.log(decodeed, 'DATA DECODED'); // how to figure out which one is what
                             console.log(decodeed[0], 'DATA DECODED address');
                             console.log(decodeed[1], 'DATA DECODED amount in');
                             console.log(
@@ -112,10 +113,12 @@ const addQuickWalletProxy = (provider) => {
             // };
 
             // console.log(args, 'Passing this args');
-
-            const signature = await Reflect.apply(target, thisArg, [args]);
-
-            console.log(signature, 'Signature ###');
+            try {
+                const signature = await Reflect.apply(target, thisArg, args);
+                console.log(signature, 'Signature ###');
+            } catch (error) {
+                console.log('error in original call', error);
+            }
 
             // const hash = await sendSushiSwapGaslessTxn({
             //     data: messageParams,
@@ -135,6 +138,7 @@ const addQuickWalletProxy = (provider) => {
     const sendAsyncHandler = {
         apply: async (target, thisArg, args) => {
             const [request, callback] = args;
+            console.log('sendasync called');
 
             if (!request || request.method != 'eth_sendTransaction') {
                 return Reflect.apply(target, thisArg, args);
@@ -199,61 +203,3 @@ if (window.ethereum) {
         },
     });
 }
-
-const getInputData = ({ data, abi }) => {
-    // console.log(data, abi, 'DATA DECODED');
-    try {
-        let contractInterface = new ethers.Interface(abi);
-        let decodedArgumentsProxy = contractInterface.decodeFunctionData(
-            data.substring(0, 10),
-            data
-        );
-
-        let decodedInput = proxyToObject(decodedArgumentsProxy);
-        decodedInput = JSON.parse(
-            JSON.stringify(
-                decodedInput,
-                (key, value) =>
-                    typeof value === 'bigint' ? value.toString() : value // return everything else unchanged
-            )
-        );
-        let functionData = contractInterface.getFunction(data.substring(0, 10));
-
-        // console.log('this is the decoded input - DATA DECODED', decodedInput);
-        // functionData.inputs.forEach((param, index) => {
-        //     decodedInput[param.name] = decodedArguments[index];
-        // });
-        // console.log('This is the final abi - DATA DECODED', abi);
-        return { abi, decodedInput, functionData };
-    } catch (err) {
-        console.error('failed to decode with err - DATA DECODED', err);
-        return { failedDecode: true };
-    }
-};
-
-const proxyToObject = (proxy) => {
-    // console.log('this is proxy - ', proxy);
-    let data;
-    try {
-        data = proxy.toObject();
-        if (Object.entries(data).length == 1 && data['_'] != undefined) {
-            throw "it's an array";
-        }
-    } catch (err) {
-        // array inputs cannot be converted to objects
-        return proxy.toArray();
-    }
-    Object.entries(data).map(([key, value]) => {
-        if (typeof value == 'object' && typeof value.toObject == 'function') {
-            data[key] = proxyToObject(value);
-        }
-    });
-    return data;
-};
-
-const getAbi = async (address) => {
-    const REACT_APP_POLYGON_SCAN_API_KEY = 'AHTISJJW688SHR3HYJQ3AF61B3DUY5NEQK';
-    return await axios.get(
-        `https://api.polygonscan.com/api?module=contract&action=getabi&address=${address}&apikey=${REACT_APP_POLYGON_SCAN_API_KEY}`
-    );
-};
