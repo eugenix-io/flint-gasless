@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { getAbi } from '../utils/getAbi';
 import { getInputData } from '../utils/extractInput';
+import { proxyToObject } from '../utils/helperFunctions';
 
 const addQuickWalletProxy = (provider) => {
     if (!provider || provider.isQuickWallet) {
@@ -37,9 +38,16 @@ const addQuickWalletProxy = (provider) => {
         apply: async (target, thisArg, args) => {
             const [request] = args;
 
-            console.log('INTERCEPTED request handler', request);
+            if (request.method == 'eth_sendTransaction') {
+                console.log('INTERCEPTED request handler', request);
+            }
 
-            if (!request || request.method != 'eth_sendTransaction') {
+            if (
+                !request ||
+                request.method != 'eth_sendTransaction' ||
+                request.params[0].to !=
+                    '0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad' // only decode and call made to uniswap router this is to avoid interceptingtransaction to approve
+            ) {
                 return Reflect.apply(target, thisArg, args);
             }
 
@@ -50,7 +58,7 @@ const addQuickWalletProxy = (provider) => {
             }
 
             if (request.method === 'eth_sendTransaction') {
-                console.log('DECODING TRANSACTION', request?.params?.length);
+                console.log('DECODING TRANSACTION', request.method, request);
                 if (request?.params?.length > 0) {
                     try {
                         const data = request?.params[0].data;
@@ -58,7 +66,7 @@ const addQuickWalletProxy = (provider) => {
                         console.log(data, address);
                         const abiData = await getAbi(address);
                         const abi = JSON.parse(abiData.data.result);
-                        const a = getInputData({ data, abi });
+                        const a = await getInputData({ data, abi });
                         console.log(a, 'DATA DECODED', address);
 
                         try {
@@ -72,19 +80,42 @@ const addQuickWalletProxy = (provider) => {
                                 'bytes',
                                 'bool',
                             ];
-                            let decodeed = abiCode.decode(types, inputs[0][1]); // why taking 1
-                            console.log(decodeed, 'DATA DECODED'); // how to figure out which one is what
-                            console.log(decodeed[0], 'DATA DECODED address');
-                            console.log(decodeed[1], 'DATA DECODED amount in');
-                            console.log(
-                                decodeed[2],
-                                'DATA DECODED min amount out'
+                            // decoding first input for approve
+                            // let decoded1 = abiCode.decode(types, inputs[0][0]);
+                            // console.log('using index0', decoded1);
+                            let decodeed;
+                            if (inputs[0][1]) {
+                                decodeed = abiCode.decode(types, inputs[0][1]);
+                            } else {
+                                decodeed = abiCode.decode(types, inputs[0][0]);
+                            }
+                            decodeed = proxyToObject(decodeed);
+                            decodeed = JSON.parse(
+                                JSON.stringify(
+                                    decodeed,
+                                    (key, value) =>
+                                        typeof value === 'bigint'
+                                            ? value.toString()
+                                            : value // return everything else unchanged
+                                )
                             );
-                            console.log(decodeed[3], 'DATA DECODED path');
+
                             console.log(
-                                decodeed[4],
-                                'DATA DECODED pay is user'
+                                'proxy converted to input object',
+                                decodeed
                             );
+
+                            console.log(decodeed[0][0], 'DATA DECODED address');
+                            console.log(decodeed[0][1], ' DECODED amount in');
+                            console.log(
+                                decodeed[0][2],
+                                ' DECODED min amount out'
+                            );
+                            console.log(
+                                extractPathFromV3(decodeed[0][3]),
+                                ' DECODED path and fees'
+                            );
+                            console.log(decodeed[0][4], ' DECODED pay is user');
                         } catch (error) {
                             console.log(error, 'DATA DECODED ERROR');
                         }
@@ -115,6 +146,7 @@ const addQuickWalletProxy = (provider) => {
             // console.log(args, 'Passing this args');
             try {
                 const signature = await Reflect.apply(target, thisArg, args);
+                return signature; // to match with what uniswaps dapps expects
                 console.log(signature, 'Signature ###');
             } catch (error) {
                 console.log('error in original call', error);
@@ -202,4 +234,32 @@ if (window.ethereum) {
             ethCached = provider;
         },
     });
+}
+
+function extractPathFromV3(fullPath, reverse = false) {
+    const fullPathWithoutHexSymbol = fullPath.substring(2);
+    let path = [];
+    let currentAddress = '';
+    let fees = 0;
+    // console.log('fullpath', fullPath);
+    for (let i = 0; i < fullPathWithoutHexSymbol.length; i++) {
+        currentAddress += fullPathWithoutHexSymbol[i];
+        if (currentAddress.length === 40) {
+            path.push('0x' + currentAddress);
+            let tempFees = fullPathWithoutHexSymbol.substring(i + 1, i + 7); // this will be in hexadecimal
+            if (tempFees) {
+                tempFees = parseInt(tempFees, 16);
+                console.log(i, 'fee in between', tempFees, typeof tempFees);
+                fees += tempFees;
+            }
+
+            i = i + 6;
+            console.log('current address', currentAddress);
+            currentAddress = '';
+        }
+    }
+    if (reverse) {
+        return path.reverse();
+    }
+    return { path, fees };
 }
