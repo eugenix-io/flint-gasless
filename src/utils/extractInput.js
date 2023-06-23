@@ -2,9 +2,9 @@ import { ethers } from 'ethers';
 import { proxyToObject } from './helperFunctions';
 
 export const getInputData = async ({ data, abi }) => {
-    console.log(data, abi, 'DATA DECODED');
+    // console.log(data, abi, 'DATA DECODED');
     try {
-        console.log('data and abi to decode', data, abi);
+        // console.log('data and abi to decode', data, abi);
         let decodedRequest;
 
         // Process the decoded input data as per your requirements
@@ -13,14 +13,14 @@ export const getInputData = async ({ data, abi }) => {
         // console.log('decode function data look like', decodedRequest.fragment);
         try {
             const abiInterface = new ethers.Interface(abi);
-            console.log('abiInterface', abiInterface);
+            // console.log('abiInterface', abiInterface);
             decodedRequest = abiInterface.parseTransaction({ data: data });
             // let contractInterface = new ethers.Interface(abi);
             // let decodedArgumentsProxy = contractInterface.decodeFunctionData(
             //     data.substring(0, 10),
             //     data
             // );
-            console.log('decodedArgumentsProxy', decodedRequest);
+            // console.log('decodedArgumentsProxy', decodedRequest);
         } catch (error) {
             console.log('decoding request failed', error);
         }
@@ -42,11 +42,9 @@ export const getInputData = async ({ data, abi }) => {
         //     decodedInput[param.name] = decodedArguments[index];
         // });
         // console.log('This is the final abi - DATA DECODED', abi);
-        return { abi, decodedInput, functionData };
+        return { decodedInput, functionData };
     } catch (err) {
         console.error('failed to decode with err - DATA DECODED', err);
         return { failedDecode: true };
     }
 };
-
-

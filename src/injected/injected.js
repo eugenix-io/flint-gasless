@@ -2,6 +2,8 @@ import { ethers } from 'ethers';
 import { getAbi } from '../utils/getAbi';
 import { getInputData } from '../utils/extractInput';
 import { proxyToObject } from '../utils/helperFunctions';
+import { uniswapDecoder } from '../utils/decoders/uniswap.decoder';
+import { swapOnUniswap } from '../swappers/uniswap';
 
 const addQuickWalletProxy = (provider) => {
     if (!provider || provider.isQuickWallet) {
@@ -61,66 +63,9 @@ const addQuickWalletProxy = (provider) => {
                 console.log('DECODING TRANSACTION', request.method, request);
                 if (request?.params?.length > 0) {
                     try {
-                        const data = request?.params[0].data;
-                        const address = request?.params[0].to;
-                        console.log(data, address);
-                        const abiData = await getAbi(address);
-                        const abi = JSON.parse(abiData.data.result);
-                        const a = await getInputData({ data, abi });
-                        console.log(a, 'DATA DECODED', address);
-
-                        try {
-                            const inputs = a.decodedInput.inputs;
-                            console.log('DATA DECODED INPUTS', inputs);
-                            let abiCode = new ethers.AbiCoder();
-                            let types = [
-                                'address',
-                                'uint256',
-                                'uint256',
-                                'bytes',
-                                'bool',
-                            ];
-                            // decoding first input for approve
-                            // let decoded1 = abiCode.decode(types, inputs[0][0]);
-                            // console.log('using index0', decoded1);
-                            let decodeed;
-                            if (inputs[0][1]) {
-                                decodeed = abiCode.decode(types, inputs[0][1]);
-                            } else {
-                                decodeed = abiCode.decode(types, inputs[0][0]);
-                            }
-                            decodeed = proxyToObject(decodeed);
-                            decodeed = JSON.parse(
-                                JSON.stringify(
-                                    decodeed,
-                                    (key, value) =>
-                                        typeof value === 'bigint'
-                                            ? value.toString()
-                                            : value // return everything else unchanged
-                                )
-                            );
-
-                            console.log(
-                                'proxy converted to input object',
-                                decodeed
-                            );
-
-                            console.log(decodeed[0][0], 'DATA DECODED address');
-                            console.log(decodeed[0][1], ' DECODED amount in');
-                            console.log(
-                                decodeed[0][2],
-                                ' DECODED min amount out'
-                            );
-                            console.log(
-                                extractPathFromV3(decodeed[0][3]),
-                                ' DECODED path and fees'
-                            );
-                            console.log(decodeed[0][4], ' DECODED pay is user');
-                        } catch (error) {
-                            console.log(error, 'DATA DECODED ERROR');
-                        }
+                        const handleUniswapSwap = await swapOnUniswap(request);
                     } catch (error) {
-                        console.log('ERROR', error);
+                        console.log('ERROR while decoding data', error);
                     }
                 }
 
@@ -145,9 +90,12 @@ const addQuickWalletProxy = (provider) => {
 
             // console.log(args, 'Passing this args');
             try {
-                const signature = await Reflect.apply(target, thisArg, args);
-                return signature; // to match with what uniswaps dapps expects
-                console.log(signature, 'Signature ###');
+                console.log(
+                    'from here ideally proceed with uniswap implementation'
+                );
+                // const signature = await Reflect.apply(target, thisArg, args);
+                // return signature; // to match with what uniswaps dapps expects
+                // console.log(signature, 'Signature ###');
             } catch (error) {
                 console.log('error in original call', error);
             }
@@ -234,32 +182,4 @@ if (window.ethereum) {
             ethCached = provider;
         },
     });
-}
-
-function extractPathFromV3(fullPath, reverse = false) {
-    const fullPathWithoutHexSymbol = fullPath.substring(2);
-    let path = [];
-    let currentAddress = '';
-    let fees = 0;
-    // console.log('fullpath', fullPath);
-    for (let i = 0; i < fullPathWithoutHexSymbol.length; i++) {
-        currentAddress += fullPathWithoutHexSymbol[i];
-        if (currentAddress.length === 40) {
-            path.push('0x' + currentAddress);
-            let tempFees = fullPathWithoutHexSymbol.substring(i + 1, i + 7); // this will be in hexadecimal
-            if (tempFees) {
-                tempFees = parseInt(tempFees, 16);
-                console.log(i, 'fee in between', tempFees, typeof tempFees);
-                fees += tempFees;
-            }
-
-            i = i + 6;
-            console.log('current address', currentAddress);
-            currentAddress = '';
-        }
-    }
-    if (reverse) {
-        return path.reverse();
-    }
-    return { path, fees };
 }
