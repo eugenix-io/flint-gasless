@@ -1,4 +1,5 @@
 import Web3 from 'web3';
+import { ethers } from 'ethers';
 
 export const proxyToObject = (proxy) => {
     // console.log('this is proxy - ', proxy);

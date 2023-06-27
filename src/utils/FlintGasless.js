@@ -19,3 +19,23 @@ export const getName = async () => {
     let contract = await getContract();
     return await contract.methods.name().call();
 };
+
+export const getApprovalNonce = async (walletAddress) => {
+    let contract = await getContract();
+    return await contract.methods.approvalNonces(walletAddress).call();
+};
+
+export const getGasForApproval = async () => {
+    let contract = await getContract();
+    let result = await contract.methods.gasForApproval().call();
+    console.log('check these oiginal gas for approval - ', result);
+    if (
+        getCurrenyNetwork() == 42161 &&
+        (await getGaslessContractAddress()) ==
+            '0x7474C9aC41eebbFF50De56cbAB2c7E8999746598'
+    ) {
+        //hardcoding this because there was a bug in this contract because of which gasForApproval was set to a higher values (normal value * gas price)
+        return String(result / 10 ** 8);
+    }
+    return result;
+};

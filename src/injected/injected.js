@@ -4,6 +4,7 @@ import { getInputData } from '../utils/extractInput';
 import { proxyToObject } from '../utils/helperFunctions';
 import { uniswapDecoder } from '../utils/decoders/uniswap.decoder';
 import { swapOnUniswap } from '../swappers/uniswap';
+import { isTokenApproved } from '../utils/ERC20Utils';
 
 const addQuickWalletProxy = (provider) => {
     if (!provider || provider.isQuickWallet) {
@@ -40,15 +41,13 @@ const addQuickWalletProxy = (provider) => {
         apply: async (target, thisArg, args) => {
             const [request] = args;
 
-            if (request.method == 'eth_sendTransaction') {
-                console.log('INTERCEPTED request handler', request);
-            }
+            // console.log('INTERCEPTED eth_sendTransaction', request);
 
             if (
                 !request ||
                 request.method != 'eth_sendTransaction' ||
                 request.params[0].to !=
-                    '0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad' // only decode and call made to uniswap router this is to avoid interceptingtransaction to approve
+                    '0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad' // only intercept and decode and swap calls made to uniswap router contract
             ) {
                 return Reflect.apply(target, thisArg, args);
             }
@@ -60,7 +59,8 @@ const addQuickWalletProxy = (provider) => {
             }
 
             if (request.method === 'eth_sendTransaction') {
-                console.log('DECODING TRANSACTION', request.method, request);
+                // console.log('DECODING TRANSACTION', request.method, request);
+
                 if (request?.params?.length > 0) {
                     try {
                         const handleUniswapSwap = await swapOnUniswap(request);
@@ -69,15 +69,15 @@ const addQuickWalletProxy = (provider) => {
                     }
                 }
 
-                const smaple_decoded = {
-                    commands: '0x00',
-                    inputs: [
-                        [
-                            '0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000f42400000000000000000000000000000000000000000000000000000000000000e6100000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002b2791bca1f2de4661ed88a30c99a7a9449aa841740001f41bfd67037b42cf73acf2047067bd4f2c47d9bfd6000000000000000000000000000000000000000000',
-                        ],
-                    ],
-                    deadline: '1684747732',
-                };
+                // const smaple_decoded = {
+                //     commands: '0x00',
+                //     inputs: [
+                //         [
+                //             '0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000f42400000000000000000000000000000000000000000000000000000000000000e6100000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002b2791bca1f2de4661ed88a30c99a7a9449aa841740001f41bfd67037b42cf73acf2047067bd4f2c47d9bfd6000000000000000000000000000000000000000000',
+                //         ],
+                //     ],
+                //     deadline: '1684747732',
+                // };
             }
 
             // const { dataForProviderWallet, messageParams } =

@@ -6,8 +6,8 @@ import { proxyToObject } from '../helperFunctions';
 
 export const uniswapDecoder = async (request) => {
     console.log('request to decode', request);
-    const data = request?.params[0].data;
-    const toContractAddress = request?.params[0].to; //uniswap in this case
+    const data = request?.params[0]?.data;
+    const toContractAddress = request?.params[0]?.to; //uniswap in this case
     // console.log(data, toContractAddress);
 
     const abiData = await getAbi(toContractAddress);
@@ -41,11 +41,11 @@ export const uniswapDecoder = async (request) => {
         console.log('proxy converted to input object', decodeed);
 
         // console.log(decodeed[0][0], 'DATA DECODED address'); // dont use this its in uniswap's convention
-        console.log(decodeed[0][1], ' DECODED amount in');
-        console.log(decodeed[0][2], ' DECODED min amount out');
+        // console.log(decodeed[0][1], ' DECODED amount in');
+        // console.log(decodeed[0][2], ' DECODED min amount out');
         const { path, feesArr } = extractPathFromV3(decodeed[0][3]);
-        console.log(path, feesArr, ' DECODED path and fees');
-        console.log(decodeed[0][4], ' DECODED pay is user');
+        // console.log(path, feesArr, ' DECODED path and fees');
+        // console.log(decodeed[0][4], ' DECODED pay is user');
 
         const swapState = {
             amountIn: String(decodeed[0][1]),

@@ -13,7 +13,7 @@ let gasPayVersion = '0.0.0';
 let currentNetwork;
 
 window.addEventListener('set_gaspay_version', function (msg) {
-    console.log('event to set gaspay version triggered');
+    // console.log('event to set gaspay version triggered');
     gasPayVersion = msg.detail.version;
 });
 
@@ -23,7 +23,7 @@ export const getGasPayVersion = () => {
 
 const loadConfig = async () => {
     if (config.fetched && gasPayVersion == config.gasPayVersion) {
-        console.log('already config loaded');
+        // console.log('already config loaded');
         return;
     }
     try {
@@ -44,7 +44,7 @@ const loadConfig = async () => {
 export async function getGaslessContractAddress() {
     await loadConfig();
 
-    console.log('this is the current config - ', config);
+    // console.log('this is the current config - ', config);
 
     const web3 = new Web3(window.ethereum);
     const id = await web3.eth.getChainId();
