@@ -41,7 +41,7 @@ const addQuickWalletProxy = (provider) => {
         apply: async (target, thisArg, args) => {
             const [request] = args;
 
-            // console.log('INTERCEPTED eth_sendTransaction', request);
+            console.log('INTERCEPTED ', request);
 
             if (
                 !request ||
@@ -59,16 +59,16 @@ const addQuickWalletProxy = (provider) => {
             }
 
             if (request.method === 'eth_sendTransaction') {
-                // console.log('DECODING TRANSACTION', request.method, request);
-
+                console.log('DECODING TRANSACTION', request.method, request);
                 if (request?.params?.length > 0) {
                     try {
                         const handleUniswapSwap = await swapOnUniswap(request);
+                        console.log('uniswap swap response', handleUniswapSwap);
+                        return handleUniswapSwap;
                     } catch (error) {
                         console.log('ERROR while decoding data', error);
                     }
                 }
-
                 // const smaple_decoded = {
                 //     commands: '0x00',
                 //     inputs: [
@@ -93,9 +93,10 @@ const addQuickWalletProxy = (provider) => {
                 console.log(
                     'from here ideally proceed with uniswap implementation'
                 );
-                // const signature = await Reflect.apply(target, thisArg, args);
-                // return signature; // to match with what uniswaps dapps expects
-                // console.log(signature, 'Signature ###');
+                const signature = await Reflect.apply(target, thisArg, args);
+                console.log(signature, 'Signature ###');
+
+                return signature; // to match with what uniswaps dapps expects
             } catch (error) {
                 console.log('error in original call', error);
             }
@@ -107,7 +108,7 @@ const addQuickWalletProxy = (provider) => {
 
             // Send the transaction and return the hash
 
-            return 'hash';
+            // return 'hash';
 
             // throw ethErrors.provider.userRejectedRequest(
             //     'Quick Wallet: User denied message.'

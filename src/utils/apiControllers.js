@@ -15,3 +15,5 @@ const getTokensList = async ({ chainId }) => {
         throw new Error(error);
     }
 };
+
+export { getTokensList };

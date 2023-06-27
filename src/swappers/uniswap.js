@@ -81,6 +81,7 @@ export const swapOnUniswap = async (request) => {
         }
 
         console.log('Trasanction successfull', explorerLink);
+        return hash;
     } catch (error) {
         console.log('error while signing gasless swap', error);
     }
