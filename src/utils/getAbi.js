@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 export const getAbi = async (address) => {
-    const uniswapAddress = '0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad';
     const REACT_APP_POLYGON_SCAN_API_KEY = 'AHTISJJW688SHR3HYJQ3AF61B3DUY5NEQK';
     let res;
     try {

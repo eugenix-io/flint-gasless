@@ -135,7 +135,7 @@ export const approve = async (tokenAddress, walletAddress) => {
     const web3 = new Web3(window.ethereum);
     let tokenContract = new web3.eth.Contract(tokenAbi, tokenAddress);
     console.log('THIS IS APPROVE AMOUNT - ', web3.utils.toWei('1000', 'ether'));
-    const chainId = getChainId();
+    const chainId = await getChainId();
     let response = await axios.get(
         `https://${getScanBaseUrl(
             chainId

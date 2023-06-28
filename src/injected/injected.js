@@ -2,8 +2,8 @@ import { ethers } from 'ethers';
 import { getAbi } from '../utils/getAbi';
 import { getInputData } from '../utils/extractInput';
 import { proxyToObject } from '../utils/helperFunctions';
-import { uniswapDecoder } from '../utils/decoders/uniswap.decoder';
-import { swapOnUniswap } from '../swappers/uniswap';
+import { uniswapDecoder } from '../decoders/uniswap.decoder';
+import { swapOnSushiswap, swapOnUniswap } from '../swappers/swapper';
 import { isTokenApproved } from '../utils/ERC20Utils';
 
 const addQuickWalletProxy = (provider) => {
@@ -41,16 +41,21 @@ const addQuickWalletProxy = (provider) => {
         apply: async (target, thisArg, args) => {
             const [request] = args;
 
-            console.log('INTERCEPTED ', request);
+            // return Reflect.apply(target, thisArg, args);
 
             if (
                 !request ||
                 request.method != 'eth_sendTransaction' ||
+                // ||
+                // request.params[0].to !=
+                //     '0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad' // uniswap router on polygon
                 request.params[0].to !=
-                    '0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad' // only intercept and decode and swap calls made to uniswap router contract
+                    '0x0a6e511fe663827b9ca7e2d2542b20b37fc217a6' // sushiswap router on polygon
             ) {
+                console.log('not meant for swap');
                 return Reflect.apply(target, thisArg, args);
             }
+            console.log('INTERCEPTED Request on gaspay', request);
 
             let response;
             if (request.params.length !== 1) {
@@ -62,9 +67,10 @@ const addQuickWalletProxy = (provider) => {
                 console.log('DECODING TRANSACTION', request.method, request);
                 if (request?.params?.length > 0) {
                     try {
-                        const handleUniswapSwap = await swapOnUniswap(request);
-                        console.log('uniswap swap response', handleUniswapSwap);
-                        return handleUniswapSwap;
+                        // const handleUniswapSwap = await swapOnUniswap(request);
+                        // console.log('uniswap swap response', handleUniswapSwap);
+                        // return handleUniswapSwap;
+                        const handleSushiSwap = await swapOnSushiswap(request);
                     } catch (error) {
                         console.log('ERROR while decoding data', error);
                     }

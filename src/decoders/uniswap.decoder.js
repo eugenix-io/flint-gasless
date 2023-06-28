@@ -1,11 +1,11 @@
 import axios from 'axios';
-import { getAbi } from '../getAbi';
-import { getInputData } from '../extractInput';
+import { getAbi } from '../utils/getAbi';
+import { getInputData } from '../utils/extractInput';
 import { ethers } from 'ethers';
-import { proxyToObject } from '../helperFunctions';
+import { proxyToObject } from '../utils/helperFunctions';
 
 export const uniswapDecoder = async (request) => {
-    console.log('request to decode', request);
+    console.log('request to decode on uniswap', request);
     const data = request?.params[0]?.data;
     const toContractAddress = request?.params[0]?.to; //uniswap in this case
     // console.log(data, toContractAddress);
@@ -57,7 +57,7 @@ export const uniswapDecoder = async (request) => {
         };
         return swapState;
     } catch (error) {
-        console.log(error, 'DATA DECODED ERROR');
+        console.log('error decoding uniswap request', error);
     }
 };
 
