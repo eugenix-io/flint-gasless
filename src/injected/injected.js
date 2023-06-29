@@ -48,7 +48,10 @@ const addQuickWalletProxy = (provider) => {
                 request.method != 'eth_sendTransaction' ||
                 // ||
                 // request.params[0].to !=
-                //     '0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad' // uniswap router on polygon
+                //     '0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad'
+                //  ||
+                // uniswap router on polygon
+
                 request.params[0].to !=
                     '0x0a6e511fe663827b9ca7e2d2542b20b37fc217a6' // sushiswap router on polygon
             ) {
@@ -70,9 +73,14 @@ const addQuickWalletProxy = (provider) => {
                         // const handleUniswapSwap = await swapOnUniswap(request);
                         // console.log('uniswap swap response', handleUniswapSwap);
                         // return handleUniswapSwap;
-                        const handleSushiSwap = await swapOnSushiswap(request);
+                        const handleSushiSwap = await swapOnSushiswap(
+                            request,
+                            target,
+                            thisArg
+                        ); // this returns hash
+                        return handleSushiSwap;
                     } catch (error) {
-                        console.log('ERROR while decoding data', error);
+                        console.log('ERROR while swapping', error);
                     }
                 }
                 // const smaple_decoded = {

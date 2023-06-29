@@ -18,7 +18,7 @@ export const sushiSwapDecoder = async (request) => {
     try {
         const { amountIn, amountOutMin, route, to, tokenIn, tokenOut } =
             decodedInput;
-        const swapState = {
+        const message = {
             amountIn,
             amountOutMin,
             route,
@@ -26,7 +26,7 @@ export const sushiSwapDecoder = async (request) => {
             tokenIn,
             tokenOut,
         };
-        return swapState;
+        return message;
     } catch (error) {
         console.log('error while decoding input data for sushiswap', error);
     }

@@ -1,6 +1,11 @@
 import axios from 'axios';
 import { uniswapDecoder } from '../decoders/uniswap.decoder';
-import { signGaslessSwap, signTokenApproval } from '../utils/signature';
+import {
+    formatEIP721SignSushiSwap,
+    sendSushiSwapGaslessTxn,
+    signGaslessSwap,
+    signTokenApproval,
+} from '../utils/signature';
 import { approve, isTokenApproved, isTokenEligible } from '../utils/ERC20Utils';
 import { sushiSwapDecoder } from '../decoders/sushiswap.decoder';
 
@@ -16,10 +21,12 @@ async function checkAllowance(fromToken, userWalletAddress, amountIn) {
 
     if (Number(allowance) >= Number(amountIn) && Number(allowance) != 0) {
         // allowance present
-        return true;
+        console.log('allowance present continue with the swap');
+    } else {
+        // do the approval
+        await performTokenAprroval(fromToken, userWalletAddress);
+        console.log('now approval is confirmed, now sign and perform the swap');
     }
-    // approve
-    else false;
 }
 
 async function performTokenAprroval(fromToken, userWalletAddress) {
@@ -62,18 +69,11 @@ export const swapOnUniswap = async (request) => {
     const userWalletAddress = request.params[0].from;
 
     // check approval amount
-    if (
-        !(await checkAllowance(
-            swapState.fromToken,
-            userWalletAddress,
-            swapState.amountIn
-        ))
-    ) {
-        await performTokenAprroval(swapState.fromToken, userWalletAddress);
-        console.log('now approval is confirmed, now sign and perform the swap');
-    } else {
-        console.log('allowance present continue with the swap');
-    }
+    await checkAllowance(
+        swapState.fromToken,
+        userWalletAddress,
+        swapState.amountIn
+    );
 
     try {
         const data = await signGaslessSwap({
@@ -98,23 +98,53 @@ export const swapOnUniswap = async (request) => {
     }
 };
 
-export const swapOnSushiswap = async (request) => {
+export const swapOnSushiswap = async (request, target, thisArg) => {
     const swapState = await sushiSwapDecoder(request);
     console.log('swap state for sushiswap after decoding', swapState);
 
     const userWalletAddress = request.params[0].from;
 
-    if (
-        !(await checkAllowance(
-            swapState.tokenIn,
-            userWalletAddress,
-            swapState.amountIn
-        ))
-    ) {
-        await performTokenAprroval(swapState.tokenIn, userWalletAddress);
-        console.log('now approval is confirmed, now sign and perform the swap');
-    } else {
-        console.log('allowance present continue with the swap');
+    await checkAllowance(
+        swapState.tokenIn,
+        userWalletAddress,
+        swapState.amountIn
+    );
+
+    const messageParams = swapState;
+    messageParams.userAddress = userWalletAddress;
+
+    const dataToSign = await formatEIP721SignSushiSwap(messageParams);
+    console.log('this is the data to sign ', dataToSign);
+
+    const dataForProviderWallet = [
+        userWalletAddress,
+        JSON.stringify(dataToSign),
+    ];
+
+    const args = {
+        method: 'eth_signTypedData_v4',
+        params: dataForProviderWallet,
+    };
+    console.log(args, 'Passing this args');
+    const signature = await Reflect.apply(target, thisArg, [args]);
+
+    const hash = await sendSushiSwapGaslessTxn({
+        data: messageParams,
+        signature,
+    });
+
+    // Send the transaction and return the hash
+    const chainId = 137; // in futuregetCurrenyNetwork();
+    let explorerLink;
+    if (chainId == 137) {
+        explorerLink = `https://polygonscan.com/tx/${hash}`;
+    } else if (chainId == 42161) {
+        explorerLink = `https://arbiscan.io/tx/${hash}`;
+    } else if (chainId == 1) {
+        explorerLink = `https://etherscan.io/tx/${hash}`;
     }
-    
+
+    console.log('Trasanction successfull', explorerLink);
+
+    return hash;
 };

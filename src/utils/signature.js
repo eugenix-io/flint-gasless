@@ -6,7 +6,7 @@ import {
     getGasPayVersion,
     getGaslessContractAddress,
 } from '../injected/store/store';
-import { getSignature } from './helperFunctions';
+import { getSignature, getSignatureParameters } from './helperFunctions';
 import * as ERC20Utils from './ERC20Utils';
 import ERC20Abi from '../abis/ERC20.json';
 import { getTokensList } from './apiControllers';
@@ -480,3 +480,84 @@ export async function getChainId() {
     let network = await provider.getNetwork();
     return parseInt(network.chainId);
 }
+
+const SwapOnSushiParams = [
+    { type: 'address', name: 'tokenIn' },
+    { type: 'uint', name: 'amountIn' },
+    { type: 'address', name: 'tokenOut' },
+    { type: 'uint', name: 'amountOutMin' },
+    { type: 'address', name: 'to' },
+    { type: 'uint', name: 'nonce' },
+    { type: 'bytes', name: 'route' },
+];
+
+export const formatEIP721SignSushiSwap = async (messagePayload) => {
+    const chainId = await getChainId();
+    const salt = await Web3.utils.padLeft(`0x${chainId.toString(16)}`, 64);
+    let NONCE;
+    try {
+        NONCE = await FlintGasless.getNonce(messagePayload.userAddress);
+        console.log('nonce for sushi swap is', NONCE);
+    } catch (error) {
+        console.log('failed to get Nonce', error);
+    }
+    messagePayload.nonce = NONCE;
+    const dataToSign = {
+        types: {
+            EIP712Domain: GASPAY_DOMAIN_TYPES,
+            SwapGaslessSushiSwapFlint: SwapOnSushiParams,
+        },
+        domain: {
+            name: await FlintGasless.getName(),
+            version: '1',
+            verifyingContract: await getGaslessContractAddress(),
+            salt,
+        },
+        primaryType: 'SwapGaslessSushiSwapFlint',
+        message: messagePayload,
+    };
+
+    return dataToSign;
+};
+
+export const sendSushiSwapGaslessTxn = async ({ data, signature }) => {
+    const { r, s, v } = getSignatureParameters(signature);
+
+    console.log(r, s, v, 'RSV params for sushiswap');
+
+    data.isNative = false; // ASK: why this
+    data.sigR = r;
+    data.sigV = v;
+    data.sigS = s;
+    const chainId = Number(await getChainId());
+
+    console.log('calling backend with the data', data, chainId);
+    let resp;
+    try {
+        resp = await axios.post(
+            `${process.env.REACT_APP_BACKEND_BASE_URL}/v1/swap/swap-sushi`,
+            {
+                params: {
+                    ...data,
+                },
+                version: await getGasPayVersion(),
+                chainId,
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+        console.log('response from server', resp);
+    } catch (error) {
+        console.log('failed to call sushi swap backend', error);
+    }
+
+    const respData = resp.data;
+    console.log(respData, 'Response from transaction $###');
+
+    const { txHash } = respData;
+
+    return txHash;
+};
