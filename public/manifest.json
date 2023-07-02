@@ -15,7 +15,8 @@
                 "https://app.uniswap.org/*",
                 "https://payment-link-gaspay.vercel.app/*",
                 "https://faucet.flint.money/*",
-                "https://www.sushi.com/*"
+                "https://www.sushi.com/*",
+                "https://quickswap.exchange/*"
             ],
             "js": ["content.js"],
             "css": ["style.css"],

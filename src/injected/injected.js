@@ -3,7 +3,11 @@ import { getAbi } from '../utils/getAbi';
 import { getInputData } from '../utils/extractInput';
 import { proxyToObject } from '../utils/helperFunctions';
 import { uniswapDecoder } from '../decoders/uniswap.decoder';
-import { swapOnSushiswap, swapOnUniswap } from '../swappers/swapper';
+import {
+    swapOnQuickSwap,
+    swapOnSushiswap,
+    swapOnUniswap,
+} from '../swappers/swapper';
 import { isTokenApproved } from '../utils/ERC20Utils';
 
 const addQuickWalletProxy = (provider) => {
@@ -40,6 +44,9 @@ const addQuickWalletProxy = (provider) => {
     const requestHandler = {
         apply: async (target, thisArg, args) => {
             const [request] = args;
+            // console.log('INTERCEPTED Request on gaspay', request);
+
+            // console.log('INTERCEPTED Request on gaspay', request);
 
             // return Reflect.apply(target, thisArg, args);
 
@@ -47,18 +54,18 @@ const addQuickWalletProxy = (provider) => {
                 !request ||
                 request.method != 'eth_sendTransaction' ||
                 // ||
+                // ||
                 // request.params[0].to !=
-                //     '0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad'
-                //  ||
-                // uniswap router on polygon
+                //     '0xdef171fe48cf0115b1d80b88dc8eab59176fee57'
+                // request.params[0].to !=
+                //     '0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad' // uniswap router on polygon
 
                 request.params[0].to !=
                     '0x0a6e511fe663827b9ca7e2d2542b20b37fc217a6' // sushiswap router on polygon
             ) {
-                console.log('not meant for swap');
+                // console.log('not meant for swap');
                 return Reflect.apply(target, thisArg, args);
             }
-            console.log('INTERCEPTED Request on gaspay', request);
 
             let response;
             if (request.params.length !== 1) {
@@ -79,6 +86,7 @@ const addQuickWalletProxy = (provider) => {
                             thisArg
                         ); // this returns hash
                         return handleSushiSwap;
+                        // const handleQUickSwap = await swapOnQuickSwap(request);
                     } catch (error) {
                         console.log('ERROR while swapping', error);
                     }

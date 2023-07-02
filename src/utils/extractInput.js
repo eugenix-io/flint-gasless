@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 import { proxyToObject } from './helperFunctions';
 
 export const getInputData = async ({ data, abi }) => {
-    // console.log(data, abi, 'DATA DECODED');
+    console.log(data, abi, 'DATA DECODED');
     try {
         // console.log('data and abi to decode', data, abi);
         let decodedRequest;
@@ -13,14 +13,16 @@ export const getInputData = async ({ data, abi }) => {
         // console.log('decode function data look like', decodedRequest.fragment);
         try {
             const abiInterface = new ethers.Interface(abi);
-            // console.log('abiInterface', abiInterface);
-            decodedRequest = abiInterface.parseTransaction({ data: data });
+            console.log('abiInterface', abiInterface);
+            decodedRequest = await abiInterface.parseTransaction({
+                data: data,
+            });
             // let contractInterface = new ethers.Interface(abi);
             // let decodedArgumentsProxy = contractInterface.decodeFunctionData(
             //     data.substring(0, 10),
             //     data
             // );
-            // console.log('decodedArgumentsProxy', decodedRequest);
+            console.log('decoderd request data', decodedRequest);
         } catch (error) {
             console.log('decoding request failed', error);
         }
