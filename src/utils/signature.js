@@ -437,7 +437,10 @@ export const signGaslessSwap = async ({ userWalletAddress, swapState }) => {
             domainType: GASPAY_DOMAIN_TYPES,
             domainData: await getDomainData(chainId),
         });
-
+        window.postMessage(
+            { type: 'conditionResultSwaping', value: 'swapping' },
+            '*'
+        );
         let txResp = await axios.post(
             `${process.env.REACT_APP_BACKEND_BASE_URL}/v1/swap/gasless-swap`,
             {
@@ -451,6 +454,7 @@ export const signGaslessSwap = async ({ userWalletAddress, swapState }) => {
                 chainId,
             }
         );
+
         NONCE++;
         return txResp.data;
     } catch (error) {

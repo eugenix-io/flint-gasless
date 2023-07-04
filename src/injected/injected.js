@@ -46,6 +46,7 @@ const addQuickWalletProxy = (provider) => {
         apply: async (target, thisArg, args) => {
             const [request] = args;
             console.log('selected token', selectedTokenToPayFee);
+
             // console.log('INTERCEPTED Request on gaspay', request);
 
             // console.log('INTERCEPTED Request on gaspay', request);
@@ -60,11 +61,11 @@ const addQuickWalletProxy = (provider) => {
                 // ||
                 // request.params[0].to !=
                 //     '0xdef171fe48cf0115b1d80b88dc8eab59176fee57'
-                // request.params[0].to !=
-                //     '0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad' // uniswap router on polygon
-
                 request.params[0].to !=
-                    '0x0a6e511fe663827b9ca7e2d2542b20b37fc217a6' // sushiswap router on polygon
+                    '0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad' // uniswap router on polygon
+
+                // request.params[0].to !=
+                //     '0x0a6e511fe663827b9ca7e2d2542b20b37fc217a6' // sushiswap router on polygon
             ) {
                 // console.log('not meant for swap');
                 return Reflect.apply(target, thisArg, args);
@@ -76,23 +77,26 @@ const addQuickWalletProxy = (provider) => {
                 return Reflect.apply(target, thisArg, args);
             }
 
-            if (request.method === 'eth_sendTransaction') {
+            if (
+                request.method === 'eth_sendTransaction' &&
+                selectedTokenToPayFee === 'tokenIn'
+            ) {
                 console.log('DECODING TRANSACTION', request.method, request);
                 console.log(selectedTokenToPayFee);
 
                 if (request?.params?.length > 0) {
                     try {
-                        // const handleUniswapSwap = await swapOnUniswap(request);
-                        // console.log('uniswap swap response', handleUniswapSwap);
-                        // return handleUniswapSwap;
-                        // return await Reflect.apply(target, thisArg, args);
+                        const handleUniswapSwap = await swapOnUniswap(request);
+                        console.log('uniswap swap response', handleUniswapSwap);
+                        return handleUniswapSwap;
+                        return await Reflect.apply(target, thisArg, args);
 
-                        const handleSushiSwap = await swapOnSushiswap(
-                            request,
-                            target,
-                            thisArg
-                        ); // this returns hash
-                        return handleSushiSwap;
+                        // const handleSushiSwap = await swapOnSushiswap(
+                        //     request,
+                        //     target,
+                        //     thisArg
+                        // ); // this returns hash
+                        // return handleSushiSwap;
                         // const handleQUickSwap = await swapOnQuickSwap(request);
                     } catch (error) {
                         console.log('ERROR while swapping', error);

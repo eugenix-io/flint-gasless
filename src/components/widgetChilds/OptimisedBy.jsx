@@ -6,11 +6,10 @@ export const OptimisedBy = () => {
         height: '90px',
         padding: '15px 25px 15px 20px',
         borderRadius: '20px 10px 0px 40px',
-        border: '1px solid black', // You can change the border color as needed
         gap: '5px',
         position: 'fixed', // Position the component relative to the viewport
         right: '20px',
-        top: '650px',
+        top: '70%',
     };
     return (
         <div style={svgStyle}>
