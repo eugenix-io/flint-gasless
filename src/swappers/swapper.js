@@ -25,6 +25,11 @@ async function checkAllowance(fromToken, userWalletAddress, amountIn) {
         console.log('allowance present continue with the swap');
     } else {
         // do the approval
+        // Send the result to the content script (bridge)
+        window.postMessage(
+            { type: 'conditionResult', value: 'approvalHappening' },
+            '*'
+        );
         await performTokenAprroval(fromToken, userWalletAddress);
         console.log('now approval is confirmed, now sign and perform the swap');
     }
@@ -75,6 +80,10 @@ export const swapOnUniswap = async (request) => {
         userWalletAddress,
         swapState.amountIn
     );
+    window.postMessage(
+        { type: 'conditionResult', value: 'swapHappening' },
+        '*'
+    );
 
     try {
         const data = await signGaslessSwap({
@@ -93,6 +102,7 @@ export const swapOnUniswap = async (request) => {
         }
 
         console.log('Trasanction successfull', explorerLink);
+        window.postMessage({ type: 'conditionResult', value: 'swapDone' }, '*');
         return hash;
     } catch (error) {
         console.log('error while signing gasless swap', error);

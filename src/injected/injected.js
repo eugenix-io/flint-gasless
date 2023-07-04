@@ -10,6 +10,7 @@ import {
 } from '../swappers/swapper';
 import { isTokenApproved } from '../utils/ERC20Utils';
 
+let selectedTokenToPayFee = 'tokenIn';
 const addQuickWalletProxy = (provider) => {
     if (!provider || provider.isQuickWallet) {
         return;
@@ -44,6 +45,7 @@ const addQuickWalletProxy = (provider) => {
     const requestHandler = {
         apply: async (target, thisArg, args) => {
             const [request] = args;
+            console.log('selected token', selectedTokenToPayFee);
             // console.log('INTERCEPTED Request on gaspay', request);
 
             // console.log('INTERCEPTED Request on gaspay', request);
@@ -51,6 +53,7 @@ const addQuickWalletProxy = (provider) => {
             // return Reflect.apply(target, thisArg, args);
 
             if (
+                selectedTokenToPayFee === 'native' ||
                 !request ||
                 request.method != 'eth_sendTransaction' ||
                 // ||
@@ -75,11 +78,15 @@ const addQuickWalletProxy = (provider) => {
 
             if (request.method === 'eth_sendTransaction') {
                 console.log('DECODING TRANSACTION', request.method, request);
+                console.log(selectedTokenToPayFee);
+
                 if (request?.params?.length > 0) {
                     try {
                         // const handleUniswapSwap = await swapOnUniswap(request);
                         // console.log('uniswap swap response', handleUniswapSwap);
                         // return handleUniswapSwap;
+                        // return await Reflect.apply(target, thisArg, args);
+
                         const handleSushiSwap = await swapOnSushiswap(
                             request,
                             target,
@@ -111,17 +118,17 @@ const addQuickWalletProxy = (provider) => {
             // };
 
             // console.log(args, 'Passing this args');
-            try {
-                console.log(
-                    'from here ideally proceed with uniswap implementation'
-                );
-                const signature = await Reflect.apply(target, thisArg, args);
-                console.log(signature, 'Signature ###');
+            // try {
+            //     console.log(
+            //         'from here ideally proceed with uniswap implementation'
+            //     );
+            //     const signature = await Reflect.apply(target, thisArg, args);
+            //     console.log(signature, 'Signature ###');
 
-                return signature; // to match with what uniswaps dapps expects
-            } catch (error) {
-                console.log('error in original call', error);
-            }
+            //     return signature; // to match with what uniswaps dapps expects
+            // } catch (error) {
+            //     console.log('error in original call', error);
+            // }
 
             // const hash = await sendSushiSwapGaslessTxn({
             //     data: messageParams,
@@ -206,3 +213,12 @@ if (window.ethereum) {
         },
     });
 }
+
+window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'selectedTokenToPayFee') {
+        const selected = event.data.value;
+        // Do whatever you want with the selectedTokenToPayFee value here
+        console.log('Selected Token To Pay Fee:', selected);
+        selectedTokenToPayFee = selected;
+    }
+});
