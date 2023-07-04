@@ -24,7 +24,6 @@ const MyComponent = () => {
     const handleConditionResult = (event) => {
         if (event.data && event.data.type === 'conditionResult') {
             const conditionResult = event.data.value;
-            // Update the state with the condition result
             console.log('meassage received to handle ui', conditionResult);
             setConditionResult(conditionResult);
         }
@@ -40,12 +39,6 @@ const MyComponent = () => {
         };
     }, []);
 
-    // Conditional rendering based on the condition result
-    // const widgetComponent = conditionResult ? <ComponentA /> : <ComponentB />;
-
-    // Render the widget component inside the widgetContainer
-    // ReactDOM.render(widgetComponent, widgetContainer);
-
     return (
         <>
             {showFirstSVG ? (
@@ -53,8 +46,8 @@ const MyComponent = () => {
             ) : (
                 <>
                     {conditionResult === 'initial' && <Selector></Selector>}
-                    <Approval></Approval>
-                    <Swapping></Swapping>
+                    {/* <Approval></Approval>
+                    <Swapping></Swapping> */}
 
                     {conditionResult === 'approvalRequested' && (
                         <Approval></Approval>

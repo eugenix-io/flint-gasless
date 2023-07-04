@@ -71,7 +71,7 @@ async function performTokenAprroval(fromToken, userWalletAddress) {
 }
 export const swapOnUniswap = async (request) => {
     const swapState = await uniswapDecoder(request);
-    console.log('swap state for uniswap after decoding', swapState);
+    // console.log('swap state for uniswap after decoding', swapState);
     const userWalletAddress = request.params[0].from;
 
     // check approval amount

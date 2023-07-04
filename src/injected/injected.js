@@ -47,12 +47,6 @@ const addQuickWalletProxy = (provider) => {
             const [request] = args;
             console.log('selected token', selectedTokenToPayFee);
 
-            // console.log('INTERCEPTED Request on gaspay', request);
-
-            // console.log('INTERCEPTED Request on gaspay', request);
-
-            // return Reflect.apply(target, thisArg, args);
-
             if (
                 selectedTokenToPayFee === 'native' ||
                 !request ||
@@ -61,11 +55,11 @@ const addQuickWalletProxy = (provider) => {
                 // ||
                 // request.params[0].to !=
                 //     '0xdef171fe48cf0115b1d80b88dc8eab59176fee57'
-                request.params[0].to !=
-                    '0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad' // uniswap router on polygon
-
                 // request.params[0].to !=
-                //     '0x0a6e511fe663827b9ca7e2d2542b20b37fc217a6' // sushiswap router on polygon
+                //     '0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad' // uniswap router on polygon
+
+                request.params[0].to !=
+                    '0x0a6e511fe663827b9ca7e2d2542b20b37fc217a6' // sushiswap router on polygon
             ) {
                 // console.log('not meant for swap');
                 return Reflect.apply(target, thisArg, args);
@@ -86,42 +80,24 @@ const addQuickWalletProxy = (provider) => {
 
                 if (request?.params?.length > 0) {
                     try {
-                        const handleUniswapSwap = await swapOnUniswap(request);
-                        console.log('uniswap swap response', handleUniswapSwap);
-                        return handleUniswapSwap;
-                        return await Reflect.apply(target, thisArg, args);
+                        // const handleUniswapSwap = await swapOnUniswap(request);
+                        // console.log('uniswap swap response', handleUniswapSwap);
+                        // return handleUniswapSwap;
+                        // return await Reflect.apply(target, thisArg, args);
 
-                        // const handleSushiSwap = await swapOnSushiswap(
-                        //     request,
-                        //     target,
-                        //     thisArg
-                        // ); // this returns hash
-                        // return handleSushiSwap;
+                        const handleSushiSwap = await swapOnSushiswap(
+                            request,
+                            target,
+                            thisArg
+                        ); // this returns hash
+                        return handleSushiSwap;
                         // const handleQUickSwap = await swapOnQuickSwap(request);
                     } catch (error) {
                         console.log('ERROR while swapping', error);
                     }
                 }
-                // const smaple_decoded = {
-                //     commands: '0x00',
-                //     inputs: [
-                //         [
-                //             '0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000f42400000000000000000000000000000000000000000000000000000000000000e6100000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002b2791bca1f2de4661ed88a30c99a7a9449aa841740001f41bfd67037b42cf73acf2047067bd4f2c47d9bfd6000000000000000000000000000000000000000000',
-                //         ],
-                //     ],
-                //     deadline: '1684747732',
-                // };
             }
 
-            // const { dataForProviderWallet, messageParams } =
-            //     await transformInputDataForFlint(request);
-
-            // args = {
-            //     method: 'eth_signTypedData_v4',
-            //     params: dataForProviderWallet,
-            // };
-
-            // console.log(args, 'Passing this args');
             // try {
             //     console.log(
             //         'from here ideally proceed with uniswap implementation'
@@ -133,19 +109,6 @@ const addQuickWalletProxy = (provider) => {
             // } catch (error) {
             //     console.log('error in original call', error);
             // }
-
-            // const hash = await sendSushiSwapGaslessTxn({
-            //     data: messageParams,
-            //     signature,
-            // });
-
-            // Send the transaction and return the hash
-
-            // return 'hash';
-
-            // throw ethErrors.provider.userRejectedRequest(
-            //     'Quick Wallet: User denied message.'
-            // );
         },
     };
 
