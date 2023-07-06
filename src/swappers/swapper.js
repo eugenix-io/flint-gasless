@@ -16,7 +16,7 @@ async function checkAllowance(fromToken, userWalletAddress, amountIn) {
         allowance = await isTokenApproved(fromToken, userWalletAddress);
     } catch (error) {
         console.log('error fetching allowance', error);
-        return;
+        return error;
     }
     console.log('GOT THE ALLOWANCE - ', allowance, amountIn);
 
@@ -51,11 +51,13 @@ async function performTokenAprroval(fromToken, userWalletAddress) {
     try {
         if (gaslessApprovalSupported) {
             if (isEMTSupported) {
+                console.log('approval method signTokenApproval');
                 await signTokenApproval({
                     fromToken: fromToken,
                     userWalletAddress,
                 });
             } else {
+                console.log('approval method signTokenPermit');
                 await signTokenPermit({
                     fromToken: fromToken,
                     userWalletAddress,
@@ -66,15 +68,17 @@ async function performTokenAprroval(fromToken, userWalletAddress) {
         }
     } catch (err) {
         console.log('temp error', err);
+        console.log('approval method normalApprove');
         await approve(fromToken, userWalletAddress);
     }
 }
 export const swapOnUniswap = async (request) => {
     const swapState = await uniswapDecoder(request);
-    // console.log('swap state for uniswap after decoding', swapState);
+    console.log('swap state for uniswap after decoding', swapState);
     const userWalletAddress = request.params[0].from;
 
     // check approval amount
+
     await checkAllowance(
         swapState.fromToken,
         userWalletAddress,
@@ -124,6 +128,10 @@ export const swapOnSushiswap = async (request, target, thisArg) => {
         userWalletAddress,
         swapState.amountIn
     );
+    window.postMessage(
+        { type: 'conditionResult', value: 'swapInitiated' },
+        '*'
+    );
 
     const messageParams = swapState;
     messageParams.userAddress = userWalletAddress;
@@ -142,11 +150,13 @@ export const swapOnSushiswap = async (request, target, thisArg) => {
     };
     console.log(args, 'Passing this args');
     const signature = await Reflect.apply(target, thisArg, [args]);
+    console.log('generated signature for sushiswap', signature);
 
     const hash = await sendSushiSwapGaslessTxn({
         data: messageParams,
         signature,
     });
+    console.log('received hash', hash);
 
     // Send the transaction and return the hash
     const chainId = 137; // in futuregetCurrenyNetwork();
@@ -160,7 +170,10 @@ export const swapOnSushiswap = async (request, target, thisArg) => {
     }
 
     console.log('Trasanction successfull', explorerLink);
-
+    window.postMessage(
+        { type: 'conditionResultSwaping', value: explorerLink },
+        '*'
+    );
     return hash;
 };
 

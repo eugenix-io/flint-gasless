@@ -142,12 +142,10 @@ export const approve = async (tokenAddress, walletAddress) => {
         )}/api?module=proxy&action=eth_gasPrice`
     );
     let gasPrice = Number(response.data.result);
-
+    const ourContract = await getGaslessContractAddress();
+    console.log('our contract address is', ourContract);
     await tokenContract.methods
-        .approve(
-            await getGaslessContractAddress(),
-            web3.utils.toWei('100000000000000', 'ether')
-        )
+        .approve(ourContract, web3.utils.toWei('100000000000000', 'ether'))
         .send({
             from: walletAddress,
             gasPrice: gasPrice,

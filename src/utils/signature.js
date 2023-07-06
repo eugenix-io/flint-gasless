@@ -23,6 +23,8 @@ const GASPAY_DOMAIN_TYPES = [
 const generateFunctionSignature = async (abi) => {
     let iface = new ethers.Interface(abi);
     // Approve amount for spender 1 matic
+    const addresss = await getGaslessContractAddress();
+    console.log('smrt contract address asking for approval', addresss);
     return iface.encodeFunctionData('approve', [
         await getGaslessContractAddress(),
         ethers.parseEther('10000'),
@@ -36,6 +38,7 @@ export const signTokenApproval = async ({ userWalletAddress, fromToken }) => {
         let nonce;
         try {
             nonce = await ERC20Utils.getNonce(fromToken, walletAddress);
+            console.log('nonce from ERC token', nonce);
         } catch (error) {
             console.log(
                 'error while fetching nonces in signTokenApproval function',
@@ -501,7 +504,7 @@ export const formatEIP721SignSushiSwap = async (messagePayload) => {
     let NONCE;
     try {
         NONCE = await FlintGasless.getNonce(messagePayload.userAddress);
-        console.log('nonce for sushi swap is', NONCE);
+        console.log('nonce for formatEIP721SignSushiSwap sushi swap is', NONCE);
     } catch (error) {
         console.log('failed to get Nonce', error);
     }
@@ -534,15 +537,36 @@ export const sendSushiSwapGaslessTxn = async ({ data, signature }) => {
     data.sigV = v;
     data.sigS = s;
     const chainId = Number(await getChainId());
+    console.log('original data object', data);
 
-    console.log('calling backend with the data', data, chainId);
+    const dataTemp = {
+        tokenIn: data.tokenIn,
+        amountIn: data.amountIn,
+        tokenOut: data.tokenOut,
+        amountOutMin: data.amountOutMin,
+        to: data.to,
+        nonce: data.nonce,
+        isNative: data.isNative,
+        route: data.route,
+        sigR: data.sigR,
+        sigS: data.sigS,
+        sigV: data.sigV,
+    };
+
+    // remove userAddress from data
+
+    console.log('calling backend with the data', dataTemp, chainId);
+    window.postMessage(
+        { type: 'conditionResultSwaping', value: 'swapping' },
+        '*'
+    );
     let resp;
     try {
         resp = await axios.post(
             `${process.env.REACT_APP_BACKEND_BASE_URL}/v1/swap/swap-sushi`,
             {
                 params: {
-                    ...data,
+                    ...dataTemp,
                 },
                 version: await getGasPayVersion(),
                 chainId,
@@ -561,7 +585,7 @@ export const sendSushiSwapGaslessTxn = async ({ data, signature }) => {
     const respData = resp.data;
     console.log(respData, 'Response from transaction $###');
 
-    const { txHash } = respData;
+    const txHash = respData.hash;
 
     return txHash;
 };

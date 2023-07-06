@@ -36,14 +36,4 @@ browser.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
     }
 });
 
-function injectWidget() {
-    const widgetContainer = document.createElement('div');
-    widgetContainer.id = 'myExtensionWidget';
-    document.body.appendChild(widgetContainer);
 
-    ReactDOM.render(<MyComponent />, widgetContainer);
-}
-
-// Inject the widget when the DOM is ready
-document.addEventListener('DOMContentLoaded', injectWidget);
-// injectWidget();

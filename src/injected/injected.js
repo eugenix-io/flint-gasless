@@ -1,8 +1,7 @@
-import { ethers } from 'ethers';
-import { getAbi } from '../utils/getAbi';
-import { getInputData } from '../utils/extractInput';
-import { proxyToObject } from '../utils/helperFunctions';
-import { uniswapDecoder } from '../decoders/uniswap.decoder';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import MyComponent from '../components/Widget.jsx';
+
 import {
     swapOnQuickSwap,
     swapOnSushiswap,
@@ -11,6 +10,8 @@ import {
 import { isTokenApproved } from '../utils/ERC20Utils';
 
 let selectedTokenToPayFee = 'tokenIn';
+var currentURL = window.location.href;
+
 const addQuickWalletProxy = (provider) => {
     if (!provider || provider.isQuickWallet) {
         return;
@@ -45,57 +46,74 @@ const addQuickWalletProxy = (provider) => {
     const requestHandler = {
         apply: async (target, thisArg, args) => {
             const [request] = args;
+            if (
+                !request ||
+                request?.method != 'eth_sendTransaction' ||
+                request?.params?.length !== 1
+            ) {
+                return await Reflect.apply(target, thisArg, args);
+            }
             console.log('selected token', selectedTokenToPayFee);
+            console.log('intercepted request', request);
 
+            let targetAddress = request?.params[0].to;
+            console.log('targetAddress is', targetAddress);
+            let targetDex;
+            switch (targetAddress) {
+                case '0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad':
+                    console.log('uniswap deteced');
+                    targetDex = 'uniswap';
+                    break;
+                case '0x0a6e511fe663827b9ca7e2d2542b20b37fc217a6':
+                    console.log('sushiswap deteced');
+                    targetDex = 'sushiswap';
+                    break;
+                default:
+                    targetDex = null;
+            }
+            if (targetDex == null) {
+                console.log('null found hence returning');
+                return await Reflect.apply(target, thisArg, args);
+            }
+            console.log('reached here', targetDex);
             if (
                 selectedTokenToPayFee === 'native' ||
-                !request ||
-                request.method != 'eth_sendTransaction' ||
-                // ||
-                // ||
-                // request.params[0].to !=
-                //     '0xdef171fe48cf0115b1d80b88dc8eab59176fee57'
-                // request.params[0].to !=
-                //     '0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad' // uniswap router on polygon
-
-                request.params[0].to !=
-                    '0x0a6e511fe663827b9ca7e2d2542b20b37fc217a6' // sushiswap router on polygon
+                selectedTokenToPayFee === 'native' // does not want to use input token for fees/ do not want to use gaspay
             ) {
-                // console.log('not meant for swap');
+                console.log('not meant for us returning');
                 return Reflect.apply(target, thisArg, args);
             }
 
             let response;
-            if (request.params.length !== 1) {
-                // Forward the request anyway.
-                return Reflect.apply(target, thisArg, args);
-            }
 
-            if (
-                request.method === 'eth_sendTransaction' &&
-                selectedTokenToPayFee === 'tokenIn'
-            ) {
-                console.log('DECODING TRANSACTION', request.method, request);
-                console.log(selectedTokenToPayFee);
+            console.log('DECODING TRANSACTION', request.method, request);
+            console.log(selectedTokenToPayFee);
 
-                if (request?.params?.length > 0) {
-                    try {
-                        // const handleUniswapSwap = await swapOnUniswap(request);
-                        // console.log('uniswap swap response', handleUniswapSwap);
-                        // return handleUniswapSwap;
-                        // return await Reflect.apply(target, thisArg, args);
-
-                        const handleSushiSwap = await swapOnSushiswap(
-                            request,
-                            target,
-                            thisArg
-                        ); // this returns hash
-                        return handleSushiSwap;
-                        // const handleQUickSwap = await swapOnQuickSwap(request);
-                    } catch (error) {
-                        console.log('ERROR while swapping', error);
-                    }
+            try {
+                if (targetDex === 'uniswap') {
+                    const handleUniswapSwap = await swapOnUniswap(request);
+                    console.log('uniswap swap response', handleUniswapSwap);
+                    return handleUniswapSwap;
+                } else if (targetDex === 'sushiswap') {
+                    const handleSushiSwap = await swapOnSushiswap(
+                        request,
+                        target,
+                        thisArg
+                    ); // this returns hash
+                    return handleSushiSwap;
                 }
+                // do the same for quickswap
+                // const handleQUickSwap = await swapOnQuickSwap(request);
+            } catch (error) {
+                console.log(
+                    'ERROR while swapping through gaspay processing with default swap',
+                    error
+                );
+
+                const signature = await Reflect.apply(target, thisArg, args);
+                console.log(signature, 'Signature ###');
+
+                return signature; // to match with what uniswaps dapps expects
             }
 
             // try {
@@ -189,3 +207,34 @@ window.addEventListener('message', (event) => {
         selectedTokenToPayFee = selected;
     }
 });
+
+function injectWidget() {
+    console.log('inject called');
+    let widgetContainer = document.createElement('div');
+    console.log('container', widgetContainer);
+
+    widgetContainer.id = 'myExtensionWidget';
+    console.log('document body before', document.body);
+
+    document.body.appendChild(widgetContainer);
+    console.log('document body after', document.body);
+
+    ReactDOM.render(
+        <MyComponent />,
+        document.getElementById('myExtensionWidget')
+    );
+}
+
+// Inject the widget when the DOM is ready
+console.log('test', typeof document, document);
+
+// document.addEventListener('DOMContentLoaded', injectWidget);
+
+if (document.readyState === 'loading') {
+    console.log('doc ready');
+    document.addEventListener('DOMContentLoaded', injectWidget);
+} else {
+    console.log('doc not ready');
+
+    injectWidget();
+}

@@ -1,13 +1,13 @@
 import Web3 from 'web3';
 import FlintGaslessAbi from './../abis/FlintGasless.json';
+import V4ABI from './../abis/V4.json';
 import { getGaslessContractAddress } from '../injected/store/store';
 
 const getContract = async () => {
     const web3 = new Web3(window.ethereum);
-    return new web3.eth.Contract(
-        FlintGaslessAbi,
-        await getGaslessContractAddress()
-    );
+    const ourAddress = await getGaslessContractAddress();
+    console.log('get contract generic call', ourAddress);
+    return new web3.eth.Contract(V4ABI, await getGaslessContractAddress());
 };
 
 export const getNonce = async (walletAddress) => {

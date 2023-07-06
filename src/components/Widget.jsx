@@ -9,6 +9,15 @@ import { Swapping } from './widgetChilds/swapping.jsx';
 const MyComponent = () => {
     const [showFirstSVG, setShowFirstSVG] = useState(true);
     const [conditionResult, setConditionResult] = useState('initial');
+    const [isHovered, setIsHovered] = useState(false);
+
+    const handleHover = () => {
+        setIsHovered(true);
+    };
+
+    const handleLeave = () => {
+        setIsHovered(false);
+    };
 
     useEffect(() => {
         // After 2 seconds, switch to the second SVG
@@ -41,22 +50,33 @@ const MyComponent = () => {
 
     return (
         <>
-            {showFirstSVG ? (
-                <OptimisedBy></OptimisedBy>
-            ) : (
-                <>
-                    {conditionResult === 'initial' && <Selector></Selector>}
-                    {/* <Approval></Approval>
-                    <Swapping></Swapping> */}
+            {/* {console.log('this is rendering')} */}
+            {/* <OptimisedBy></OptimisedBy> */}
+            <div
+                onMouseEnter={handleHover}
+                onMouseLeave={handleLeave}
+                style={{ zIndex: 9999999 }}
+            >
+                {!isHovered ? (
+                    <>
+                        {conditionResult === 'initial' && (
+                            <OptimisedBy></OptimisedBy>
+                        )}
+                    </>
+                ) : (
+                    ''
+                )}
 
-                    {conditionResult === 'approvalRequested' && (
-                        <Approval></Approval>
-                    )}
-                    {conditionResult === 'swapInitiated' && (
-                        <Swapping></Swapping>
-                    )}
-                </>
-            )}
+                {conditionResult === 'approvalRequested' && (
+                    <Approval></Approval>
+                )}
+                {conditionResult === 'swapInitiated' && <Swapping></Swapping>}
+                {isHovered && (
+                    <>
+                        {conditionResult === 'initial' && <Selector></Selector>}
+                    </>
+                )}
+            </div>
         </>
     );
 };

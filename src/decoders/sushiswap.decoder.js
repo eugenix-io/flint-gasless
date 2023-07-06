@@ -2,7 +2,7 @@ import { getInputData } from '../utils/extractInput';
 import { getAbi } from '../utils/getAbi';
 
 export const sushiSwapDecoder = async (request) => {
-    console.log('request to decode on sushiSwap', request);
+    // console.log('request to decode on sushiSwap', request);
     const data = request?.params[0]?.data;
     const toContractAddress = request?.params[0]?.to; //sushiswap in this case
     // console.log(data, toContractAddress);

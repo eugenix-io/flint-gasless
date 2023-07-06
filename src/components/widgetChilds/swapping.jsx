@@ -12,9 +12,9 @@ const Container = styled.div`
     align-items: center;
     position: fixed;
     width: 23%;
-    height: 39%;
-    top: 50%;
-    left: 74%;
+    height: 27%;
+    top: 56%;
+    left: 76%;
     padding: 34px 27px 37.5px 26px;
     border-radius: 20px;
     border: 4px;
@@ -30,28 +30,23 @@ const Rectangle = styled.div`
 const Content4 = styled.div`
     display: flex;
     width: 100%;
-    height: 30%;
+    height: 36%;
     flex-direction: column;
     align-items: baseline;
     justify-content: center;
 `;
 
-const Animate4 = styled.div`
-    width: 188px;
-    height: 175px;
-    margin: 0 auto;
-`;
-
 const Heading4 = styled.div`
     display: flex;
     width: 100%;
-    height: 100%;
+    height: 45%;
     font-weight: 400;
     font-size: 16px;
     line-height: 19.36px;
     letter-spacing: 0.4px;
     color: rgb(242, 242, 242);
     justify-content: center;
+    align-items: center;
 `;
 
 const Heading24 = styled.div`
@@ -64,7 +59,7 @@ const Heading24 = styled.div`
     letter-spacing: 0.4px;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: baseline;
 `;
 
 const Sign = styled.div`
@@ -121,7 +116,7 @@ export const Swapping = () => {
                                     : lottieSuccess
                             }
                             play
-                            style={{ width: '60%', marginLeft: '19%' }}
+                            style={{ width: '50%', marginLeft: '25%' }}
                         />
                     )}
                 </Rectangle>
