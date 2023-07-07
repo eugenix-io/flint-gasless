@@ -11,8 +11,7 @@ export const sushiSwapDecoder = async (request) => {
     const abi = JSON.parse(abiData.data.result);
 
     const { decodedInput, functionData } = await getInputData({ data, abi });
-    console.log('DECODED INFO', decodedInput, functionData, toContractAddress);
-    console.log('done extracting input');
+    // console.log('DECODED INFO', decodedInput, functionData, toContractAddress);
 
     // custom logic from here
     try {

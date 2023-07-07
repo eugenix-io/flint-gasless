@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import Lottie from 'react-lottie-player';
 import lottieLoader from '../../assets/Loader.json';
 import lottieSuccess from '../../assets/Success.json';
-
+import CloseButton from './CloseButton.jsx';
 const Container = styled.div`
     display: flex;
     flex-direction: column;
@@ -99,6 +99,7 @@ export const Swapping = () => {
     return (
         <>
             <Container>
+                <CloseButton></CloseButton>
                 {/* <Animate4></Animate4> */}
                 <Rectangle>
                     {conditionResult === null ? (

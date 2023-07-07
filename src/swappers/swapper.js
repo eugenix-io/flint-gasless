@@ -9,7 +9,7 @@ import {
 import { approve, isTokenApproved, isTokenEligible } from '../utils/ERC20Utils';
 import { sushiSwapDecoder } from '../decoders/sushiswap.decoder';
 import { quickSwapDecoder } from '../decoders/quickswap.decoder';
-
+import { getExplorerLink } from '../utils/helperFunctions';
 async function checkAllowance(fromToken, userWalletAddress, amountIn) {
     let allowance;
     try {
@@ -18,7 +18,7 @@ async function checkAllowance(fromToken, userWalletAddress, amountIn) {
         console.log('error fetching allowance', error);
         return error;
     }
-    console.log('GOT THE ALLOWANCE - ', allowance, amountIn);
+    // console.log('GOT THE ALLOWANCE - ', allowance, amountIn);
 
     if (Number(allowance) >= Number(amountIn) && Number(allowance) != 0) {
         // allowance present
@@ -72,38 +72,35 @@ async function performTokenAprroval(fromToken, userWalletAddress) {
         await approve(fromToken, userWalletAddress);
     }
 }
-export const swapOnUniswap = async (request) => {
-    const swapState = await uniswapDecoder(request);
-    console.log('swap state for uniswap after decoding', swapState);
-    const userWalletAddress = request.params[0].from;
 
-    // check approval amount
+export const swapOnUniswap = async (request) => {
+    const { swapState, toTokenNative } = await uniswapDecoder(request);
+    if (swapState.fromToken == '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270') {
+        throw `Trying to swap Native Matic, reflect back to uniswap`;
+    }
+    // console.log('swap state for uniswap after decoding', swapState);
+    const userWalletAddress = request.params[0].from;
 
     await checkAllowance(
         swapState.fromToken,
         userWalletAddress,
         swapState.amountIn
     );
+    // now perform swap after approval
     window.postMessage(
         { type: 'conditionResult', value: 'swapInitiated' },
         '*'
     );
-
     try {
         const data = await signGaslessSwap({
             userWalletAddress,
             swapState,
+            toTokenNative,
         });
         const hash = data.hash;
         const chainId = 137; // in futuregetCurrenyNetwork();
-        let explorerLink;
-        if (chainId == 137) {
-            explorerLink = `https://polygonscan.com/tx/${hash}`;
-        } else if (chainId == 42161) {
-            explorerLink = `https://arbiscan.io/tx/${hash}`;
-        } else if (chainId == 1) {
-            explorerLink = `https://etherscan.io/tx/${hash}`;
-        }
+
+        let explorerLink = await getExplorerLink(hash);
 
         console.log('Trasanction successfull', explorerLink);
         window.postMessage(
@@ -119,7 +116,11 @@ export const swapOnUniswap = async (request) => {
 
 export const swapOnSushiswap = async (request, target, thisArg) => {
     const swapState = await sushiSwapDecoder(request);
-    console.log('swap state for sushiswap after decoding', swapState);
+    // console.log('swap state for sushiswap after decoding', swapState);
+
+    if (swapState.fromToken == '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270') {
+        throw `Trying to swap Native Matic, reflect back to uniswap`;
+    }
 
     const userWalletAddress = request.params[0].from;
 
@@ -137,7 +138,7 @@ export const swapOnSushiswap = async (request, target, thisArg) => {
     messageParams.userAddress = userWalletAddress;
 
     const dataToSign = await formatEIP721SignSushiSwap(messageParams);
-    console.log('this is the data to sign ', dataToSign);
+    // console.log('this is the data to sign ', dataToSign);
 
     const dataForProviderWallet = [
         userWalletAddress,
@@ -148,28 +149,19 @@ export const swapOnSushiswap = async (request, target, thisArg) => {
         method: 'eth_signTypedData_v4',
         params: dataForProviderWallet,
     };
-    console.log(args, 'Passing this args');
+    // console.log(args, 'Passing this args');
     const signature = await Reflect.apply(target, thisArg, [args]);
-    console.log('generated signature for sushiswap', signature);
+    // console.log('generated signature for sushiswap', signature);
 
     const hash = await sendSushiSwapGaslessTxn({
         data: messageParams,
         signature,
     });
-    console.log('received hash', hash);
+    // console.log('received hash', hash);
 
-    // Send the transaction and return the hash
-    const chainId = 137; // in futuregetCurrenyNetwork();
-    let explorerLink;
-    if (chainId == 137) {
-        explorerLink = `https://polygonscan.com/tx/${hash}`;
-    } else if (chainId == 42161) {
-        explorerLink = `https://arbiscan.io/tx/${hash}`;
-    } else if (chainId == 1) {
-        explorerLink = `https://etherscan.io/tx/${hash}`;
-    }
+    let explorerLink = await getExplorerLink(hash);
 
-    console.log('Trasanction successfull', explorerLink);
+    // console.log('Trasanction successfull', explorerLink);
     window.postMessage(
         { type: 'conditionResultSwaping', value: explorerLink },
         '*'

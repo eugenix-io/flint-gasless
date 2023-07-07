@@ -18,8 +18,16 @@ export const quickSwapDecoder = async (request) => {
 
     const abi = JSON.parse(abiData.data.result);
 
-    const { decodedInput, functionData } = await getInputData({ data, abi });
-    console.log('DECODED INFO', decodedInput, functionData, toContractAddress);
+    const { decodedInput, functionData } = await getInputData({
+        data,
+        abi,
+        quickSwap: true,
+    });
+    console.log(
+        'DECODED INFO',
+        decodedInput.data,
+        functionData,
+        toContractAddress
+    );
     console.log('done extracting input for quick swap');
-    
 };

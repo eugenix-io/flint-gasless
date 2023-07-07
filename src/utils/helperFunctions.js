@@ -72,3 +72,16 @@ export async function getChainId() {
     let network = await provider.getNetwork();
     return parseInt(network.chainId);
 }
+
+export async function getExplorerLink(hash) {
+    const chainId = await getChainId();
+    let explorerLink;
+    if (chainId == 137) {
+        explorerLink = `https://polygonscan.com/tx/${hash}`;
+    } else if (chainId == 42161) {
+        explorerLink = `https://arbiscan.io/tx/${hash}`;
+    } else if (chainId == 1) {
+        explorerLink = `https://etherscan.io/tx/${hash}`;
+    }
+    return explorerLink;
+}

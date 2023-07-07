@@ -8,24 +8,37 @@ export const uniswapDecoder = async (request) => {
     // console.log('request to decode on uniswap', request);
     const data = request?.params[0]?.data;
     const toContractAddress = request?.params[0]?.to; //uniswap in this case
-    // console.log(data, toContractAddress);
 
     const abiData = await getAbi(toContractAddress);
     const abi = JSON.parse(abiData.data.result);
     const { decodedInput, functionData } = await getInputData({ data, abi });
-    console.log('DECODED INFO', decodedInput, functionData, toContractAddress);
+    // console.log('DECODED INFO', decodedInput, functionData, toContractAddress);
 
     try {
         const inputs = decodedInput.inputs;
         let abiCode = new ethers.AbiCoder();
-        let types = ['address', 'uint256', 'uint256', 'bytes', 'bool'];
+        let types = ['address', 'uint256', 'uint256', 'bytes', 'bool']; // uniswap exactSwap function arg data types
 
-        let decodeed;
-        if (inputs[0][1]) {
-            decodeed = abiCode.decode(types, inputs[0][1]);
-        } else {
-            decodeed = abiCode.decode(types, inputs[0][0]);
+        let decodeed = null;
+        let toTokenNative = false;
+        if (decodedInput?.commands?.endsWith('0c')) {
+            // command 0x000c i.e. last two chars are "0c"
+            // this means tokenOut is Native and uniswap will perform two steps internally
+            // in this case input[0][0] is relevant;
+            // decodeed = abiCode.decode(types, inputs[0][0]);
+            console.log('token out is native native ');
+            toTokenNative = true;
         }
+
+        try {
+            decodeed = abiCode.decode(types, inputs[0][0]);
+            console.log('decoded [0][0]', decodeed);
+        } catch (error) {
+            console.log('error with decoding [0][0]');
+            decodeed = abiCode.decode(types, inputs[0][1]);
+            console.log('decoded [0][1]', decodeed);
+        }
+
         decodeed = proxyToObject(decodeed);
         decodeed = JSON.parse(
             JSON.stringify(
@@ -35,7 +48,7 @@ export const uniswapDecoder = async (request) => {
             )
         );
 
-        console.log('proxy converted to input object', decodeed);
+        // console.log('proxy converted to input object', decodeed);
 
         const { path, feesArr } = extractPathFromV3(decodeed[0][3]);
 
@@ -47,7 +60,7 @@ export const uniswapDecoder = async (request) => {
             tokenArray: path,
             feeArr: feesArr,
         };
-        return swapState;
+        return { swapState, toTokenNative };
     } catch (error) {
         console.log('error decoding uniswap request', error);
     }
@@ -58,7 +71,6 @@ function extractPathFromV3(fullPath, reverse = false) {
     let path = [];
     let currentAddress = '';
     let feesArr = [];
-    // console.log('fullpath', fullPath);
     for (let i = 0; i < fullPathWithoutHexSymbol.length; i++) {
         currentAddress += fullPathWithoutHexSymbol[i];
         if (currentAddress.length === 40) {
@@ -67,7 +79,6 @@ function extractPathFromV3(fullPath, reverse = false) {
             if (tempFees) {
                 tempFees = parseInt(tempFees, 16);
                 console.log(i, 'fee in between', tempFees, typeof tempFees);
-                // fees += tempFees;
                 feesArr.push(String(tempFees));
             }
 

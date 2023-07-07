@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import MyComponent from '../components/Widget.jsx';
+import $ from 'jquery';
 
 import {
     swapOnQuickSwap,
@@ -42,10 +43,11 @@ const addQuickWalletProxy = (provider) => {
             return provider.sendAsync(payloadOrMethod, callbackOrParams);
         },
     };
-
     const requestHandler = {
         apply: async (target, thisArg, args) => {
             const [request] = args;
+            // console.log(request?.method, request);
+
             if (
                 !request ||
                 request?.method != 'eth_sendTransaction' ||
@@ -53,8 +55,6 @@ const addQuickWalletProxy = (provider) => {
             ) {
                 return await Reflect.apply(target, thisArg, args);
             }
-            console.log('selected token', selectedTokenToPayFee);
-            console.log('intercepted request', request);
 
             let targetAddress = request?.params[0].to;
             console.log('targetAddress is', targetAddress);
@@ -77,7 +77,7 @@ const addQuickWalletProxy = (provider) => {
                     targetDex = null;
             }
             if (targetDex == null) {
-                console.log('null found hence returning', targetDex);
+                // console.log('null found hence returning', targetDex);
                 return await Reflect.apply(target, thisArg, args);
             }
             console.log('reached here', targetDex);
@@ -85,19 +85,23 @@ const addQuickWalletProxy = (provider) => {
                 selectedTokenToPayFee === 'native' ||
                 selectedTokenToPayFee === 'native' // does not want to use input token for fees/ do not want to use gaspay
             ) {
-                console.log('not meant for us returning');
+                // console.log('not meant for us returning');
                 return Reflect.apply(target, thisArg, args);
             }
 
             let response;
 
-            console.log('DECODING TRANSACTION', request.method, request);
-            console.log(selectedTokenToPayFee);
+            // console.log('DECODING TRANSACTION', request.method, request);
 
             try {
                 if (targetDex === 'uniswap') {
                     const handleUniswapSwap = await swapOnUniswap(request);
-                    console.log('uniswap swap response', handleUniswapSwap);
+                    // console.log('uniswap swap response', handleUniswapSwap);
+                    window.postMessage({ type: 'swapdone', value: true }, '*');
+
+                    // const testPromise = new Promise((resolve, reject) => {
+                    //     resolve(handleUniswapSwap);
+                    // });
                     return handleUniswapSwap;
                 } else if (targetDex === 'sushiswap') {
                     const handleSushiSwap = await swapOnSushiswap(
@@ -109,11 +113,16 @@ const addQuickWalletProxy = (provider) => {
                 } else if ((targetDex = 'quickswap')) {
                     const handleQUickSwap = await swapOnQuickSwap(request);
                     console.log('response from quickswap', handleQUickSwap);
+
+                    // do the same for quickswap
+                    // const handleQUickSwap = await swapOnQuickSwap(request);
                     return handleQUickSwap;
                 }
-                // do the same for quickswap
-                // const handleQUickSwap = await swapOnQuickSwap(request);
             } catch (error) {
+                window.postMessage(
+                    { type: 'conditionResult', value: 'initial' },
+                    '*'
+                ); // if error get widget to original state
                 console.log(
                     'ERROR while swapping through gaspay processing with default swap',
                     error
@@ -124,18 +133,6 @@ const addQuickWalletProxy = (provider) => {
 
                 return signature; // to match with what uniswaps dapps expects
             }
-
-            // try {
-            //     console.log(
-            //         'from here ideally proceed with uniswap implementation'
-            //     );
-            //     const signature = await Reflect.apply(target, thisArg, args);
-            //     console.log(signature, 'Signature ###');
-
-            //     return signature; // to match with what uniswaps dapps expects
-            // } catch (error) {
-            //     console.log('error in original call', error);
-            // }
         },
     };
 
@@ -185,6 +182,7 @@ const addQuickWalletProxy = (provider) => {
         provider.isQuickWallet = true;
         console.log('');
     } catch (error) {
+        console.log('error while creating proxy objects', error);
         // If we can't add ourselves to this provider, don't mess with other providers.
     }
 };
@@ -218,32 +216,21 @@ window.addEventListener('message', (event) => {
 });
 
 function injectWidget() {
-    console.log('inject called');
-    let widgetContainer = document.createElement('div');
-    console.log('container', widgetContainer);
+    try {
+        let widgetContainer = document.createElement('div');
+        widgetContainer.id = 'myExtensionWidget';
+        document.body.appendChild(widgetContainer);
 
-    widgetContainer.id = 'myExtensionWidget';
-    console.log('document body before', document.body);
-
-    document.body.appendChild(widgetContainer);
-    console.log('document body after', document.body);
-
-    ReactDOM.render(
-        <MyComponent />,
-        document.getElementById('myExtensionWidget')
-    );
+        ReactDOM.render(
+            <MyComponent />,
+            document.getElementById('myExtensionWidget')
+        );
+    } catch (error) {
+        console.log('doc not found', error);
+    }
 }
 
-// Inject the widget when the DOM is ready
-console.log('test', typeof document, document);
-
-// document.addEventListener('DOMContentLoaded', injectWidget);
-
-if (document.readyState === 'loading') {
-    console.log('doc ready');
-    document.addEventListener('DOMContentLoaded', injectWidget);
-} else {
-    console.log('doc not ready');
-
+// console.log('test', typeof document, document);
+setTimeout(() => {
     injectWidget();
-}
+}, 1000);

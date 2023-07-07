@@ -1,7 +1,4 @@
 import browser from 'webextension-polyfill';
-import React, { useEffect, useState } from 'react';
-import ReactDOM from 'react-dom';
-import MyComponent from './../components/Widget.jsx';
 
 var s = document.createElement('script');
 s.src = browser.runtime.getURL('injected.js');
@@ -35,5 +32,3 @@ browser.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
         );
     }
 });
-
-

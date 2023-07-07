@@ -1,13 +1,13 @@
 // MyComponent.js
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import SelectorFee from './SelectorFee.jsx';
 import { OptimisedBy } from './widgetChilds/OptimisedBy.jsx';
 import { Approval } from './widgetChilds/Approval.jsx';
 import { Selector } from './widgetChilds/Selector.jsx';
 import { Swapping } from './widgetChilds/swapping.jsx';
 
+let swapD = false;
 const MyComponent = () => {
-    const [showFirstSVG, setShowFirstSVG] = useState(true);
     const [conditionResult, setConditionResult] = useState('initial');
     const [isHovered, setIsHovered] = useState(false);
 
@@ -18,16 +18,6 @@ const MyComponent = () => {
     const handleLeave = () => {
         setIsHovered(false);
     };
-
-    useEffect(() => {
-        // After 2 seconds, switch to the second SVG
-        const timer = setTimeout(() => {
-            setShowFirstSVG(false);
-        }, 3000);
-
-        // Clear the timer when the component unmounts
-        return () => clearTimeout(timer);
-    }, []);
 
     // Function to handle the message from injected.js
     const handleConditionResult = (event) => {
@@ -50,17 +40,19 @@ const MyComponent = () => {
 
     return (
         <>
-            {/* {console.log('this is rendering')} */}
-            {/* <OptimisedBy></OptimisedBy> */}
             <div
                 onMouseEnter={handleHover}
                 onMouseLeave={handleLeave}
                 style={{ zIndex: 9999999 }}
             >
+                {/* <Swapping style={{ zIndex: 9999 }}></Swapping> */}
+
                 {!isHovered ? (
                     <>
                         {conditionResult === 'initial' && (
-                            <OptimisedBy></OptimisedBy>
+                            <>
+                                <OptimisedBy></OptimisedBy>
+                            </>
                         )}
                     </>
                 ) : (
@@ -70,7 +62,12 @@ const MyComponent = () => {
                 {conditionResult === 'approvalRequested' && (
                     <Approval></Approval>
                 )}
-                {conditionResult === 'swapInitiated' && <Swapping></Swapping>}
+                <div>
+                    {conditionResult === 'swapInitiated' && (
+                        <Swapping style={{ zIndex: 9999 }}></Swapping>
+                    )}
+                </div>
+
                 {isHovered && (
                     <>
                         {conditionResult === 'initial' && <Selector></Selector>}

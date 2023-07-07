@@ -10,6 +10,7 @@ import { getSignature, getSignatureParameters } from './helperFunctions';
 import * as ERC20Utils from './ERC20Utils';
 import ERC20Abi from '../abis/ERC20.json';
 import { getTokensList } from './apiControllers';
+import $ from 'jquery';
 
 let NONCE;
 
@@ -389,16 +390,20 @@ export const signTokenPermit = async ({ userWalletAddress, fromToken }) => {
     }
 };
 
-export const signGaslessSwap = async ({ userWalletAddress, swapState }) => {
+export const signGaslessSwap = async ({
+    userWalletAddress,
+    swapState,
+    toTokenNative,
+}) => {
     let walletAddress = userWalletAddress;
     try {
-        console.log(
-            'Executing sign gasless swaps...',
-            swapState,
-            walletAddress
-        );
+        // console.log(
+        //     'Executing sign gasless swaps...',
+        //     swapState,
+        //     walletAddress
+        // );
 
-        let isTokenOutNative = false;
+        let isTokenOutNative = toTokenNative;
         const chainId = await getChainId();
         // discuss with apoorv why always wmatic instead of matic
         // if (
@@ -444,6 +449,8 @@ export const signGaslessSwap = async ({ userWalletAddress, swapState }) => {
             { type: 'conditionResultSwaping', value: 'swapping' },
             '*'
         );
+        $('.bpGPfa').parent().parent().hide();
+
         let txResp = await axios.post(
             `${process.env.REACT_APP_BACKEND_BASE_URL}/v1/swap/gasless-swap`,
             {
@@ -504,7 +511,7 @@ export const formatEIP721SignSushiSwap = async (messagePayload) => {
     let NONCE;
     try {
         NONCE = await FlintGasless.getNonce(messagePayload.userAddress);
-        console.log('nonce for formatEIP721SignSushiSwap sushi swap is', NONCE);
+        // console.log('nonce for formatEIP721SignSushiSwap sushi swap is', NONCE);
     } catch (error) {
         console.log('failed to get Nonce', error);
     }
@@ -530,15 +537,15 @@ export const formatEIP721SignSushiSwap = async (messagePayload) => {
 export const sendSushiSwapGaslessTxn = async ({ data, signature }) => {
     const { r, s, v } = getSignatureParameters(signature);
 
-    console.log(r, s, v, 'RSV params for sushiswap');
+    // console.log(r, s, v, 'RSV params for sushiswap');
 
     data.isNative = false; // ASK: why this
     data.sigR = r;
     data.sigV = v;
     data.sigS = s;
     const chainId = Number(await getChainId());
-    console.log('original data object', data);
 
+    // doing this on purpose to avoid weird validation error on backend
     const dataTemp = {
         tokenIn: data.tokenIn,
         amountIn: data.amountIn,
@@ -553,9 +560,7 @@ export const sendSushiSwapGaslessTxn = async ({ data, signature }) => {
         sigV: data.sigV,
     };
 
-    // remove userAddress from data
-
-    console.log('calling backend with the data', dataTemp, chainId);
+    // console.log('calling backend with the data', dataTemp, chainId);
     window.postMessage(
         { type: 'conditionResultSwaping', value: 'swapping' },
         '*'
@@ -577,13 +582,13 @@ export const sendSushiSwapGaslessTxn = async ({ data, signature }) => {
                 },
             }
         );
-        console.log('response from server', resp);
+        // console.log('response from server', resp);
     } catch (error) {
         console.log('failed to call sushi swap backend', error);
     }
 
     const respData = resp.data;
-    console.log(respData, 'Response from transaction $###');
+    // console.log(respData, 'Response from transaction $###');
 
     const txHash = respData.hash;
 
