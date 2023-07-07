@@ -2,32 +2,25 @@ import { ethers } from 'ethers';
 import { proxyToObject } from './helperFunctions';
 
 export const getInputData = async ({ data, abi }) => {
-    console.log(data, abi, 'DATA DECODED');
     try {
         // console.log('data and abi to decode', data, abi);
         let decodedRequest;
 
-        // Process the decoded input data as per your requirements
-        // console.log('decoded request look like', decodedRequest);
-        // console.log('decode args proxy object', decodedRequest.args);
-        // console.log('decode function data look like', decodedRequest.fragment);
         try {
             const abiInterface = new ethers.Interface(abi);
-            console.log('abiInterface', abiInterface);
+            // console.log('abiInterface', abiInterface);
             decodedRequest = await abiInterface.parseTransaction({
                 data: data,
             });
-            // let contractInterface = new ethers.Interface(abi);
-            // let decodedArgumentsProxy = contractInterface.decodeFunctionData(
-            //     data.substring(0, 10),
-            //     data
-            // );
+
             console.log('decoderd request data', decodedRequest);
         } catch (error) {
             console.log('decoding request failed', error);
         }
+        console.log('decoded args', decodedRequest.args);
 
         let decodedInput = proxyToObject(decodedRequest.args);
+        // console.log('converted proxy object', decodedInput.data);
         decodedInput = JSON.parse(
             JSON.stringify(
                 decodedInput,
@@ -35,15 +28,10 @@ export const getInputData = async ({ data, abi }) => {
                     typeof value === 'bigint' ? value.toString() : value // return everything else unchanged
             )
         );
-        // let functionData = contractInterface.getFunction(data.substring(0, 10));
+        console.log('removed bigint', decodedInput.data);
+        decodedInput = decodedInput.data;
         let functionData = decodedRequest.fragment;
-        // console.log('function data in the request', functionData);
 
-        // console.log('this is the decoded input - DATA DECODED', decodedInput);
-        // functionData.inputs.forEach((param, index) => {
-        //     decodedInput[param.name] = decodedArguments[index];
-        // });
-        // console.log('This is the final abi - DATA DECODED', abi);
         return { decodedInput, functionData };
     } catch (err) {
         console.error('failed to decode with err - DATA DECODED', err);

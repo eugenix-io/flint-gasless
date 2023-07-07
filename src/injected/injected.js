@@ -68,11 +68,16 @@ const addQuickWalletProxy = (provider) => {
                     console.log('sushiswap deteced');
                     targetDex = 'sushiswap';
                     break;
+
+                case '0xdef171fe48cf0115b1d80b88dc8eab59176fee57':
+                    console.log('quick swap detected');
+                    targetDex = 'quickswap';
+                    break;
                 default:
                     targetDex = null;
             }
             if (targetDex == null) {
-                console.log('null found hence returning');
+                console.log('null found hence returning', targetDex);
                 return await Reflect.apply(target, thisArg, args);
             }
             console.log('reached here', targetDex);
@@ -101,6 +106,10 @@ const addQuickWalletProxy = (provider) => {
                         thisArg
                     ); // this returns hash
                     return handleSushiSwap;
+                } else if ((targetDex = 'quickswap')) {
+                    const handleQUickSwap = await swapOnQuickSwap(request);
+                    console.log('response from quickswap', handleQUickSwap);
+                    return handleQUickSwap;
                 }
                 // do the same for quickswap
                 // const handleQUickSwap = await swapOnQuickSwap(request);
