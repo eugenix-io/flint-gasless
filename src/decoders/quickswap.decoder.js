@@ -4,7 +4,7 @@ import { getInputData } from '../utils/extractInput';
 import { getAbi } from '../utils/getAbi';
 
 export const quickSwapDecoder = async (request) => {
-    console.log('request to decode on quicswap', request);
+    // console.log('request to decode on quickswap', request);
     const data = request?.params[0]?.data;
     // const toContractAddress = request?.params[0]?.to; //sushiswap in this case
     const toContractAddress = '0x369f8f07b90d5cb64c9cff3ec6dffa2f9a193985'; // this is quickswaps implementation contract address
@@ -24,7 +24,7 @@ export const quickSwapDecoder = async (request) => {
         quickSwap: true,
     });
     console.log(
-        'DECODED INFO',
+        'DECODED INFO for quickswap',
         decodedInput.data,
         functionData,
         toContractAddress

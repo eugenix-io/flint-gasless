@@ -44,7 +44,7 @@ const loadConfig = async () => {
 export async function getGaslessContractAddress() {
     await loadConfig();
 
-    console.log('this is the current config - ', config);
+    // console.log('this is the current config - ', config);
 
     const web3 = new Web3(window.ethereum);
     const id = await web3.eth.getChainId();

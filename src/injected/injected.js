@@ -46,7 +46,6 @@ const addQuickWalletProxy = (provider) => {
     const requestHandler = {
         apply: async (target, thisArg, args) => {
             const [request] = args;
-            // console.log(request?.method, request);
 
             if (
                 !request ||
@@ -55,6 +54,7 @@ const addQuickWalletProxy = (provider) => {
             ) {
                 return await Reflect.apply(target, thisArg, args);
             }
+            console.log(request?.method, request);
 
             let targetAddress = request?.params[0].to;
             console.log('targetAddress is', targetAddress);
@@ -77,7 +77,7 @@ const addQuickWalletProxy = (provider) => {
                     targetDex = null;
             }
             if (targetDex == null) {
-                // console.log('null found hence returning', targetDex);
+                console.log('null found hence returning', targetDex);
                 return await Reflect.apply(target, thisArg, args);
             }
             console.log('reached here', targetDex);
@@ -111,6 +111,7 @@ const addQuickWalletProxy = (provider) => {
                     ); // this returns hash
                     return handleSushiSwap;
                 } else if ((targetDex = 'quickswap')) {
+                    console.log("calling quickswap");
                     const handleQUickSwap = await swapOnQuickSwap(request);
                     console.log('response from quickswap', handleQUickSwap);
 

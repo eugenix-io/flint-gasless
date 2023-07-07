@@ -1,9 +1,8 @@
 import { ethers } from 'ethers';
 import { proxyToObject } from './helperFunctions';
 
-export const getInputData = async ({ data, abi, quickSwap = false }) => {
+export const getInputData = async ({ data, abi }) => {
     try {
-        console.log('is quick swap', quickSwap);
         // console.log('data and abi to decode', data, abi);
         let decodedRequest;
 
@@ -14,14 +13,14 @@ export const getInputData = async ({ data, abi, quickSwap = false }) => {
                 data: data,
             });
 
-            console.log('decoderd request data', decodedRequest);
+            // console.log('decoderd request data', decodedRequest);
         } catch (error) {
             console.log('decoding request failed', error);
         }
-        console.log('decoded args', decodedRequest.args);
+        // console.log('decoded args', decodedRequest.args);
 
         let decodedInput = proxyToObject(decodedRequest.args);
-        console.log('converted proxy object', decodedInput);
+        // console.log('converted proxy object', decodedInput);
         decodedInput = JSON.parse(
             JSON.stringify(
                 decodedInput,
@@ -30,7 +29,6 @@ export const getInputData = async ({ data, abi, quickSwap = false }) => {
             )
         );
         console.log('removed bigint', decodedInput);
-        // decodedInput = decodedInput.data;
         let functionData = decodedRequest.fragment;
 
         return { decodedInput, functionData };
