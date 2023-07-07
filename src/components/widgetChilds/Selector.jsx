@@ -134,7 +134,7 @@ export const Selector = () => {
                             onChange={() => handleTokenChange('native')}
                         />
                         <img width={'25px'} src={Polygon} alt="MATIC Token" />
-                        <p style={{ marginLeft: '-15%' }}>INPUT</p>
+                        <p style={{ marginLeft: '-15%' }}>MATIC</p>
                         <img
                             src={
                                 selectedToken === 'native'

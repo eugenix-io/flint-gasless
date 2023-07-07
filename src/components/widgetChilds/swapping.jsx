@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 
+import Logo from './../../assets/Subtract.svg';
+
 import Lottie from 'react-lottie-player';
 import lottieLoader from '../../assets/Loader.json';
 import lottieSuccess from '../../assets/Success.json';
@@ -75,7 +77,7 @@ const Sign = styled.div`
 `;
 
 export const Swapping = () => {
-    const [conditionResult, setConditionResult] = useState(null);
+    const [conditionResult, setConditionResult] = useState('fghvjb');
 
     const handleConditionResult = (event) => {
         if (event.data && event.data.type === 'conditionResultSwaping') {
@@ -137,10 +139,16 @@ export const Swapping = () => {
                         )}
                         {conditionResult != null &&
                             conditionResult != 'swapping' && (
-                                <p>
-                                    view transaction{' '}
-                                    <a href={conditionResult}>here</a>
-                                </p>
+                                <>
+                                    <img
+                                        style={{ marginRight: '9px' }}
+                                        src={Logo}
+                                    ></img>
+                                    <p>
+                                        view transaction{' '}
+                                        <a href={conditionResult}>here</a>
+                                    </p>
+                                </>
                             )}
                     </Heading24>
                 </Content4>
