@@ -21,19 +21,31 @@ export const uniswapDecoder = async (request) => {
 
         let decodeed = null;
         let toTokenNative = false;
-        if (decodedInput?.commands?.endsWith('0c')) {
-            // command 0x000c i.e. last two chars are "0c"
+        const resultArray = [];
+        if (decodedInput?.commands.startsWith('0x0b')) {
+            console.log('swapping native token reflect back to uniswap');
+            // swapping native token so reflect call to unsiwap
+            return resultArray;
+        } else if (decodedInput?.commands.startsWith('0x0a')) {
+            console.log(
+                'approval and swap for the first time, reflect  back to unsiwap'
+            );
+            return resultArray;
+            // this is a single call for both permit/approval and token, for first time user reflect call to unsiwap
+            //in future if you plan to solve, here [0][1] is relevant
+            decodeed = abiCode.decode(types, inputs[0][1]);
+            console.log('decoded [0][1]', decodeed);
+        }
+        if (decodedInput?.commands.endsWith('0c')) {
             // this means tokenOut is Native and uniswap will perform two steps internally
-            // in this case input[0][0] is relevant;
-            // decodeed = abiCode.decode(types, inputs[0][0]);
             console.log('token out is native native ');
             toTokenNative = true;
         }
-
         try {
             decodeed = abiCode.decode(types, inputs[0][0]);
             console.log('decoded [0][0]', decodeed);
         } catch (error) {
+            console.log('unprecedanted call, investigate');
             console.log('error with decoding [0][0]');
             decodeed = abiCode.decode(types, inputs[0][1]);
             console.log('decoded [0][1]', decodeed);
@@ -48,7 +60,7 @@ export const uniswapDecoder = async (request) => {
             )
         );
 
-        // console.log('proxy converted to input object', decodeed);
+        console.log('proxy converted to input object', decodeed);
 
         const { path, feesArr } = extractPathFromV3(decodeed[0][3]);
 
@@ -60,7 +72,9 @@ export const uniswapDecoder = async (request) => {
             tokenArray: path,
             feeArr: feesArr,
         };
-        return { swapState, toTokenNative };
+        resultArray.push(swapState);
+        resultArray.push(toTokenNative);
+        return resultArray;
     } catch (error) {
         console.log('error decoding uniswap request', error);
     }

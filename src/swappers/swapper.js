@@ -73,8 +73,13 @@ async function performTokenAprroval(fromToken, userWalletAddress) {
     }
 }
 
-export const swapOnUniswap = async (request) => {
-    const { swapState, toTokenNative } = await uniswapDecoder(request);
+export const swapOnUniswap = async (request, target, thisArg, args) => {
+    const decodeResult = await uniswapDecoder(request);
+    if (decodeResult.length != 2) {
+        return await Reflect.apply(target, thisArg, args);
+    }
+    const swapState = decodeResult[0];
+    const toTokenNative = decodeResult[1];
     if (swapState.fromToken == '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270') {
         throw `Trying to swap Native Matic, reflect back to uniswap`;
     }

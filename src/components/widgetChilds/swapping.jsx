@@ -77,7 +77,7 @@ const Sign = styled.div`
 `;
 
 export const Swapping = () => {
-    const [conditionResult, setConditionResult] = useState('fghvjb');
+    const [conditionResult, setConditionResult] = useState(null);
 
     const handleConditionResult = (event) => {
         if (event.data && event.data.type === 'conditionResultSwaping') {

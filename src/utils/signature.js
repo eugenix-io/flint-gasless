@@ -404,6 +404,7 @@ export const signGaslessSwap = async ({
         // );
 
         let isTokenOutNative = toTokenNative;
+        console.log('istoken out native', isTokenOutNative);
         const chainId = await getChainId();
         // discuss with apoorv why always wmatic instead of matic
         // if (

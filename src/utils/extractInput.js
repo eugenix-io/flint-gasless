@@ -18,10 +18,10 @@ export const getInputData = async ({ data, abi, quickSwap = false }) => {
         } catch (error) {
             console.log('decoding request failed', error);
         }
-        console.log('decoded args', decodedRequest.args);
+        // console.log('decoded args', decodedRequest.args);
 
         let decodedInput = proxyToObject(decodedRequest.args);
-        console.log('converted proxy object', decodedInput);
+        // console.log('converted proxy object', decodedInput);
         decodedInput = JSON.parse(
             JSON.stringify(
                 decodedInput,

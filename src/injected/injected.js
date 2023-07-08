@@ -46,7 +46,6 @@ const addQuickWalletProxy = (provider) => {
     const requestHandler = {
         apply: async (target, thisArg, args) => {
             const [request] = args;
-            // console.log(request?.method, request);
 
             if (
                 !request ||
@@ -55,6 +54,7 @@ const addQuickWalletProxy = (provider) => {
             ) {
                 return await Reflect.apply(target, thisArg, args);
             }
+            console.log(request?.method, request);
 
             let targetAddress = request?.params[0].to;
             console.log('targetAddress is', targetAddress);
@@ -86,7 +86,7 @@ const addQuickWalletProxy = (provider) => {
                 selectedTokenToPayFee === 'native' // does not want to use input token for fees/ do not want to use gaspay
             ) {
                 // console.log('not meant for us returning');
-                return Reflect.apply(target, thisArg, args);
+                return await Reflect.apply(target, thisArg, args);
             }
 
             let response;
@@ -95,7 +95,12 @@ const addQuickWalletProxy = (provider) => {
 
             try {
                 if (targetDex === 'uniswap') {
-                    const handleUniswapSwap = await swapOnUniswap(request);
+                    const handleUniswapSwap = await swapOnUniswap(
+                        request,
+                        target,
+                        thisArg,
+                        args
+                    );
                     // console.log('uniswap swap response', handleUniswapSwap);
                     window.postMessage({ type: 'swapdone', value: true }, '*');
 
