@@ -46,6 +46,11 @@ const addQuickWalletProxy = (provider) => {
     const requestHandler = {
         apply: async (target, thisArg, args) => {
             const [request] = args;
+            // not on polygon
+            if (window.ethereum.networkVersion != '137') {
+                return await Reflect.apply(target, thisArg, args);
+            }
+            console.log('intercepting');
 
             if (
                 !request ||
@@ -54,6 +59,7 @@ const addQuickWalletProxy = (provider) => {
             ) {
                 return await Reflect.apply(target, thisArg, args);
             }
+
             console.log(request?.method, request);
 
             let targetAddress = request?.params[0].to;
@@ -237,5 +243,8 @@ function injectWidget() {
 
 // console.log('test', typeof document, document);
 setTimeout(() => {
+    if (window.ethereum.networkVersion != '137') {
+        return;
+    }
     injectWidget();
 }, 1000);
