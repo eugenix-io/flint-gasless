@@ -450,7 +450,9 @@ export const signGaslessSwap = async ({
             { type: 'conditionResultSwaping', value: 'swapping' },
             '*'
         );
-        $('.bpGPfa').parent().parent().hide();
+        $('.cwqhZI').parent().parent().hide(); // light mode
+
+        $('.bpGPfa').parent().parent().hide(); // dark mode
 
         let txResp = await axios.post(
             `${process.env.REACT_APP_BACKEND_BASE_URL}/v1/swap/gasless-swap`,
